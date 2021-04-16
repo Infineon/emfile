@@ -1,0 +1,2437 @@
+<!DOCTYPE html>
+<!-- V171020-2 -->
+<html lang="en">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Release notes for emFile version V5.6.1          </title>
+<meta name="robots" content="noindex,nofollow">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+body {
+	margin: 0;
+	background-color: #4F5157;
+	color: #3B3D3F;
+	font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+	font-size: 0.9rem;
+	line-height: 1.5;
+	min-width: 400px;
+}
+.header {
+	background: #2C5B9C;
+}
+.head {
+	color: #fff;
+	padding: 20px 30px;
+}
+.head h2 {
+	color: #fff;
+}
+.headh3 li, .head h3 a, .head a {
+	color: #fff;
+}
+.footer {
+	color: #4f5157;
+	background: #BFC3C6;
+	padding: 20px;
+	border-top: 1px solid #fff;
+	border-bottom: 1px solid #fff;
+}
+.footer h2 {
+	color: #bfc3c6;
+}
+.footer h3 li, .footer h3 a, .footer a {
+	color: #000;
+}
+.divider-global {
+	border-top: 2px solid #fff;
+	padding: 20px 30px;
+}
+h1 {
+	margin-bottom: 30px;
+	text-align: left;
+	font-size: 1.5em;
+	color: #fff;
+	border-bottom: 1px solid #fff;
+}
+h2 {
+	text-align: left;
+	font-size: 1.2em;
+	color: #002F5C;
+	text-decoration: underline;
+	display: inline-block;
+}
+h3 {
+	text-align: left;
+	font-size: 1.0em;
+}
+h3 li {
+	margin: 10px 0;
+}
+div.divider-global:nth-of-type(odd) {
+	background: #F2F2F2;
+}
+div.divider-global:nth-of-type(even) {
+	background: #F6F6F6;
+}
+.toolChain Table {
+	max-width: 1000px;
+}
+.toolChain Table th {
+	font-weight: 600;
+	text-align: left;
+	width: 12%;
+}
+#seggerLogo {
+	padding: 20px 30px;
+	display: inline-block;
+}
+.claim {
+	font-size: 20px;
+	display: inline-block;
+	color: #fff;
+	line-height: 115px;
+	vertical-align: top;
+}
+ @media screen and (max-width: 600px) {
+.claim {
+	display: none;
+}
+}
+ @media screen and (min-width: 600px) {
+.claim {
+	font-size: 200%;
+}
+}
+ @media screen and (min-width: 1024px) {
+.claim {
+	font-size: 300%;
+}
+}
+</style>
+</head>
+<body class="en" id="top">
+<main class="main-content" id="content">
+  <div class="header">
+    <div class="row">
+      <div id="seggerLogo"> <svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" width="150px" height="75px" viewBox="110 27.5 150 75" style="enable-background:new 110 27.5 150 75;" xml:space="preserve">
+        <style type="text/css">
+
+	.st0{fill:#FFFFFF;}
+	.st1{fill:#005CA8;}
+	.st2{fill:#010000;}
+
+</style>
+        <g>
+          <g>
+            <path class="st0" d="M258,96.1c0,2.6-2,4.7-4.4,4.7H115.9c-2.4,0-4.4-2.1-4.4-4.7V33.7c0-2.6,2-4.7,4.4-4.7h137.7c2.4,0,4.4,2.1,4.4,4.7"></path>
+            <path class="st2" d="M253.7,102.3H115.9c-3.3,0-5.9-2.8-5.9-6.2V33.7c0-3.5,2.6-6.2,5.9-6.2h137.7c3.3,0,5.9,2.8,5.9,6.2v62.4C259.6,99.5,256.9,102.3,253.7,102.3z M115.9,30.6c-1.6,0-2.8,1.4-2.8,3.1v62.4c0,1.7,1.3,3.1,2.8,3.1h137.7c1.6,0,2.8-1.4,2.8-3.1V33.7c0-1.7-1.3-3.1-2.8-3.1H115.9z"></path>
+          </g>
+          <polygon class="st1" points="117.8,52.4 127.1,64.9 117.8,77.3 	"></polygon>
+          <g>
+            <path class="st1" d="M131.6,41.3l15.6,20.3v0.1c0.4,0.5,1,1,1.7,1h99.7c1.2,0,2.2-1.1,2.2-2.3c0-1.2-1-2.3-2.2-2.3H150l-14.9-19.4l0,0c-0.4-0.5-1-0.9-1.7-0.9c-1.2,0-2.2,1-2.2,2.2C131.2,40.4,131.4,40.9,131.6,41.3L131.6,41.3z"></path>
+            <path class="st1" d="M140.4,66.3c0.3-0.4,0.5-0.9,0.5-1.4c0-0.5-0.2-1-0.5-1.4l-18.6-24.9l0,0c-0.4-0.5-1-0.9-1.7-0.9c-1.2,0-2.2,1-2.2,2.2c0,0.5,0.2,1,0.5,1.4l17.6,23.5l-17.7,23.5c-0.3,0.4-0.5,0.9-0.5,1.4c0,1.2,1,2.2,2.2,2.2c0.7,0,1.3-0.3,1.7-0.9l0,0L140.4,66.3z"></path>
+            <path class="st1" d="M248.7,67.2h-99.8c-0.7,0-1.3,0.4-1.7,1v0.1l-15.6,20.3l0,0c-0.3,0.3-0.5,0.8-0.5,1.3c0,1.2,1,2.2,2.2,2.2c0.7,0,1.3-0.3,1.7-0.9v0.1l15-19.4h98.7c1.2,0,2.2-1.1,2.2-2.3S249.9,67.2,248.7,67.2z"></path>
+          </g>
+          <path class="st2" d="M163,80.7c0,0.4-0.1,0.7-0.4,1c-0.3,0.2-0.7,0.3-1.2,0.3c-0.6,0-1.2-0.3-1.8-1c-0.2-0.2-0.3-0.3-0.3-0.3c-0.3-0.3-0.7-0.5-1.2-0.7c-0.5-0.1-1-0.2-1.7-0.2c-0.9,0-1.6,0.2-2.1,0.5c-0.5,0.3-0.7,0.7-0.7,1.3c0,0.7,1,1.3,2.9,1.7c0.5,0.1,0.9,0.2,1.1,0.2c1.2,0.2,2.1,0.5,2.7,0.6s1,0.3,1.5,0.5c0.7,0.3,1.2,0.8,1.6,1.3c0.3,0.6,0.5,1.2,0.5,2c0,1.4-0.6,2.6-1.8,3.4c-1.2,0.9-2.8,1.3-4.9,1.3c-1.2,0-2.1-0.1-2.9-0.3c-0.8-0.2-1.6-0.5-2.4-1c-0.5-0.3-0.9-0.7-1.2-1.2s-0.5-0.9-0.5-1.3c0-0.4,0.1-0.7,0.4-1c0.3-0.3,0.7-0.4,1.2-0.4c0.6,0,1.2,0.3,1.7,1c0.2,0.3,0.3,0.5,0.5,0.6c0.3,0.3,0.7,0.6,1.3,0.8c0.5,0.2,1.1,0.2,1.8,0.2c1.1,0,1.9-0.2,2.5-0.5c0.6-0.3,0.9-0.8,0.9-1.4c0-0.9-1.4-1.6-4.3-2.1c-0.1,0-0.2-0.1-0.2-0.1c-2.2-0.4-3.7-1-4.5-1.6c-0.8-0.6-1.2-1.6-1.2-2.8c0-1.4,0.6-2.5,1.7-3.2c1.1-0.7,2.8-1.2,4.8-1.2c1,0,1.8,0.1,2.6,0.3c0.7,0.2,1.5,0.5,2.1,0.9c0.5,0.3,0.9,0.6,1.2,1C162.8,79.9,163,80.3,163,80.7z"></path>
+          <path class="st2" d="M177.8,89.6c0.6,0,1.1,0.1,1.4,0.3c0.3,0.2,0.5,0.6,0.5,1s-0.2,0.7-0.5,1c-0.3,0.2-0.8,0.3-1.4,0.3h-9c-0.8,0-1.4-0.2-1.7-0.5c-0.3-0.3-0.5-0.9-0.5-1.8V80c0-0.9,0.1-1.5,0.5-1.8c0.3-0.3,0.9-0.5,1.7-0.5h8.6c0.6,0,1.1,0.1,1.4,0.3c0.3,0.2,0.5,0.5,0.5,1c0,0.4-0.2,0.7-0.5,0.9c-0.3,0.2-0.8,0.3-1.4,0.3h-7.2v3.1h6.5c0.6,0,1.1,0.1,1.4,0.3c0.3,0.2,0.5,0.5,0.5,1c0,0.4-0.2,0.7-0.5,0.9c-0.3,0.2-0.8,0.3-1.4,0.3h-6.5v3.7L177.8,89.6L177.8,89.6z"></path>
+          <path class="st2" d="M194.2,86.9h-2.6c-0.5,0-0.8-0.1-1.1-0.3c-0.3-0.2-0.4-0.5-0.4-0.9c0-0.3,0.1-0.7,0.4-0.9c0.3-0.2,0.6-0.3,1.1-0.3h3.8c0.7,0,1.3,0.1,1.6,0.3c0.3,0.2,0.5,0.6,0.5,1v5.6c0,0.5-0.1,0.7-0.3,1c-0.2,0.2-0.5,0.3-0.9,0.3c-0.3,0-0.6-0.1-0.9-0.2c-0.2-0.2-0.4-0.4-0.5-0.7l-0.3-1.1c-0.6,0.7-1.4,1.3-2.2,1.6c-0.8,0.3-1.7,0.5-2.8,0.5c-2.4,0-4.4-0.7-5.8-2.1c-1.5-1.4-2.2-3.3-2.2-5.6s0.7-4.2,2.2-5.6c1.5-1.4,3.5-2.1,5.9-2.1c0.8,0,1.6,0.1,2.2,0.2c0.7,0.1,1.4,0.3,2,0.6c0.9,0.4,1.5,0.8,2,1.3c0.5,0.5,0.7,1,0.7,1.4c0,0.4-0.2,0.7-0.5,1c-0.3,0.3-0.6,0.4-1.1,0.4c-0.4,0-0.7-0.1-1-0.2c-0.3-0.1-0.6-0.4-1-0.8c-0.5-0.5-1-0.9-1.4-1.1c-0.5-0.2-1.1-0.3-1.8-0.3c-1.4,0-2.6,0.5-3.4,1.3c-0.8,0.9-1.2,2.1-1.2,3.7c0,1.6,0.4,2.8,1.3,3.7c0.9,0.9,2.1,1.3,3.5,1.3c1.2,0,2.1-0.3,2.8-0.9C193.5,88.7,193.9,87.8,194.2,86.9z"></path>
+          <path class="st2" d="M212.6,86.9H210c-0.5,0-0.8-0.1-1.1-0.3c-0.3-0.2-0.4-0.5-0.4-0.9c0-0.3,0.1-0.7,0.4-0.9c0.3-0.2,0.6-0.3,1.1-0.3h3.8c0.7,0,1.3,0.1,1.6,0.3c0.3,0.2,0.5,0.6,0.5,1v5.6c0,0.5-0.1,0.7-0.3,1c-0.2,0.2-0.5,0.3-1,0.3c-0.3,0-0.6-0.1-0.9-0.2c-0.2-0.2-0.3-0.4-0.5-0.7l-0.3-1.1c-0.6,0.7-1.4,1.3-2.2,1.6c-0.8,0.3-1.8,0.5-2.9,0.5c-2.4,0-4.4-0.7-5.9-2.1c-1.5-1.4-2.2-3.3-2.2-5.6s0.7-4.2,2.2-5.6c1.5-1.4,3.5-2.1,5.9-2.1c0.8,0,1.6,0.1,2.2,0.2c0.7,0.1,1.4,0.3,2,0.6c0.9,0.4,1.5,0.8,2,1.3c0.5,0.5,0.7,1,0.7,1.4c0,0.4-0.1,0.7-0.5,1c-0.3,0.3-0.7,0.4-1.1,0.4c-0.3,0-0.7-0.1-1-0.2c-0.3-0.1-0.6-0.4-1-0.8c-0.5-0.5-0.9-0.9-1.4-1.1c-0.5-0.2-1.1-0.3-1.8-0.3c-1.4,0-2.6,0.5-3.4,1.3c-0.8,0.9-1.2,2.1-1.2,3.7c0,1.6,0.4,2.8,1.3,3.7c0.9,0.9,2,1.3,3.5,1.3c1.1,0,2.1-0.3,2.8-0.9C212,88.7,212.5,87.8,212.6,86.9z"></path>
+          <path class="st2" d="M230.5,89.6c0.6,0,1.2,0.1,1.4,0.3c0.3,0.2,0.5,0.6,0.5,1s-0.2,0.7-0.5,1c-0.3,0.2-0.8,0.3-1.4,0.3h-9c-0.8,0-1.4-0.2-1.7-0.5c-0.3-0.3-0.5-0.9-0.5-1.8V80c0-0.9,0.2-1.5,0.5-1.8c0.3-0.3,0.9-0.5,1.7-0.5h8.6c0.6,0,1.1,0.1,1.4,0.3s0.5,0.5,0.5,1c0,0.4-0.2,0.7-0.5,0.9c-0.3,0.2-0.8,0.3-1.4,0.3h-7.2v3.1h6.6c0.6,0,1.1,0.1,1.4,0.3c0.3,0.2,0.5,0.5,0.5,1c0,0.4-0.2,0.7-0.5,0.9c-0.3,0.2-0.8,0.3-1.4,0.3h-6.6v3.7L230.5,89.6L230.5,89.6z"></path>
+          <path class="st2" d="M238.4,80.3v3.9h4.1c0.9,0,1.6-0.2,2-0.5c0.4-0.3,0.6-0.8,0.6-1.4c0-0.6-0.2-1.1-0.6-1.4c-0.4-0.3-1-0.5-1.8-0.5H238.4L238.4,80.3z M238.4,90.8c0,0.5-0.1,0.9-0.5,1.2c-0.3,0.3-0.7,0.4-1.3,0.4s-1-0.1-1.3-0.4c-0.3-0.3-0.5-0.7-0.5-1.2V80c0-0.9,0.2-1.5,0.5-1.8c0.3-0.3,0.9-0.5,1.7-0.5h6.2c1.9,0,3.3,0.3,4.1,1c0.9,0.7,1.4,1.7,1.4,3.1c0,0.9-0.2,1.6-0.7,2.2c-0.5,0.6-1.1,1-1.9,1.2c0.6,0.2,1.1,0.5,1.5,0.9c0.3,0.4,0.5,0.9,0.6,1.6c0.1,0.3,0.1,0.6,0.1,1c0,0.5,0.1,0.7,0.1,0.9c0.1,0.2,0.1,0.4,0.2,0.7c0.1,0.3,0.1,0.6,0.1,0.7c0,0.4-0.2,0.7-0.5,1c-0.3,0.2-0.7,0.3-1.3,0.3c-0.7,0-1.3-0.2-1.6-0.5c-0.3-0.3-0.5-1.3-0.6-2.8c-0.1-1.1-0.3-1.9-0.7-2.2c-0.3-0.3-1-0.4-1.9-0.4h-3.7v4.3H238.4z"></path>
+        </g>
+        </svg> </div>
+      <div class="claim">The Embedded Experts</div>
+      <div class="head">
+        <div class="container">
+          <!-- ****************************************************************** -->
+          <!-- Modifiable information starts here                                 -->
+          <!-- Don't forget to edit the title tag either                          -->
+          <!-- ****************************************************************** -->
+          <h1>Release notes for emFile version V5.6.1          </h1>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- ****************************************************************** -->
+  <!-- History                                                            -->
+  <!-- ****************************************************************** -->
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.6.1 [23 March 2021]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Block Map NOR driver: An invalid write operation was performed during an internal logical sector copy operation when the available free memory was smaller than the logical sector size and not aligned to a flash line. This defect affects only configurations that set FS_NOR_CAN_REWRITE to 0. Fixed. Introduced in version 4.04d</li>
+          <li>Block Map NOR driver: Incorrect data was written during an internal logical sector copy operation with the support for bit error correction and header write optimization enabled. Fixed. Introduced in version 5.6.0</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.6.0 [16 February 2021]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added ECC support to Block Map NOR driver.</li>
+          <li>Added support for runtime configurable OS layer.</li>
+          <li>Added FS_NOR_BM_Mount() API function.</li>
+          <li>Added FS_MMC_CM_SetDriverStrength() API function.</li>
+          <li>Added support for Adesto AT25SL321 serial NOR flash device.</li>
+          <li>Added support for Macronix MX66L2G45G serial NOR flash device.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Added ability to configure the size of the work buffers allocated by the Block Map NOR driver on the stack.</li>
+          <li>Added ability to configure where the buffer for the formatting of debug messages is allocated (statically or on the stack).</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Block Map NOR driver: A false error was reported when writing data to a NOR flash device with support for incremental write operations and with the CRC verification feature enabled. Fixed. Introduced in version 5.0.0</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.4.1 [19 November 2020]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Block Map NOR driver: Uninitialized variable caused a compiler warning. Fixed. Introduced in version 5.4.0</li>
+          <li>FAT: Unused variable caused a compiler warning. Fixed. Introduced in version 5.4.0</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.4.0 [16 November 2020]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for ultra high speed access modes of SD cards and MMC devices.</li>
+          <li>Added support for the two-plane operation of NAND flash devices.</li>
+          <li>Added FS_NOR_SFDP_Configure() API function.</li>
+          <li>Added FS_GetVolumeAlias() API function.</li>
+          <li>Added support for Adesto AT25SF128A serial NOR flash device.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Block Map NOR driver: Added support for preserving the erase count of a physical sector erased during a clean operation for NOR flash devices that do not support incremental write operations.</li>
+          <li>File system: Added the ability to set a constant volume alias.</li>
+          <li>Journaling: Improved the write performance by removing redundant sector write operations.</li>
+          <li>File system: Improved the write performance in FAST write mode by removing redundant sector read operations.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system: Wrong error code was return when the file system was not able to update the allocation table. Fixed. Introduced in version 4.06b</li>
+          <li>File system: Moving a file to the same volume with FS_MULTI_HANDLE_SAFE set to 1 could possibly result in a path longer than the file system was able to handle. Fixed. Introduced in the initial version.</li>
+          <li>File system: Moving a directory to one of its subdirectories corrupted the file system. Fixed. Introduced in the initial version.</li>
+          <li>FAT: Partitions with a cluster size of 128 Kbytes were not handled correctly. Fixed. Introduced in the initial version.</li>
+          <li>Journaling: The failure of a single subtransaction caused an error on all of the other subtransactions that were executed as part of the same main transaction. Fixed. Introduced in version 5.2.0</li>
+          <li>NOR SPI physical layer: The file system failed to initialize a Microchip SST26VF064B NOR flash device. Fixed. Introduced in version 5.0.0</li>
+          <li>NOR SPI physical layer: The busy status of ISSI IS25LP01G NOR flash was not handled correctly. Fixed. Introduced in the version 4.06b</li>
+          <li>Block Map NOR driver: FS_NOR_BM_ReadOff() and FS_NOR_BM_WriteOff() accessed the wrong offset when using a NOR flash device with different physical sector sizes. Fixed. Introduced in version 4.04g</li>
+          <li>WinDrive driver: The presence of a removable device was not detected correctly. Fixed. Introduced in version 5.0.0</li>
+          <li>WinDrive driver: The checking for administrative rights was not working correctly. Fixed. Introduced in the initial version.</li>
+          <li>WinDrive driver: The capacity of some storage devices was not calculated correctly. Fixed. Introduced in the initial version.</li>
+          <li>WinDrive driver: Unaligned data buffers caused data access errors. Fixed. Introduced in the initial version.</li>
+          <li>SPI MMC/SD driver: A false error was reported when trying to delete a file. Fixed. Introduced in version 5.1.0</li>
+          <li>NAND SPI physical layer: Management data was written to the range of the spare area reserved for the ECC for a Micron MT29F2G01ABAGDSF NAND flash device. Fixed. Introduced in the version 4.04e</li>
+          <li>File system: FS_SetFileBufferFlagsEx() returned an error even when the operation succeeded. Introduced in the version 4.04f</li>
+          <li>File system: FS_Sync() failed to update the file buffer data of opened files to storage device. Fixed. Introduced in the version 4.04a</li>
+          <li>File system: Wrong data was read from a file configured to use a file buffer in read mode when the data present in the file buffer was overwritten. Fixed. Introduced in the version 4.04a</li>
+          <li>File system: Wrong file position was returned on 16-bit targets when the file position was larger than 65535. Fixed. Introduced in the version 5.0.0</li>
+          <li>FAT LFN: The file system could possibly accessed invalid memory when the application tried to access a file with a name containing extended ASCII characters with FS_SUPPORT_EXT_ASCII set to 0. Fixed. Introduced in version 5.0.0</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.2.0 [26 June 2020]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added PC utility for merging and splitting of files managed by the BigFile component.</li>
+          <li>Added FS_NOR_BM_SetInvalidSectorError() API function.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>EFS: Reduced the RAM usage.</li>
+          <li>Sector Map NOR driver: Optimized the write performance of the management data.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system: The file system was locked recursively with FS_DEBUG_LEVEL set a value greater than or equal to FS_DEBUG_LEVEL_LOG_ERRORS. Fixed. Introduced in version 5.0.0</li>
+          <li>NAND DataFlash physical layer: Invalid data was read from a 64 Mbit DataFlash device with FS_NAND_SUPPORT_READ_CACHE set to 0. Fixed. Introduced in the initial version.</li>
+          <li>File system: An empty string was not recognized as root directory. Fixed. Introduced in version 4.06b</li>
+          <li>FAT LFN: The file system was not able to open short file names that contained two or more dot characters. Fixed. Introduced in version 4.04a</li>
+          <li>Block Map NOR driver: The write error recovery did not work correctly when a copy of the affected logical sector was present in the block. Fixed. Introduced in version 4.04e</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.1.0 [5 May 2020]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_GetMountType() API function.</li>
+          <li>Added FS_GetMemInfo() API function.</li>
+          <li>Added FS_NOR_SPIFI_SetSectorSize() API function.</li>
+          <li>Added support for Macronix MX25V1635F.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File buffer: Added option for the alignment of the file position to sector boundary to help improve the write performance.</li>
+          <li>EFS: Added support for free cluster cache to help improve the write performance.</li>
+          <li>File system: Added a cache for the internal sector buffers.</li>
+          <li>Journaling: Improved the error handling.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.0.1 [16 March 2020]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system: FS_Move() did not unlock the file system with FS_OS_LOCKING set to 1. Fixed. Introduced in the version 5.0.0</li>
+          <li>NAND physical layer: The physical layer for NXP iMX6U5 tried to access invalid memory. Fixed. Introduced in version 5.0.0</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 5.0.0 [9 March 2020]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>The source files are now MISRA C:2012 compliant.</li>
+          <li>Added support for Shift JIS encoded Japanese file names.</li>
+          <li>Added BigFile extension that enables an application to handle files larger than 4 Gbytes.</li>
+          <li>Added support for dual flash mode to SFDP NOR physical layer.</li>
+          <li>Added support for Cypress S25FL256L serial NOR flash device.</li>
+          <li>Added support for Toshiba TC58CYG2S0HRAIG NAND flash device.</li>
+          <li>Added "clean" and "createjournal" commands to NOR Image Creator.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File system: The strategy for the allocation of clusters was improved.</li>
+          <li>EFS: The file name case sensitivity can now be configured at runtime.</li>
+          <li>Shipment: The file structure was cleaned up.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system: The file buffer was not invalidated when the application wrote at once a number of bytes larger than the buffer size. A following read operation returned old data. Fixed. Introduced in the version 4.04g.</li>
+          <li>FAT LFN: Leading space and trailing period characters were not removed from file names as required by the FAT specification. Fixed. Introduced in the initial version.</li>
+          <li>File system: FS_FindFirstFile() and FS_FindNextFile() wrote past the end of the file name buffer when the short name of the file had an extension and the size of the file name buffer was equal to or smaller than the size of the file name. Fixed. Introduced in the initial version.</li>
+          <li>Universal NAND driver: The driver unintentionally tried to write to a page that was not empty. This behavior affects only configurations that calculate the ECC in the NAND physical layer and by which the ECC value of a blank data block does not have all the bits set to 1. Fixed. Introduced in the initial version.</li>
+          <li>Journaling: FS_JOURNAL_Invalidate() unintentionally disabled the journal operation. Fixed. Introduced in the version 4.04b.</li>
+          <li>File system: The file system tried to free the memory block allocated for a file buffer twice. Fixed. Introduced in the version 4.04f.</li>
+          <li>FAT: The file delete optimization did not work properly causing a data loss. Fixed. Introduced in the initial version.</li>
+          <li>FAT: A file system corruption occurred with the file write mode set to FAST when the size of the file was decreased. Fixed. Introduced in the initial version.</li>
+          <li>EFS: The disk checking operation incorrectly reported an error when a file name contained exactly the maximum number of characters allowed. Fixed. Introduced in the initial version.</li>
+          <li>File system: The handle to an opened file was unintentionally closed when the an unmount operation was concurrently performed on a different volume than the volume on which the file was stored. The behavior affects only configurations that set FS_OS_LOCKING to 2. Introduced in the initial version.</li>
+          <li>SPI NAND physical layer: Identification of Micron MT29F1G01ABAFDSF serial NAND flash failed in case of an uncorrectable bit error in the page 0 of block 0. Fixed. Introduced in the initial version.</li>
+          <li>SPI NAND physical layer: An uncorrectable bit error was not propagated to the caller by the page copy operation. Fixed. Introduced in the initial version.</li>
+          <li>FAT: The backup copy of the allocation table was not updated correctly with the delete optimization enabled. Fixed. Introduced in the initial version.</li>
+          <li>File system: The file system tried to access invalid memory after a forced unmount. Fixed. Introduced in the initial version.</li>
+          <li>Universal NAND driver: The bit error checking feature was not disabled when calling FS_NAND_UNI_SetMaxBitErrorCnt() with the BitErrorCnt parameter set to 0. Fixed. Introduced in the version 4.04a.</li>
+          <li>LOGVOL driver: A driver instance was not initialized correctly after the application performed a deinitialization of the file system. Fixed. Introduced in the initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.06b [7 Mai 2019]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new versions of Universal NAND and SD / MMC driver that allow only a read access to the storage device.</li>
+          <li>Added power save mode support for SD card storage devices.</li>
+          <li>Added FS_InitCheck(), FS_CheckAT() and FS_CheckDir() API functions that can be used to check the integrity of the file system structure in a non-blocking way.</li>
+          <li>Added support for ISSI IS25LP01G serial NOR flash device.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Increased the write performance of the Universal NAND driver.</li>
+          <li>The memory copy function used internally by the file system is now configurable via the FS_MEMCPY() define.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>M25 NOR physical layer: NOR flash devices with a block size larger than 64KB where not handled correctly when the size of the physical sector was manually configured. Fixed. The behavior has been present since initial version.</li>
+          <li>Block map NOR driver: The data storage functions did not return an error on attempt to access an invalid sector index. Fixed. The behavior has been present since initial version.</li>
+          <li>SD / MMC driver: An incorrect number of sectors was passed to the storage device when reading large amounts of data. Fixed. The behavior has been present since version 4.04g.</li>
+          <li>File system: FS_GetFileAttributes() failed to indicate that a directory did not exist when the name of directory ended with a directory delimiter. Fixed. The behavior has been present since version 4.04c.</li>
+          <li>Block map NOR driver: A wrong data block was discarded when an unexpected reset interrupted a in-place work block conversion for NOR flash devices that cannot rewrite. Fixed. The behavior has been present since version 4.06a.</li>
+          <li>FAT: On an almost full storage device the file system tried to access the data of an out-of-bounds logical sector when the write mode was set to medium or fast. Fixed. The behavior has been present since initial version.</li>
+          <li>SFDP NOR physical layer: The configuration a specific physical sector size for ISSI IS25LP128 did not work as expected. Fixed. The behavior has been present since initial version 4.04g.</li>
+          <li>Block map NOR driver: The driver attempted to modify for the second time the same flash line on NOR flash devices that cannot rewrite when writing with the CRC feature enabled. Fixed. The behavior has been present since version 4.04g.</li>
+          <li>SPI NAND physical layer: Management data was stored to locations that were not protected by ECC on Micron MT29F1G01ABAFD serial NAND flash device. The compatibility to the older emFile versions can be ensured by setting the FS_NAND_SUPPORT_COMPATIBILITY_MODE to 1 or 2. Fixed. The behavior has been present since version 4.04e.</li>
+          <li>FAT: Under special circumstances changing the volume label caused an invalid memory access. Fixed. The behavior has been present since initial version.</li>
+          <li>EFS: Under special circumstances attempting to create a directory on a full volume corrupted the file system structure. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.06a [11 December 2018]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added RAID5 logical driver that can be used to increase data reliability.</li>
+          <li>Added support non-blocking free space checking operation via the API functions FS_GetVolumeFreeSpaceFirst() and FS_GetVolumeFreeSpaceNext().</li>
+          <li>Added support to block map NOR driver for permanently switching the NOR flash device to read-only mode in case of a fatal error.</li>
+          <li>Added quad and dual support for serial NAND flash devices.</li>
+          <li>Added support for Micron MT29F1G08ABAFA NAND flash device to ONFI physical layer.</li>
+          <li>Added support for Macronix MX25L128 NOR flash device.</li>
+          <li>Added support for ISSI IS37SML01G1 and IS38SML01G1 NAND flash devices to SPI NAND physical layer.</li>
+          <li>Added quad and dual support for Winbond serial NOR flash devices.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>SPI NAND physical layer: Added timeout for the operation that waits for the NAND device to finish the execution of a command.</li>
+          <li>Journal: Unused bytes are filled with 0xFF in order to help improve the lifetime of some NAND flash devices by reducing the number of bits set to 0.</li>
+          <li>Block map NOR driver: Added support for conversion of work blocks in-place for NOR flash devices without rewrite support.</li>
+          <li>NOR physical layer: Added function for blank checking of an erased physical sector and for the initialization of NOR flash device.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND ONFI physical layer: The page copy operation was enabled / disabled only for the first instance of the physical layer. Fixed. The behavior has been present since version 4.04g.</li>
+          <li>SD / MMC card mode driver: Read or write errors were not reported to the storage layer. Fixed. The behavior has been present since version 4.04g.</li>
+          <li>SPI NOR physical layer: The address mode was not set correctly for Macronix devices with a capacity larger than 128 Mbit. Fixed. The behavior has been present since version 4.04f.</li>
+          <li>Block map NOR driver: Redundant write retry operations where performed when a logical sector was copied negatively affecting the write performance. Fixed. The behavior has been present since version 4.04g.</li>
+          <li>Block map NOR driver: Invalidating a physical sector during the low-level format operation caused a second write to a flash line on a NOR flash without rewrite support. Fixed. The behavior has been present since initial version.</li>
+          <li>FAT file system: SD cards and eMMC devices with a capacity of exactly 2GB were not formatted correctly via FS_FormatSD() API function. Fixed. The behavior has been present since version 4.04f.</li>
+          <li>Universal NAND driver: FS_NAND_UNI_IsBlockBad() returned an incorrect value. Fixed. The behavior has been present since version 4.04b.</li>
+          <li>SD/MMC card mode driver: The driver did not perform the correct number of initialization retries for eMMC devices. Fixed. The behavior has been present since initial version.</li>
+          <li>Universal NAND driver: The driver failed to recover the data via RAID when the affected page was located in a work block. Fixed. The behavior has been present since version 4.02a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04g [6 July 2018]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added POSIX support to FS_Truncate() API function.</li>
+          <li>Added CRC verification for management and user data to block map NOR driver.</li>
+          <li>Added support for eMMC power save mode to SD / MMC driver.</li>
+          <li>Added support for eMMC data cache to SD / MMC driver.</li>
+          <li>Added support for ISSI IS25LP128, Macronix MX25L3233, GigaDevice GD25Q32C and GigaDevice GD25Q64C serial NOR flash devices.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File system: Replaced the old version of the file buffer with the new faster implementation.</li>
+          <li>Journal: Added optimization when deleting and writing a file in the same journal transaction.</li>
+          <li>Journal: Added support for calling an application-registered callback function on journal overflow.</li>
+          <li>File system: Added support to configure the vsnprintf() function used by the file system to format the debug messages.</li>
+          <li>SFDP NOR physical layer: Added support for the sharing of the SPI bus via lock and unlock functions.</li>
+          <li>Block map NOR driver: Improved the error handling.</li>
+          <li>Sector map NOR driver: Improved the blank checking of physical sector.</li>
+          <li>Universal NAND driver: Added support to configure under which conditions a NAND block is marked as defective.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>EFS: The file system failed to create a directory entry of the maximum size after the application created and then deleted two or more adjacent directory entries with a combined size larger than the maximum directory entry size. Fixed. The behavior has been present since version 4.04b.</li>
+          <li>File system: SD cards and eMMC devices with a capacity larger than 2GB were not formatted correctly by the FS_FormatSD() API function. Fixed. The behavior has been present since version 4.04f.</li>
+          <li>File system: The format operation via FS_FormatSD() API function did not work for storage devices with very small capacity such as RAMDISK. Fixed. The behavior has been present since initial version.</li>
+          <li>LFN: The FS_FindFirstFile() and FS_FileNextFile() API functions returned the short instead of the long file name when the size of the destination buffer was one byte larger than the length of the long file name and the long file name was terminated by NUL. Fixed. The behavior has been present since initial version.</li>
+          <li>DISKPART driver: Under special circumstances a false positive error was reported when the Universal NAND driver tried to recover data via the RAID1 module. Fixed. The behavior has been present since version 4.04e.</li>
+          <li>SPIFI NOR physical layer: The number of bytes used as storage was not calculated correctly. Fixed. The behavior has been present since version 4.02b.</li>
+          <li>SFDP NOR physical layer: The number of bytes used as storage was not calculated correctly. Fixed. The behavior has been present since version 3.34b.</li>
+          <li>SPIFI NOR physical layer: Under special circumstances the NOR flash device was not released from the power down mode. Fixed. The behavior has been present since version 4.02b.</li>
+          <li>File buffer: The file buffer was not updated correctly when the file was truncated. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>2048x8 NAND physical layer: Under special circumstances wrong ECC correction status was returned. Fixed. The behavior has been present since 4.04a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04f [19 Feb 2018]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for deleting entire FAT directory trees via FS_DeleteDir().</li>
+          <li>Added FS_SetFileBufferFlagsEx() function that can be used to configure the file buffer flags for files opened on a specific volume.</li>
+          <li>Added support for the allocation of EFS directory entry buffers from the memory pool of file system.</li>
+          <li>Added FS_NOR_BM_WriteOff() and FS_NOR_BM_ErasePhySector() functions to allow an application to write to and to erase physical sectors directly.</li>
+          <li>Added support for hardware polling to SPIFI NOR physical layer.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>2048x8 NAND physical layer: Added support for hardware copy page operation.</li>
+          <li>Universal NAND driver: Optimized the operations that read data from the spare area.</li>
+          <li>SD/MMC driver: Added support for efficiently writing the same sector data multiple times.</li>
+          <li>File system: Replaced all calls to strcpy() by calls to strncpy() to comply to coding standards.</li>
+          <li>FAT LFN: Optimized the performance of file delete operation.</li>
+          <li>SPIFI NOR physical layer: Added support for dual and quad write operations.</li>
+          <li>NOR SFDP and SPIFI physical layers: Added support GigaDevice GD25Q256 and GD25Q127C NOR flash devices.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system: The fast file buffer caused a memory leak when a global file buffer has been configured. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>Universal NAND driver: Wrong ECC block size was passed to physical layer. Fixed. The behavior has been present since version 4.04d.</li>
+          <li>Sector write buffer: Multiple write operations were not handled correctly. Fixed. The behavior has been present since initial version.</li>
+          <li>Universal NAND driver: Under special circumstances the data in the spare are buffer was overwritten when the data was recovered via RAID1 add-on. Fixed. The behavior has been present since version 4.02a.</li>
+          <li>EFS: Under special circumstances FS_DeleteDir() falsely reported that the maximum recursion level has been reached. Fixed. The behavior has been present since version 4.04d.</li>
+          <li>NOR sector map driver: False positive error message was reported when a logical sector has been invalidated by an emFile version older than 4.04d. Fixed. The behavior has been present since version 4.04e.</li>
+          <li>Universal NAND driver: Under special circumstances an incorrect data CRC was stored after an error recovery via the RAID1 add-on. Fixed. The behavior has been present since version 4.04e.</li>
+          <li>Universal NAND driver: Incorrect number of work blocks was reported when the number of configured work blocks was different than the number of work blocks used at low-level format. Fixed. The behavior has been present since initial version.</li>
+          <li>FAT LFN: Invalid characters where allowed in a file name. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04e [20 Oct 2017]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_MMC_CM_SetSectorRange() API function that can be used to configure which sectors of the SD card have to be used as storage.</li>
+          <li>Added new configuration option that lets the application specify if the file system has to report the end-of-file condition as error or not.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Universal NAND driver:
+            Added optional CRC verification of data.</li>
+          <li>NAND physical layer:
+            Added support for manual configuration of the NAND flash device parameters.</li>
+          <li>NOR SFDP and SPIFI physical layer:
+            Added support for the following Macronix serial NOR flash devices: MX25R64, MX25L256, and MX25L512.</li>
+          <li>NOR M25 physical layer:
+            Added support for the Micron N25Q512A serial NOR flash device.</li>
+          <li>SPI NAND physical layer:
+            Added support for the following serial NAND flash devices: Micron MT29F1G01ABAF, Micron MT29F2G01ABAGD, and Macronix MX35LF1GE4AB.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND SPI physical layer:
+            Using a software ECC instead of the internal HW ECC of the serial NAND flash caused uncorrectable bit errors. Fixed. The behavior has been present since initial version.</li>
+          <li>NOR sector map driver:
+            Data written using a version of the file system older than 4.04d was not recognized as valid. Fixed. The behavior has been present since version 4.04d.</li>
+          <li>NOR block map driver:
+            Under special circumstances a work block was not converted correctly to a data block possibly leading to a data loss. Fixed. The behavior has been present since version 4.04d.</li>
+          <li>Universal NAND driver:
+            FS_NAND_UNI_ReadPageRaw() read and incorrect number of bytes from data area. Fixed. The behavior has been present since version 4.04d.</li>
+          <li>Universal NAND driver:
+            FS_NAND_UNI_WritePageRaw() wrote and incorrect number of bytes to data area. Fixed. The behavior has been present since version 4.04d.</li>
+          <li>Universal NAND driver:
+            FS_NAND_UNI_WritePage() wrote incorrect data to spare area. Fixed. The behavior has been present since version 4.04b.</li>
+          <li>Universal NAND driver:
+            An incorrect number of NAND blocks was calculated when the first block in the partition was marked as defective. Fixed. The behavior has been present since version 3.34a.</li>
+          <li>Storage layer:
+            The API functions FS_STORAGE_SyncSectors() and FS_STORAGE_FreeSectors() did not lock the file system when FS_OS_LOCKING was set to 2. Fixed. The behavior has been present since version 4.00a.</li>
+          <li>Storage layer:
+            FS_STORAGE_RefreshSectors() and FS_STORAGE_GetSectorUsage() locked the file system recursively. Fixed. The behavior has been present since version 4.00a.</li>
+          <li>File system:
+            Data was written at a wrong position after the same file was opened in read mode with a file write mode configured to fast or medium and with support for multiple file handles enabled. Fixed. The behavior has been present since initial version.</li>
+          <li>DISKPART driver:
+            The request for corrected sector data was not handled correctly. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            FS_CheckDisk() failed to correct errors when the auto-mount mode was set to read-only. Fixed. The behavior has been present since version 4.04b.</li>
+          <li>2048x8 NAND physical layer:
+            Data stored to the cache of NAND flash device was used after being invalidated by a NAND reset operation. Fixed. The behavior has been present since version 4.04a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04d [16 Jun 2017]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_DeleteDir() API function that can be used to delete entire directory trees.</li>
+          <li>Added FS_NAND_UNI_SetBlockReserve() API function that can be used to configure the number of blocks reserved by the Universal NAND driver as replacement for the blocks that become defective.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR block map driver:
+            Improved the performance of write, "free sector" and low-level format operations.</li>
+          <li>Universal NAND driver:
+            Improved the performance of low-level mount operation.</li>
+          <li>NOR sector map:
+            Improved the procedure of detecting if the storage has been low-level formatted with the fail-safe erase option enabled.</li>
+          <li>NOR CFI physical layer:
+            Improved error handling and added support for Cypress HyperFlash.</li>
+          <li>ST M25 NOR physical layer:
+            Added support for configuring new NOR flash devices.</li>
+          <li>SPI NOR physical layer:
+            Added support for ISSI IS25LP064A device.</li>
+          <li>MMC card mode driver:
+            Added workaround for ATP 512 MB microSD cards that report an error when the last sector on the storage is read via a multiple block read command.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            FS_GetFileAttributes() and FS_ModifyFileAttributes() did not return an error when the volume was not mounted properly. Fixed. The behavior has been present since initial version.</li>
+          <li>EFS:
+            The index of a directory entry overflowed when a large number of files were created in a directory causing an endless loop when scanning the files via FS_FindFirstFile()/FS_FindNextFile(). Fixed. The behavior has been present since initial version.</li>
+          <li>NOR sector map:
+            Physical sectors marked as invalid were not used for data storage. Fixed. The behavior has been present since version 3.34b.</li>
+          <li>SPI NOR physical layer:
+            The timeout for the program and erase operations was not calculated correctly. Fixed. The behavior has been present since version 4.04c.</li>
+          <li>File system:
+            Wrong number of bytes was returned when reading more bytes than available with file buffer. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>File system:
+            EOF error was not reported when the application tried to read beyond the end of file. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04c [16 Mar 2017]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for SPI bus locking to SPI NAND physical layer.</li>
+          <li>Added support for partial sector read operation to Universal NAND driver.</li>
+          <li>Added FS_GetFileInfo() API function that returns information about a file or directory.</li>
+          <li>Added FS_NOR_SPI_ReadDeviceId() function that can be used to read the device id of a serial NOR flash device.</li>
+          <li>Added FS_MMC_CM_AllowBufferedWrite() function that can be used to enable / disable the buffering of data written to storage device.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Universal NAND driver:
+            If possible, the "free sector" operation marks entire NAND blocks as invalid to increase performance.</li>
+          <li>Universal NAND driver:
+            Added statistical counters for the number of bit errors corrected.</li>
+          <li>Universal NAND driver:
+            Added support for software multi-bit error correction.</li>
+          <li>EFS file system:
+            Improved the performance of the operations that check for free space on the storage.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NOR block map driver:
+            Wrong range of sectors was detected for NOR flash devices with bottom boot sectors. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            An error was returned when the application queried the attributes of the root directory. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            FS_GetFileAttributes() did not return when the application queried the attributes of the root directory of a FAT volume with support for long file names enabled. Fixed. The behavior has been present since initial version.</li>
+          <li>NOR drivers:
+            Under rare circumstances a write operation interrupted by an unexpected reset caused a data loss when using a serial NOR flash as storage device. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            Wrong number of bytes was returned when reading more bytes than available in the file with the file buffer enabled. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>File system:
+            FS_FTell() returned the wrong value in case of an error. Fixed. The behavior has been present since version 3.34a.</li>
+          <li>SPI NOR physical layer:
+            Serial NOR flash devices with a physical sector size larger than 64 KByte were not handled correctly on 8- and 16-bit targets. Fixed. The behavior has been present since version 3.34a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04b [17 Nov 2016]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for fast write operation to SLC1 NAND driver.</li>
+          <li>Added new function to Journaling which can be used to cancel pending transactions.</li>
+          <li>Added new test functions to NAND drivers.</li>
+          <li>Added support for partitions to NAND Image Creator.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND drivers:
+            In case of a fatal error the NAND flash is no longer mark as read-only by default. The application has to request this via the fatal error callback.</li>
+          <li>NOR SPI physical layer:
+            Added support for Winbond SPI NOR flash devices.</li>
+          <li>NOR SPI physical layer:
+            Added support for Spansion SPI NOR flash devices with a capacity larger than 128 Mbit.</li>
+          <li>NOR drivers:
+            Added support for runtime configuration of the erase and write verification feature.</li>
+          <li>NOR drivers:
+            Added support for runtime configuration of the "skip blank sector" feature.</li>
+          <li>NOR sector map driver:
+            Improved the error handling.</li>
+          <li>NAND ONFI physical layer:
+            Added support for multiple planes, page copy operation and ECC result query.</li>
+          <li>File system:
+            Improved the performance of the "free sector" operation.</li>
+          <li>EFS file system:
+            Improved the error handling and reduced the stack usage.</li>
+          <li>SLC1 NAND driver:
+            Improved the performance of the "free sector" operation.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SPI NOR physical layer:
+            Wrong physical sector size was detected for some Spansion SPI NOR flash devices. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>SPI NOR physical layer:
+            Wrong number of dummy cycles was used for the read operation on some Spansion SPI NOR flash devices. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>SPI NOR physical layer:
+            Switching to 4-byte addresses did not work for some Micron SPI NOR flash devices. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>NOR drivers:
+            The timeout for the write and erase operations was not calculated correctly. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>NOR block map driver:
+            Under rare circumstances a data loss occurred after a power fail when a logical sector containing valid data was marked as invalid. Fixed. The behavior has been present since initial version.</li>
+          <li>NOR sector map driver:
+            An incompletely erased physical sector was not marked as invalid. Fixed. The behavior has been present since version 3.34b.</li>
+          <li>File system:
+            The file pointer was not positioned correctly when calling FS_FSeek() with the file buffer enabled. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>NAND SPI physical layer:
+            Data was not stored correctly on NAND flash devices which support only one plane. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            The deinitialization operation failed when an external memory manager was used. Fixed. The behavior has been present since version 4.04a.</li>
+          <li>File system:
+            The performance of file copy operation using FS_CopyFileEx() decreased when the specified work buffer was not a multiple of logical sector size. Fixed. The behavior has been present since version 3.26b.</li>
+          <li>Universal NAND driver:
+            Under special circumstances a work block was not loaded correctly at low-level mount causing an error. Fixed. The behavior has been present since version 4.00a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.04a [21 Jun 2016]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for recognizing if a volume was properly unmounted before reset.</li>
+          <li>Added support for profiling via SEGGER SystemView.</li>
+          <li>Added FS_X_OS_Delay() to the OS layer.</li>
+          <li>Added faster file buffer implementation.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR SPI physical layer:
+            The type of serial NOR devices supported is now configurable via FS_NOR_SetDeviceList() and FS_NOR_SPIFI_SetDeviceList() respectively.</li>
+          <li>Universal NAND driver:
+            The driver relocates NAND flash blocks based on the number of bit errors corrected in order to prevent data loss.</li>
+          <li>File system:
+            All standard C library functions used by the file system can be overwritten at compile time.</li>
+          <li>2048x8 NAND physical layer:
+            Added support for Toshiba TC58NVG0S3HTA00 devices.</li>
+          <li>ONFI NAND physical layer:
+            Added support for Toshiba TC58CVG1S3HxAIx devices.</li>
+          <li>NOR drivers:
+            The drivers invalidate the erase signature only if it is valid. This prevents write errors on physical sectors which were not properly erased.</li>
+          <li>FAT file system:
+            Improved the performance of directory creation operation. A multiple write operation is used instead of writing one sector at a time.</li>
+          <li>SPI NAND physical layer:
+            Added support for Winbond W25N01GVxxIG/IT devices.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>EFS file system:
+            An error was reported when moving empty directories. Fixed. The behavior has been present since initial version.</li>
+          <li>EFS file system:
+            The directory entry was not updated when closing the file if an EOF error was encountered by a previous read operation. Fixed. The behavior has been present since initial version.</li>
+          <li>FAT file system:
+            The check disk operation reported a false invalid directory entry error on the next directory entry following an invalid long file name. Fixed. The behavior has been present since initial version.</li>
+          <li>FAT LFN:
+            Wrong long file name entries were created when the file name contained 2 or more dot characters. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            External memory allocation/deallocation functions were not deinitialized properly. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            FS_CreateDir() did not use Journal to protect the operation against power failure. Fixed. The behavior has been present since initial version.</li>
+          <li>SLC1 NAND driver:
+            The driver reported the wrong number of available logical sectors after the second initialization. Fixed. The behavior has been present since version 3.24e.</li>
+          <li>Block map NOR driver:
+            Under special circumstances the block map NOR driver invalidated a data block at low-level mount which could have caused a data loss. Fixed. The behavior has been present since version 3.26a.</li>
+          <li>File system:
+            FS_CheckDisk() did not return an error when it failed to fix file system errors. Fixed. Present since initial version.</li>
+          <li>EFS file system:
+            A read operation failed to release the used sector buffer in case of an error. Fixed. Present since initial version.</li>
+          <li>EFS file system:
+            No error was reported when the file delete operation failed. Fixed. Present since initial version.</li>
+          <li>File system:
+            FS_ModifyFileAttributes() failed to report an error when the volume was mounted as read only. Fixed. Present since version 3.32c.</li>
+          <li>File system:
+            FS_RmDir() failed to report an error when the volume was mounted as read only. Fixed. Present since initial version.</li>
+          <li>SD/MMC card mode driver
+            FS_MMC_CM_GetCardId() caused a buffer overflow. Fixed. Present since version 3.30g.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.02b [10 Feb 2016]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for memory-mapped SPI NOR flash devices.</li>
+          <li>Added support for trim and reliable write operations for MMC storage devices.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>FAT:
+            Directory entries belonging to the same long file name are marked as deleted using the minimum number of sector write operations possible.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.02a [3 Dec 2015]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added RAID1 logical driver which can be used to increase the data reliability. This is achieved by mirroring the sector data on a different volume.</li>
+          <li>Added FS_MMC_CM_ReadExtCSD() and FS_MMC_CM_WriteExtCSD() functions. They can be used access the EXT_CSD internal register of MMC/eMMC devices.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>MMC/SD card mode driver:
+            Added more debug and log messages and improved the error handling.</li>
+          <li>SLC1 NAND driver:
+            Improved data reliability by adding the possibility to relocate blocks in which 1 bit error occurred.
+            DataFlash physical layer:
+            Added workaround for devices which sometimes return invalid data when reading via RAM buffer. By default the data is now read directly from the memory array.</li>
+          <li>MMC/SD SPI driver:
+            Added workaround for ATP 512 MB microSD cards which report an error when the last sector on the storage is read via a multiple block read command.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SLC1 NAND driver:
+            Under special conditions a block containing valid data was marked as being free at low-level mount possibly causing a data loss. Fixed. The behavior has been present since version 3.24e.</li>
+          <li>LOGVOL driver:
+            The deinitialization operation did not free the memory of all device drivers causing a memory leak. Fixed. The behavior has been present since initial version.</li>
+          <li>Storage layer:
+            FS_STORAGE_FreeSectors() locked the file system recursively. Fixed. The behavior has been present since version 3.32a.</li>
+          <li>Storage layer:
+            FS_STORAGE_SyncSectors() locked the file system recursively. Fixed. The behavior has been present since version 3.34b.</li>
+          <li>FAT file system:
+            The number of free clusters was not correctly set for FAT32 partitions at high-level format. Fixed. The behavior has been present since initial version.</li>
+          <li>MMC/SD SPI driver:
+            The capacity of SD cards larger than 2 GB was not calculated correctly. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.00b [26 Aug 2015]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_MMC_CM_GetCardInfo() function. The function can be used to get information about the storage card.</li>
+          <li>Added FS_STORAGE_GetSectorUsage() function that returns information about whether a sector contains valid data or not.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND 4096x8 physical layer:
+            Added support for Hynix H27UAG8T2A series NAND flash devices.</li>
+          <li>Universal NAND driver:
+            The active wear leveling process checks now also the erase count of work blocks when searching for the NAND block with the lowest erase count.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SD/MMC SPI driver:
+            The driver caused and invalid memory access after the re-initialization of the file system. Fixed. The behavior has been present since version 4.00a.</li>
+          <li>NAND physical layer:
+            The FS_NAND_PHY_ReadONFIPara() and FS_NAND_PHY_ReadDeviceId() functions were using the hardware layer routines from the version V3.34b of emFile. Fixed. The behavior has been present since version V4.00a.</li>
+          <li>File system:
+            The FS_GetVolumeInfo(), FS_GetVolumeInfoEx() and FS_CheckDisk() functions were not properly locking the file system against concurrent access when FS_OS_LOCKING was set to 2. Fixed. The behavior has been present since version V3.32c.</li>
+          <li>File system:
+            The FS_Remove() function was not properly locking the file system system against concurrent access when FS_OS_LOCKING was set to 2. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 4.00a [19 Jun 2015]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Replaced hard-coded function names of the hardware layer API with function tables. An update of the emFile configuration is required. For more information refer to section "Porting emFile 3.x to 4.x" of the emFile manual.</li>
+          <li>Added support for grouping physical block to Universal NAND driver. It saves RAM space when using a NAND flash with a large number of physical blocks. Block grouping can be configured via FS_NAND_UNI_SetNumBlocksPerGroup() function.</li>
+          <li>Added support for fast write operations to Universal NAND driver. The application can reserve buffer space and the write without performing a copy/erase operation. The buffer space can be reserved via the functions FS_NAND_UNI_Clean() and FS_NAND_UNI_SetCleanThreshold().</li>
+          <li>Added the possibility to configure whether read-only files/directories stored on a FAT partition can be moved or renamed. This feature is can be configured via the FS_FAT_ConfigROFileMovePermission() function.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File system:
+            The directory entry is updated now on file close only when necessary.</li>
+          <li>Journal:
+            The journal will cancel automatically a transaction in case of an error.</li>
+          <li>MMC/SD SPI driver:
+            Added support for the locking of the SPI bus.</li>
+          <li>MMC/SD card mode driver:
+            The sequence for switching into 4-bit mode of an SD/MMC card has been improved. In case of a failure the driver falls back to 1-bit mode.</li>
+          <li>NAND drivers:
+            The write performance of the NAND drivers has been improved. A write operation that triggers the allocation of a new work block is performed during the block copy operation.</li>
+          <li>NAND DataFlash physical layer:
+            Three different block sizes can be configured for a DataFlash via FS_NAND_BLOCK_TYPE define as: 1 x DataFlash block, 8 x DataFlash block and 1 x DataFlash sector.</li>
+          <li>NOR drivers:
+            A blank physical sector will not be erased at low-level format the define FS_NOR_SKIP_BLANK_SECTORS set to 1.</li>
+          <li>NAND DataFlash physical layer:
+            A virtual page can be configured for the DataFlash physical layer. This allows Universal NAND driver to support DataFlash devices. The virtual page can be set via the FS_NAND_DF_SetMinPageSize() function.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT file system:
+            FS_FAT_CheckDisk() reported an error when checking a volume immediately after a high-level format. Fixed. The behavior has been present since version 3.34b.</li>
+          <li>FAT file system:
+            An integer overflow occurred when FS_FAT_CheckDisk() tried to compute the number of clusters allocated to a file with the size of 0xFFFFFFFF bytes. Fixed. The behavior has been present since initial version.</li>
+          <li>EFS file system:
+            Under special circumstances FS_EFS_CheckDisk() failed to repair damaged EFS partition and did not return. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            On some cases FS_FOpenEx() returned the wrong error code. Fixed. The behavior has been present since version 3.34a.</li>
+          <li>FAT file system:
+            An invalid root directory was created by the format operation when support for free sector was enabled (FS_SUPPORT_FREE_SECTOR == 1). Fixed. The behavior has been present since version 3.24g.</li>
+          <li>FAT file system:
+            FS_FormatSD() was not locked against concurrent access when FS_OS_LOCKING was set to 2. Fixed. The behavior has been present since initial version</li>
+          <li>FAT LFN:
+            Duplicated short names were generated when two or more long file/directory names were created on the same subdirectory containing a dot as the first character in the name. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            The contents of the file was corrupted when the application tried to write beyond 4 GB file size limit. Fixed. The behavior has been present since initial version.</li>
+          <li>Journal:
+            The support for free sectors was always enabled when creating the journal even when the application required for it to be disabled. Fixed. The behavior has been present since version 3.34b.</li>
+          <li>File system:
+            Calling FS_GetVolumeStatus() when the storage medium was not preset caused a following mount operation to fail. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            FS_Sync() locked the file system recursively when FS_OS_LOCKING was set to 2. Fixed. The behavior has been present since initial version.</li>
+          <li>MMC/SD card mode driver:
+            The bus test procedure for MultiMedia cards did not work properly. Fixed. The behavior has been present since version 3.28a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.34b [7 Jan 2015]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new logical driver which helps increase the data reliability by maintaining a copy of each sector data.</li>
+          <li>New logical driver available which implements a write buffer for sector data.</li>
+          <li>New physical layer available which supports JEDEC JESD216B compliant SPI NOR flash devices and data transfers via 1, 2 or 4 data lines.</li>
+          <li>Added FS_JOURNAL_CreateEx() API function. The function can used to create a journal which informs the storage driver about unused sectors.</li>
+          <li>Added support for SPI NOR flash devices with a capacity greater than 128Mbit.</li>
+          <li>Added FS_MMC_CM_Erase() API function. It can be used to erase MMC cards.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File system:
+            Improved the performance of the disk checking operation.</li>
+          <li>SPI NAND physical layer:
+            Improved the read and write performance.</li>
+          <li>Storage layer:
+            Improved the sector refresh operation. Only the sectors which contain valid data will be refreshed.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            Some API functions did not return the correct error code when the volume was not mounted and the auto-mount feature was disabled. Fixed. The behavior has been present since version V3.34a</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.34a [4 Jun 2014]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_FOpenEx() API function. It opens a file and returns an error code if the operation fails.</li>
+          <li>Added new logical driver which supports the access to a storage medium using a sector size different than that of the storage driver.</li>
+          <li>Added FS_SetFileSize() API function. It can be used increase the size of the file without moving the file pointer.</li>
+          <li>Added FS_FreeSectors() API function. It can be used to inform the storage layer about unused sectors.</li>
+          <li>Added support for 64Mbit DataFlash devices with a page size of 256 bytes.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Universal NAND driver:
+            Improved the write verification functionality.</li>
+          <li>Universal NAND driver:
+            Reduced the low-level mount time for the NAND flashes which support HW ECC.</li>
+          <li>FAT LFN:
+            A single short directory entry is created if the file name complies with the 8.3 format.</li>
+          <li>File system API:
+            Added meaningful return codes to several API functions.</li>
+          <li>SD/MMC SPI driver:
+            Some SD cards did not respond correctly to a CMD12 (STOP_TRANSMISSION) command. Added retries to work around this.</li>
+          <li>NAND 4096x8 physical layer:
+            Added support for Samsung NAND flash devices with 128 pages per block.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SD/MMC SPI driver:
+            SD cards with a capacity greater than 2GB were not identified correctly on 16-bit systems. Fixed. The behavior has been present since initial version.</li>
+          <li>NAND ONFI physical layer:
+            The read functions did not return any data in case of an ECC error. In a NAND dump the pages appeared as containing all zeros. Fixed. The behavior has been present since version V3.24g.</li>
+          <li>NAND DataFlash physical layer:
+            Devices with a page size of 256 bytes were not handled correctly. Fixed. The behavior has been present since version V3.24g.</li>
+          <li>CRYPT driver:
+            When reading several sectors at once invalid data was returned in the first byte of the first sector read. Fixed. The behavior has been present since version V3.30b.</li>
+          <li>File system:
+            FS_ModifyFileAttributes() did not use the journal when writing data to storage. Fixed. The behavior has been present since version V3.32c.</li>
+          <li>File system:
+            The time stamp of volume label was not correctly set. Fixed. The behavior has been present since initial version.</li>
+          <li>Storage layer:
+            Internal API functions called from the MSD component of emUSB were not locked against concurrent access when the locking level of the file system was set to coarse. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.32c [30 Jan 2014]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_GetVolumeInfoEx() API function. It can be used to get information about how the storage medium is formatted.</li>
+          <li>Added FS_STORAGE_GetCleanCnt() function. An application can call it to get the number of clean operations which must be performed before all the invalid data is erased.</li>
+          <li>Added FS_ModifyFileAttributes() API function which can be used to set and clear file attributes with a single function call.</li>
+          <li>Added support for NOR flash devices connected via SPIFI.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR block map driver:
+            Added support for getting the number of clean operation required before all the invalid data on the storage medium is erased.</li>
+          <li>MMC/SD SPI driver:
+            Improved the identification mechanism of SD cards which responded incorrectly to SEND_IF_COND initialization command.</li>
+          <li>Disk checking:
+            Replaced numeric literal return values with symbolic constants to improve readability.</li>
+          <li>Universal NAND driver:
+            Added initialization with 0's of unused sectors in a data block in order to reduce the chance of bit errors.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SD/MMC card mode driver:
+            Functions of the HW layer were called before the HW layer initialization. Fixed. The behavior has been present since version V3.20a.</li>
+          <li>NAND ONFI physical layer:
+            The physical layer failed to allocate an internal memory buffer when only the storage layer was used and no file system was configured. Fixed. The behavior has been present since version V3.24e.</li>
+          <li>NOR sector map driver:
+            The clean operation tried to erase a physical sector which was already blank. Fixed. The behavior has been present since version V3.26i.</li>
+          <li>File system:
+            The unmount operation tried to call functions of the file system layer even when no file system was configured causing linking errors. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            The volume searching function returned a valid volume pointer even when the volume was not correctly initialized. Fixed. The behavior has been present since initial version.</li>
+          <li>File buffer:
+            The file buffer flags were not initialized to default values when opening a file. Fixed. The behavior has been present since version V3.22a.</li>
+          <li>FAT with LFN:
+            Under special circumstances an invalid memory access occurred when checking the validity of a file name with support for UTF-8 enabled. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.32b [24 Jul 2013]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR block map driver:
+            Improved the handling of clean operations triggered via FS_STORAGE_Clean()/FS_STORAGE_CleanOne() API calls. Physical sectors containing invalid data are erased in order to increase the write performance.</li>
+          <li>File system:
+            Added 2 new return codes to FS_CheckDisk(). Code 3 is returned when the maximum recursion level has been reached. A negative value is returned in case of a file system error. </li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Encryption:
+            Files larger than a cluster size which were stored on non-consecutive clusters were incorrectly encrypted. Fixed. The behavior has been present since version V3.30b.</li>
+          <li>Atmel SD/MMC driver:
+            The capacity of 2GB SD cards was not computed correctly. Fixed. The behavior has been present initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.32a [22 May 2013]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New physical layer available for NAND flash devices with SPI interface.</li>
+          <li>New logical driver available which reads sectors in advance and caches them. This logical driver can be used together with an SD/MMC driver to improve the performance of searching for free clusters in the allocation table.</li>
+          <li>Added file buffer support to EFS. The file buffer improves the read and write performance when accessing small amounts of data.</li>
+          <li>Added FS_STORAGE_FreeSectors() API function which can be used by a file system to help the NAND or NOR driver to manage the data more efficiently.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File system:
+            Added a check at mount time to test if the number of sectors available on the storage medium has shrunk.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File buffer:
+            The contents of file was corrupted when seeking to end of file with the file buffer enabled. Fixed. The behavior has been present since version V3.22a.</li>
+          <li>File buffer:
+            The contents of file buffer was discarded when opening the same file for the second time with FS_MULTI_HANDLE_SAFE enabled. Fixed. The behavior has been present since version V3.22a.</li>
+          <li>NAND physical layer:
+            Wrong data was read by the FS_NAND_PHY_512x8 physical layer from NAND512-A devices which support sequential row read. Fixed. The behavior has been present since initial version.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30l [22 Mar 2013]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Encryption:
+            File contents was corrupted when writing with enabled file buffering. Fixed. The behavior has been present since version V3.30b.</li>
+          <li>Encryption:
+            File contents was corrupted when truncating a file. Fixed. The behavior has been present since version V3.30b.</li>
+          <li>File system:
+            Unused variables caused compiler warnings. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30k [5 Mar 2013]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Encryption:
+            File contents was corrupted when writing close to the end of file. Fixed. The behavior has been present since version V3.30b.</li>
+          <li>FAT:
+            A 0xFFFFFFFF value in a FAT32 entry was interpreted as read error. Fixed. The behavior has been present since version V3.10e.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30j [18 Feb 2013]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Journaling:
+            The mount operation used the wrong journal unit number when more than one volume was configured. Fixed. The behavior has been present since version V3.30i.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30i [11 Feb 2013]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_JOURNAL_Enable() and FS_JOURNAL_Disable() API functions. An application can use these functions to explicitly activate or deactivate the journal.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>File system:
+            Normalized the format of the error and warning debug messages. A new line is not emitted at the end of these messages anymore.</li>
+          <li>Journaling:
+            Optimized the write performance of journal when the application explicitly controls a transaction by calling the FS_JOURNAL_Begin()/FS_JOURNAL_End() functions.</li>
+          <li>SLC1 NAND driver:
+            Added support for verification of a sector write.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>EFS:
+            A format operation accidentally deleted the information about the partitioning of storage medium. Fixed. The behavior has been present since version V3.10e.</li>
+          <li>Journaling:
+            The command sent by the file system to NAND or NOR driver to mark a sector as not used was not handled properly. The sectors could have been erased before the end of transaction which could have caused the corruption of file data. Fixed. The behavior has been present since version V3.30g.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30h [14 Dec 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_NAND_2048x8_EnableReadCache() and FS_NAND_2048x8_DisableReadCache() API functions which can be used to enable/disable the page read optimization of the FS_NAND_PHY_2048x8 physical layer.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30g [19 Nov 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_MMC_CM_GetCardId() API function. It can be used to read the serial number and other identification information from an SD card.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            FS_Truncate() reduced the size of a file with more bytes than requested leaving the file system in an inconsistent state. Fixed. The behavior has been present since version 3.28a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30f [8 Nov 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_WipeFile() API function which can be used to overwrite the contents of a file. Typically used before removing a file which contains sensitive data.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NOR CFI physical layer:
+            Data was written to a wrong address on NOR devices with write buffer and which have been configured with an address gap. Fixed. The behavior has been present since version 3.30d.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30e [30 Oct 2012]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>SPI NOR physical layer:
+            Added support for the identification of 256MBit NOR flash devices.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Journaling:
+            FS_CheckDisk() reported an error after the creation of journal file. Fixed. The behavior has been present since version 3.30c.</li>
+          <li>NOR block map driver:
+            The physical layer was not de-initialized properly. Fixed. The behavior has been present since version 3.26a.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30d [19 Oct 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added FS_NOR_CFI_SetAddrGap() API function which can be used to configure a gap in the address space of a CFI NOR flash.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            The number of free clusters reported on FAT32 volumes was 1 less than the actual number. Fixed. The behavior has been present since version 3.30a.</li>
+          <li>File system:
+            FS_Mount() reported an incorrect value when the mount operation failed. Fixed. The behavior has been present since initial version.</li>
+          <li>File system:
+            The file buffer stopped working properly after several file open/close cycles. Fixed. The behavior has been present since version 3.30a.</li>
+          <li>Journaling:
+            The module was not de-initialized properly. Fixed. The behavior has been present since version V3.10e.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30c [5 Oct 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Encryption and Journaling add-ons are included now in the trial version.</li>
+          <li>Added FS_SetFileWriteModeEx() API function which can be used to configure the write mode for each volume separately.</li>
+          <li>Added FS_CreateMBR() and FS_GetPartitionInfo() API functions for the management of Master Boot Record.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            The modification time stamp of a file was updated even when the file data was not modified. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30b [6 Sep 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New add-on available for encryption/decryption of individual files. DES and AES encryption algorithms are supported.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>SPI NOR physical layer:
+            Improved the medium initialization sequence to support the use of HW layers which work in interrupt mode.</li>
+          <li>Universal NAND driver:
+            Added support for NAND flashes with a spare area larger than 1/32 of the main area of the page.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Universal NAND driver:
+            Low-level mount failed when correctable bit errors were detected in the first empty page of a work block. Fixed.</li>
+          <li>FAT:
+            The size of the allocation table was not calculated correctly at high-level format leading to errors when the file system tried to access the last 2 clusters. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.30a [3 Aug 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New logical driver available which provides AES encryption for file system data. 128-bit and 256-bit key lengths are supported.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Universal NAND driver:
+            Wrong duplicated data block was discarded at low-level mount causing a data loss. Fixed.</li>
+          <li>File system:
+            An newly allocated file buffer was not correctly initialized. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.28d [16 Jul 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Increased the number of files which can be opened at once in the trial version from 1 to 2.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Universal NAND driver:
+            Changed the low-level format procedure to allow the erasing of the blocks marked as defect by the driver.</li>
+          <li>SLC1 NAND driver:
+            Improved the handling of bad blocks. The first byte in the spare area of the second page in a block is checked now for a bad block marker.</li>
+          <li>SPI NOR physical layer:
+            Improved the initialization sequence to remove the write protection of storage blocks only if present.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Universal NAND driver:
+            The status of a block (good/bad) was read with ECC enabled which caused ECC errors. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.28c [4 Jul 2012]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>SLC1 NAND driver:
+            Changed the low-level format procedure to allow the erasing of the blocks marked as defect by the driver.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system cache:
+            When reading multiple sectors invalid data was stored to cache. Fixed.</li>
+          <li>NOR sector map driver:
+            Instance pointer was not invalidated at de-initialization causing a data corruption. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.28b [20 Jun 2012]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            Uninitialized variables caused compiler warnings. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.28a [17 Jun 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New logical driver available which allows emFile to mount any partition defined in a Master Boot Record.</li>
+          <li>New cache module with configurable associativity level available. It offers better performance for the same cache capacity.</li>
+          <li>Added to new API function FS_CACHE_SetAssocLevel(). It can be used to configure the associativity level of a multi-way set cache.</li>
+          <li>Added to new API function FS_CACHE_GetNumSectors(). It returns the number of sectors which can be stored to cache.</li>
+          <li>Added FS_SIZEOF_CACHE_... defines to help an application to allocate a cache buffer large enough to store a specified number of sectors.</li>
+          <li>Added new API function FS_STORAGE_RefreshSectors(). The function rewrites one or more sectors with original data. Typically called to  extend data life.</li>
+          <li>Added new API function FS_FFlush(). An application can use it to update the buffered data of an opened file to storage medium .</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR block map driver:
+            Added compile-time configurable number of reserved bytes to reduce the NOR flash resource usage.</li>
+          <li>FAT:
+            Improved the validity check of the FSInfoSector. During a write operation, Windows sets a specific flag in a reserved byte of the boot sector. If this flag is found set, the information of the FSInfoSector is considered invalid.</li>
+          <li>File system:
+            Made FS_MAINTAIN_FAT_COPY option run-time configurable. The FS_FAT_ConfigMaintainFATCopy() function must be called to enable/disable this feature.</li>
+          <li>File system:
+            Made FS_FAT_USE_FSINFO_SECTOR option run-time configurable. The FS_FAT_ConfigUseFSInfoSector() function must be called to enable/disable this feature.</li>
+          <li>File system:
+            Added a warning message for the case when an application tries to call FS_Init() more than one time without calling FS_DeInit() in between.</li>
+          <li>NAND physical layer:
+            Improved the read performance of the NAND_PHY_2048x8 physical layer. When possible, data is read from the NAND flash internal buffer. No data is fetched from the memory array in this case.</li>
+          <li>SD/MMC card mode driver:
+            Added support for eMMC devices operating at 2.8V.</li>
+          <li>LOGVOL driver:
+            Improved the support for removable storage mediums. The correct media status is reported and the storage capacity is updated when a new storage storage medium is inserted.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            When truncating a file to 0 the first cluster field of the directory entry was not set to 0 leaving the file system into an inconsistent state. Fixed.</li>
+          <li>File system:
+            When passed an unknown volume name the format functions always performed the operation on the first volume. Fixed.</li>
+          <li>File system:
+            Missing default value for FS_OS_LOCKING define caused compiler warnings. Fixed.</li>
+          <li>Journaling:
+            The de-initialization of journaling module caused an invalid memory access. Fixed.</li>
+          <li>NOR physical layer:
+            The NOR_PHY_ST_M25 physical layer did not wait for the write to status sector (write protection removal) to finish causing the following operations to fail. Fixed.</li>
+          <li>LOGVOL driver:
+            The logical driver tried to access the storage medium before the initialization of device drivers. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26k [19 Apr 2012]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Universal NAND driver:
+            Low-level format failed when ECC errors were detected by the HW ECC. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26j [12 Apr 2012]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR block map driver:
+            Added compile-time configurable number of reserved bytes to reduce the NOR flash resource usage.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            FS_SetMaxSectorSize() did not accept a sector size smaller than 512 bytes. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26i [22 Mar 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added two new API functions FS_STORAGE_Clean() and FS_STORAGE_CleanOne(). The functions can be called to perform garbage collection on a NOR or NAND flash.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR block map driver:
+            Added compile-time configurable rewrite mode to support internal flashes which are not able to rewrite same data when 0s are maintained.</li>
+          <li>NOR block map driver:
+            Added compile-time configurable flash line size to support internal flashes which require aligned writes.</li>
+          <li>NOR sector map driver:
+            Added support for garbage collection. An application can call the FS_STORAGE_Clean() and FS_STORAGE_CleanAll() API functions to create writable logical sectors.</li>
+          <li>NOR SPI physical layer:
+            Added the ability to remove the write protection of flash blocks.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            FS_Sync() returned 0 on an invalid/missing volume. Fixed.</li>
+          <li>SD/MMC driver:
+            SD cards with a capacity larger than 4GB were formatted incorrectly on 16-bit systems due to an integer overflow. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26h [22 Feb 2012]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Made the number of LOGVOL instances compile-time configurable.</li>
+          <li>Made the usage of large blocks for an Atmel DataFlash compile-time configurable.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>LFN:
+            Added the ability to interpret the case of short name entries created by Windows.
+            The base or the extension part of a file name is converted to lower case when the corresponding flags in the reserved field of directory entry are set.</li>
+          <li>SD/MMC SPI driver:
+            Implemented a workaround for the SD cards which report invalid values for the access time parameters.
+            In such a case, the driver uses fixed timeout values for read and write accesses.</li>
+          <li>SD/MMC card mode driver:
+            Improved the error handling. A data read/write operation is started only if the SD card responds without error to data transfer command.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26g [10 Feb 2012]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Journaling:
+            On a storage medium formatted with MBR the start sector of partition was not considered when calculating the position of the Journal.dat file. Filling up the free space on the disk could have caused the corruption of the file system. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26f [30 Jan 2012]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            memcmp() was called instead of generic FS_MEMCMP() macro. This lead to errors when compiling with FS_NO_CLIB set to 1. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26e [9 Jan 2012]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SLC1 NAND driver:
+            A bit error in the ECC protecting the sector data was copied to destination sector without being corrected. In special circumstances this could lead to several blocks being marked as bad by the driver. Fixed.</li>
+          <li>SLC1 NAND driver:
+            Driver API functions did not return an error when an invalid sector was accessed. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26d [5 Dec 2011]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new API function FS_NAND_PHY_GetONFIPara(). It reads the ONFI parameters from an ONFI compatible NAND flash.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>SD/MMC card mode driver:
+            Increased the number of initialization retries to allow the communication with some types of micro SD cards.</li>
+          <li>NOR sector map driver:
+            Added more statistics counters.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Block map NOR driver:
+            During the processing of a trim command a sector containing data was marked (by accident) as invalid. Fixed.</li>
+          <li>FAT:
+            Trying to format a medium which was not large enough caused a memory fault. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26c [11 Nov 2011]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>EFS:
+            An empty source file caused FS_CopyFile()/FS_CopyFileEx() to allocate all the free space on the medium. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26b [7 Nov 2011]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new API function FS_CopyFileEx() which allows an application to provide its own temporary buffer.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>EFS:
+            Improved the write speed when using journaling. Data appended to a file is written directly to medium.</li>
+          <li>FAT:
+            Improved the error handling when searching the allocation table.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Storage driver:
+            Status of driver was queried before the driver initialization. Fixed.</li>
+          <li>NAND/NOR drivers:
+            Internal counters were not correctly reset. Fixed.</li>
+          <li>NAND driver:
+            FS_NAND_ReadDeviceId() did not initialize the NAND flash. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.26a [5 Oct 2011]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New NAND driver available which supports SLC and MLC NAND flashes.</li>
+          <li>New NOR driver available which requires very few RAM.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            Improved the speed of active wear leveling. The driver checks now only the allocated blocks.</li>
+          <li>ONFI physical layer:
+            Added functions to enable/disable the NAND flash internal ECC engine.</li>
+          <li>File system:
+            Improved the computation speed of the CRC16 routine.</li>
+          <li>SD/MMC driver:
+            Improved the read/write speed.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>IDE driver:
+            Write Feature command did not work properly. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24g [29 Jul 2011]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            In case of a fatal error the application has now the possibility to decide whether the medium should be marked as read-only or not.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            Minimum erase count was not updated when converting a work block into a data block. Fixed.</li>
+          <li>NAND driver:
+            Missing pointer casts caused errors when compiling with a C++ compiler. Fixed.</li>
+          <li>NAND driver:
+            Missing ONFI support caused linking errors when using the object code version of emFile. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24f [22 Jul 2011]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            Removed the checking for the number of work blocks. The driver will always use the number of work blocks read from device.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            Low-level format caused an array overflow when the number of work blocks configured was greater than the number of work blocks read from device. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24e [5 Jul 2011]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new API function FS_NAND_SetNumWorkBlocks(). It configures at runtime the number of work blocks the NAND driver uses.</li>
+          <li>Added new API functions FS_Lock(), FS_Unlock(), FS_LockVolume(), FS_UnlockVolume(). These functions allow a task to get exclusive access to file system or a specified volume.</li>
+          <li>Added ONFI physical layer for the NAND driver.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            Added support for file system TRIM operation.</li>
+          <li>NOR driver:
+            Improving the write speed. The sectors are marked as erasable only when required.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT:
+            FAT_Format() failed when the number of sectors was less than 256. Fixed.</li>
+          <li>FAT:
+            Invalid error code returned when reading a FAT entry. Fixed.</li>
+          <li>File system:
+            Incorrect number of bytes written returned by FS_Write() on journal overflow. Fixed.</li>
+          <li>DataFlash NAND physical layer:
+            Wrong read command was used for a 64Mbit DataFlash connected over SPI. Fixed.</li>
+          <li>DataFlash physical layer:
+            Decision where to store the spare are on a 64Mbit device was wrong. Fixed.</li>
+          <li>File system:
+            FS_BITFIELD_CalcSize() caused an integer overflow on 16-bit targets. Fixed.</li>
+          <li>Serial NOR physical layer:
+            Initialization caused an integer overflow on 16-bit targets. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24d [21 Mar 2011]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            Improved the write speed by optimizing the copy of a block. The ECC of the copied sector is computed only once.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Atmel SD/MMC driver:
+            Driver blocked when the second unit was unmounted. Fixed.</li>
+          <li>NAND driver:
+            Mount procedure failed to delete a duplicated data block. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24c [28 Feb 2011]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>File system:
+            Compile error generated when FS_SUPPORT_DEINIT == 1 and FS_USE_FILE_BUFFER == 0. Fixed.</li>
+          <li>Journaling:
+            Race condition occurred when FS_OS_LOCKING == 2. Fixed.</li>
+          <li>FAT:
+            Buffer was not deallocated when FS_Format() failed. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24b [10 Feb 2011]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new API function FS_NAND_SetOnFatalErrorCB(). It registers callback function which is invoked when the NAND driver encounters a fatal error.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            Optimized the write speed and added read retries to improve the recovery from bit errors.</li>
+          <li>Journaling:
+            Improved the write speed.</li>
+          <li>Atmel MMC driver:
+            Added support for the second MCI controller.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            False error message at deinitialization about an invalid unit number. Fixed.</li>
+          <li>NOR driver:
+            False error message at deinitialization about an invalid unit number. Fixed.</li>
+          <li>File system:
+            File buffers were not properly freed at deinitialization. Fixed.</li>
+          <li>Atmel SD/MMC driver:
+            Data was corrupted when reading a large number of sectors at once. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.24a [8 Dec 2010]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added support for eMMC, MMCplus, MMCmobile cards (v4.x standard).</li>
+          <li>Added new API function FS_NAND_SetMaxEraseCntDiff() which allows the user to control the wear leveling.</li>
+          <li>Added new API function FS_AddOnExitHandler() which gives the user the opportunity to perform additional tasks at deinitialization.</li>
+          <li>Added new API function FS_NOR_SetSectorSize() which allows configuration of sector size of NOR driver.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND driver:
+            Improved the wear leveling and the handling of device errors.</li>
+          <li>MMC Atmel driver:
+            Improved the data transfer and the handling of events.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            At deinitialization the resources were not properly freed. Fixed.</li>
+          <li>embOS integration:
+            Resources were not properly freed at deinitialization. Fixed.</li>
+          <li>FAT with LFN:
+            File names were not properly checked for invalid characters. Fixed.</li>
+          <li>Journaling:
+            Deinitialization of caused a memory fault. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.22c [18 Oct 2010]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND_PHY_2048x8.c:
+            Improved the readability.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_SetEndOfFile():
+            Allocated one cluster more on EFS when the size of the file was a multiple of cluster size. Fixed.</li>
+          <li>File buffering:
+            When writing to a file using buffering, emFile accidentally caused a buffer overflow. Fixed.</li>
+          <li>FS_AssigCache():
+            This function caused a deadlock on an OS which didn't support multiple locking from the same task. Fixed.</li>
+          <li>FS_GetFileAttributes():
+            This function returned 0 instead of 0xff when the volume was not found. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.22a [12 Jul 2010]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new API function FS_ConfigFileBufferDefault() which allows the user to use file buffers to increase read/write performance when reading/writing files in small chunks.</li>
+          <li>Added new API function FS_ConfigFileBufferFlags() which allows configurations of the file buffer flags on a per-file basis.</li>
+          <li>Added new API function FS_SetFileWriteMode() which allows to choose between different file write modes.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>FS_Remove():
+            File could be deleted even if they were opened / in use.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>SPI MMC/SD card driver: some SD cards do not work properly in high speed mode.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20i [21 Jun 2010]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT_SetEndOfFile.c:
+            When truncating a file, emFile accidentally truncated one cluster too much. Fixed</li>
+          <li>Atmel MMC/SD SPI driver:
+            After a complete read operation, the driver did not send a STOP command to the SD card. Fixed</li>
+          <li>DataFlash physical layer:
+            64 MBit / 128 MBit devices were not identified / auto-configured correctly.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20h [20 Apr 2010]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Data Flash:
+            Added support for 128MBit data flash. A warning is shown, when data flash is in "power of 2 mode".</li>
+          <li>Ramdisk:
+            Added FS_HUGE macro to the RAMDISK pointer in order to have a hint for 16-bit compilers.</li>
+          <li>WinDrive:
+            Added support for Windows Vista and Windows 7.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            When converting a work block into a data block the internal index of the sectors was not written which causes data misinterpretation after a power failure. Fixed</li>
+          <li>MMC/SD SPI driver:
+            Data CRC was not calculated correctly. Fixed</li>
+          <li>NOR flash driver:
+            On 16-bit processors the calculation of internal data caused data overflows. Fixed</li>
+          <li>General API:
+            Internal data were set before checking for NULL-pointer. Fixed</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20g [21 Jan 2010]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Long file name support:
+            Reduced the amount of time taken to generate short file names.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20f [23 Nov 2009]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            Under some circumstances, especially if most of the NAND flash was full, a work block was marked as free accidentally. Fixed</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20e [6 Nov 2009]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_USE_FILE_BUFFER:
+            When setting this macro to 1, compile errors could occur. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20d [28 Oct 2009]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_STORAGE_ReadSectors/FS_STORAGE_WriteSectors:
+            When the volume was mounted, used and unmounted and the volume is then accessed by the STORAGE functions,
+            a partition offset when reading/writing in burst-mode was not reset which could be lead in wrong sector data. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20c [12 Oct 2009]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_Unmount:
+            When unmounting a volume the IDE/CF and MMC/SD card driver did not handle this correctly. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20b [14 Sep 2009]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_Rename/FS_Move:
+            When renaming or moving a file or directory and an invalid file name was specified the file name was not checked for valid file name characters. Fixed.</li>
+          <li>FS_FOpen:
+            When opening a file on a write-protected medium a valid file handle was returned instead of return a NULL handle. Fixed.</li>
+          <li>FS_Unmount:
+            When unmounting a volume the driver was not signaled to unmount the volume. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.20a [17 Aug 2009]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New Configuration function FS_NOR_SPI_Configure() to setup a SPI NOR flash manually.</li>
+          <li>Added new function FS_Sync() to synchronize/flushes all memory/cached data to medium.</li>
+          <li>MMC/SD card driver (both card mode and SPI) support high speed mode of SD cards.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NOR flashes:
+            Reduced the RAM usage of the NOR driver.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            Under some circumstance the wrong block was assigned to read. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.14a [15 Dec 2008]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new physical layer for NAND flashes (very large page NAND flashes).</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND flashes:
+            Reduced the RAM usage of the NAND driver.</li>
+          <li>NOR CFI flashes.
+            Added support for write buffer functionality for better write performance.</li>
+          <li>NOR CFI flashes.
+            Added support for automatically unlock sectors.</li>
+          <li>NOR CFI flashes.
+            Added new macro to use call a delay/sleep function during sector operation.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            During a low-level-mount invalid work blocks were added to the work block list which lead to use wrong work blocks. Fixed.</li>
+          <li>NAND driver:
+            Blocks that were not used by the NAND driver have not been added to the free block list, which lead the NAND driver to overwrite
+            the block 0 of the NAND flash and cause the NAND driver to corrupt the low-level-information. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12j [6 Nov 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_CopyFile:
+            When the destination file during a file copy could not be created the file object of the destination file was not freed. Fixed.</li>
+          <li>Journaling:
+            When FS_SUPPORT_JOURNAL and FS_SUPPORT_DEINIT is enabled the function FS__JOURNAL_DeInit was not found during linking. Fixed.</li>
+          <li>EFS:
+            FS_FOpen could create a file although the file name already exists. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12i [6 Aug 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT LFN:
+            With LFN enabled a wrong file handle or wrong directory could returned/opened. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12h [4 Aug 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT LFN file handles:
+            A false file handle could be returned with LFN support. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12g [22 Jun 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Low-level mount robustness:
+            A volume corrupted on power failure or by sector copying. Fixed.</li>
+          <li>FS_X_OS_Lock() called before FS_X_OS_Init():
+            With OS locking level 2 (FS_OS_LOCKING 2) FS_X_OS_Lock() was called before FS_OS_Init(). Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12f [10 Jun 2008]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>FS_Unmount().
+            FS_Unmount sets the state of a volume to uninitialized even if the volume is not mounted.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Caches:
+            When insufficient memory was assigned to the cache, the function could fail. Fixed.</li>
+          <li>CacheRWQuota:
+            When the FS_CACHE_SetMode and FS_CACHE_SetQuota was called after selecting the FS_CACHE_RWQUOTA cache all cached sector were wrongly invalided. Fixed.</li>
+          <li>Alignment:
+            When calling FS_GetFileAttributes with unaligned 32bit variable could cause on some CPU system a memory fault. Fixed.</li>
+          <li>FAT:
+            The character &quot;&amp;&quot; was identified as an invalid char when using it for a short name entry leading to fail the file/directory operation. Fixed</li>
+          <li>LFN/UTF8:
+            When copying a Unicode string the alignment of the buffer was not checked which could cause on some CPU system a memory fault. Fixed.</li>
+          <li>LFN:
+            When generating a short name entry for a long file name, an internal variable was incremented twice which lead to abort the short name generation in half of the time.</li>
+          <li>OS locking
+            When FS_OS_LOCKING is set 2, FS_X_OS_Lock() and FS_X_OS_Unlock() was called before FS_X_OS_Init() was called. Fixed.
+            FS_DeInit:
+            When using more than one volume, FS_DeInit will fail before of referencing a invalid pointer. Fixed.</li>
+          <li></li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12e [30 Jun 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>Caches:
+            When reading data in burst mode (multiple sectors read) and any FS' cache is enabled, the system crashed. Fixed.</li>
+          <li>Memory allocation:
+            When memory for an additional file handle/object or an additional volume object is allocated, the pointer was not checked if valid. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12d [19 Jun 2008]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>Added new function: FS_CACHE_Invalidate.</li>
+          <li>Added new functions for checking and performing low-level-format in FS_X_AddDevices: FS_NOR_IsLLFormatted(), FS_NOR_FormatLow(), FS_NAND_IsLLFormatted and FS_NAND_FormatLow.</li>
+          <li>Added new function for setting the NOR flash driver sector size: FS_NOR_SetSectorSize().</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Cache modules check for alignment.</li>
+          <li>Improved debug logging and error handling.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_Move, FAT:
+            Moving a file could fail, the wrong file name was passed. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12c [10 Jun 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>MMC Card mode driver:
+            When checking the card type, MMC and MMC plus card may not recognized correctly. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12b [3 Jun 2008]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT LFN & UTF8 :
+            When a unaligned pointer to a UTF8 string was given, the conversion to an Unicode string might fail. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.12a [24 Apr 2008]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New add-on available: Independent FS-Journaling.</li>
+          <li>New run-time configurable functions available:
+            FS_WriteUpdateDir - Configures whether the directory entry shall be updated after user data has been written.
+            FS_MMC_CM_Allow4bitMode - Configures the MMC/SD card mode driver to allow 4-bit mode data transfer. </li>
+          <li>Added FS_SetOnDeviceActivityHook which allows to log which sectors are read/written by file system.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>EFS: Improved read/write performance.</li>
+          <li>File handles/volume objects are rather allocated than predefined by compile time switch.</li>
+          <li>Allow to use an external memory manager if required.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_SetVolumeLabel:
+            Setting a volume label always failed. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10j [22 Apr 2008]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Removed any compiler warning that may be reported by a 16-bit compiler.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10i [14 Apr 2008]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Improved support for newer SD cards that conforms with SD card specification V2.00.</li>
+          <li>Improved support for newer MMCplus cards.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10h [7 Jan 2008]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>FAT disk checking operation supports orphaned long file name entries.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10g [14 Dec 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_Rename(FAT):
+            When renaming a file or directory with a long file name, the long file name entry was not removed. Fixed.</li>
+          <li>LFN (FAT):
+            When looking for a file/directory, the operation could fail, due of not handling orphaned long directory entries correctly. Fixed.</li>
+          <li>FS_Rename(FAT):
+            Renaming a file or directory could fail when using absolute file paths. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10f [4 Dec 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_Rename/FS_Move (FAT):
+            When moving/renaming a file or directory other directory entries could be affected. Fixed.</li>
+          <li>Unmount/Remount:
+            When unmounting and remounting a volume using FS_Mount() could fail. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10e [2 Nov 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND driver:
+            An wrong identifier was used to mark a bad block which could result in using the bad block later when searching for a new block. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10d [25 Oct 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT CheckDisk:
+            FS_CheckDisk() removed short directory entries if directory entry name was shorter than 8+3 characters. Fixed.</li>
+          <li>FS_GetTotalSpace, FS_GetFreeSpace():
+            In opposite to the manual FS_GetTotalSpace(), FS_GetFreeSpace() expected an additional parameter DevIndex, which was not used. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10c [16 Oct 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>RamDisk, WinDrive:
+            Driver were not included. Fixed.</li>
+          <li>Compile time switches
+            Enabling the switches FS_VERIFY_WRITE or FS_SUPPORT_CHECK_MEMORY could cause that the compilation failed. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10b [5 Oct 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>MMC_SPI:
+            Some comments did not end correctly. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.10a [24 Sep 2007]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>SD HC cards are supported.</li>
+          <li>The max sector size is run-time configurable.</li>
+          <li>Atmel DATAFLASH is supported by NAND driver.</li>
+          <li>New function added: FS_UnmountForced().</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Improved SD card mode handling.</li>
+        </ol>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT:
+            FS_Rename(), FS_Move could move a file/directory although the file/directory has read-only attributes. Fixed.</li>
+          <li>When setting a volume label after formatting the volume and creating a file/directory with the same file, file/directory operation could fail. Fixed.</li>
+          <li>MMC:
+            MMC card initialization in SPI mode could fail, if there is no pull-up on MISO line. The MMC driver did not wait accordingly to the spec. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.08b [6 Jul 2007]</h2>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>Additional functions which allow using the storage layer stand alone (without file system) added.</li>
+          <li>FS_Init() and FS_InitStorage() can now be called multiple times, simplifying the use of the storage layer without file system. Typically applications are usage of the storage layer with a USB mass storage device.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.08a [4 Jul 2007]</h2>
+      <div>
+        <h3>New Features</h3>
+        <ol>
+          <li>New function to initialize the storage layer (aka LBL) only added.</li>
+          <li>New configuration function for IDE/CF driver added.</li>
+        </ol>
+        <h3>Improvements</h3>
+        <ol>
+          <li>NAND flash driver: Multiple work blocks supported, improving write speed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.06b [6 Jun 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>NAND:
+            The NAND driver could report an ECC error although no data has ever been written to this sector. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.06a [5 Jun 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT:
+            When LFN support is enabled, files/directories with short file names could not be opened. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.04c [18 May 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FS_X_GetTimeDate(): In the configuration samples date and time were stored in wrong order, this could cause wrong time and date values in directory entries. Fixed.</li>
+          <li>When FS_MULTI_HANDLE_SAFE is set to 1 and a file object is no longer used, the FS__FreeFileObj did not remove the string that is used to identify the file object. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.04b [10 May 2007]</h2>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>FAT: The wrong date and time were written when creating a file. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+  <div class="divider-global">
+    <div class="container">
+      <h2>Version 3.04a [10 May 2007]</h2>
+      <div>
+        <h3>New features</h3>
+        <ol>
+          <li>Major conceptional changes from version 2.xx. Improved flexibility and ease of use. Configuration simplified. For details, refer to the manual.</li>
+          <li>Hardware and configuration samples to sample directory added.</li>
+          <li>User provided functions for time and date FS_X_GetTime(), FS_X_GetDate() have been replaced by single function FS_X_GetTimeDate().</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Improvements</h3>
+        <ol>
+          <li>IDE, MMC/SD card mode driver improvements.</li>
+          <li>NAND flash driver: Use a large (2048 bytes) page with sector sizes of 512 bytes.</li>
+          <li>NOR flash driver: Fail safety improved.</li>
+        </ol>
+      </div>
+      <div>
+        <h3>Program corrections</h3>
+        <ol>
+          <li>The physical NAND driver for 8bit small NAND flashes, generic 8bit NAND flashes and 16bit large page NAND flash have not been adapted to the new driver structure. Fixed.</li>
+          <li>NAND: The driver could allocate memory for its instance information twice. Fixed.</li>
+          <li>NAND: Data for the first sector in a block could be corrupted under some circumstances (other sectors of the same block already written, but the first block not) when powered down. Fixed.</li>
+          <li>EFS: When no more cluster were available for data store the EFS writing routine did not return and could cause data corruption on the medium. Fixed.</li>
+        </ol>
+      </div>
+    </div>
+  </div>
+
+  <!-- ****************************************************************** -->
+  <!-- Modifiable information ends here                                   -->
+  <!-- Don't forget to edit the "Copyright" year if necessary and         -->
+  <!-- >>>>>if a SUPPORT E-MAIL is required change the info@segger.com<<<<<<  -->
+  <!-- ****************************************************************** -->
+
+</main>
+<div class="footer">
+  <div class="container">
+    <div>
+      <p>Copyright 2001-2021 SEGGER Microcontroller GmbH. All rights reserved.<br>
+        For more information, please visit our website&nbsp;<a href="https://www.segger.com/" target="_blank">www.segger.com</a>&nbsp;or contact us at&nbsp;<a href="mailto:support_emfile@segger.com">support_emfile@segger.com</a>&nbsp;</p>
+    </div>
+  </div>
+</div>
+</body>
+</html>
