@@ -67,8 +67,8 @@ Purpose : OS Layer for the file system. RTOS_AWARE component must be defined
 */
 #if defined(COMPONENT_RTOS_AWARE)
 #define MAX_LOCKS           (6)
-#define SEMA_MAX_COUNT      (1lu)
-#define SEMA_INIT_COUNT     (0lu)
+#define SEMA_MAX_COUNT      (1Lu)
+#define SEMA_INIT_COUNT     (0Lu)
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
 
 /*********************************************************************
@@ -78,10 +78,10 @@ Purpose : OS Layer for the file system. RTOS_AWARE component must be defined
 **********************************************************************
 */
 #if defined(COMPONENT_RTOS_AWARE)
-static cy_mutex_t _mutex[MAX_LOCKS];
+static cy_mutex_t mutex[MAX_LOCKS];
 
 #if FS_SUPPORT_DEINIT
-    static unsigned   _NumLocks;
+    static uint32_t NumberLocks;
 #endif
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
 
@@ -91,6 +91,8 @@ static cy_mutex_t _mutex[MAX_LOCKS];
 *
 **********************************************************************
 */
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Directive 4.6', 7,\
+'The third-party defines the function interface with basic numeral type')
 
 /*********************************************************************
 *
@@ -118,7 +120,7 @@ static cy_mutex_t _mutex[MAX_LOCKS];
 */
 void FS_X_OS_Lock(unsigned LockIndex) {
 #if defined(COMPONENT_RTOS_AWARE)
-    cy_rslt_t result = cy_rtos_get_mutex(&_mutex[LockIndex], CY_RTOS_NEVER_TIMEOUT);
+    cy_rslt_t result = cy_rtos_get_mutex(&mutex[LockIndex], CY_RTOS_NEVER_TIMEOUT);
 
     CY_ASSERT(CY_RSLT_SUCCESS == result);
     FS_USE_PARA(result); /* To avoid compiler warning in Release mode */
@@ -148,7 +150,7 @@ void FS_X_OS_Lock(unsigned LockIndex) {
 */
 void FS_X_OS_Unlock(unsigned LockIndex) {
 #if defined(COMPONENT_RTOS_AWARE)
-    cy_rslt_t result = cy_rtos_set_mutex(&_mutex[LockIndex]);
+    cy_rslt_t result = cy_rtos_set_mutex(&mutex[LockIndex]);
 
     CY_ASSERT(CY_RSLT_SUCCESS == result);
     FS_USE_PARA(result); /* To avoid compiler warning in Release mode */
@@ -185,16 +187,16 @@ void FS_X_OS_Unlock(unsigned LockIndex) {
 */
 void FS_X_OS_Init(unsigned NumLocks) {
 #if defined(COMPONENT_RTOS_AWARE)
-    unsigned i;
+    uint32_t i;
     cy_rslt_t result;
 
     for (i = 0; i < NumLocks; i++) {
-        result = cy_rtos_init_mutex(&_mutex[i]);
+        result = cy_rtos_init_mutex(&mutex[i]);
         CY_ASSERT(CY_RSLT_SUCCESS == result);
     }
 
 #if FS_SUPPORT_DEINIT
-    _NumLocks = NumLocks;
+    NumberLocks = NumLocks;
 #endif
 
     FS_USE_PARA(result); /* To avoid compiler warning in Release mode */
@@ -222,14 +224,14 @@ void FS_X_OS_DeInit(void) {
 #if defined(COMPONENT_RTOS_AWARE)
     unsigned i;
     cy_rslt_t result;
-    unsigned NumLocks = _NumLocks;
+    unsigned NumLocks = NumberLocks;
 
     for (i = 0; i < NumLocks; i++) {
-        result = cy_rtos_deinit_mutex(&_mutex[i]);
+        result = cy_rtos_deinit_mutex(&mutex[i]);
         CY_ASSERT(CY_RSLT_SUCCESS == result);
     }
 
-    _NumLocks = 0;
+    NumberLocks = 0u;
 
     FS_USE_PARA(result); /* To avoid compiler warning in Release mode */
 #else
@@ -362,5 +364,5 @@ void FS_X_OS_Delay(int ms) {
 
    FS_USE_PARA(result); /* To avoid compiler warning in Release mode */
 }
-
+CY_MISRA_BLOCK_END('MISRA C-2012 Directive 4.6')
 /*************************** End of file ****************************/

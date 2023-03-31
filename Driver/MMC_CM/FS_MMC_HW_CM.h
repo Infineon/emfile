@@ -60,6 +60,7 @@ typedef struct
     cyhal_gpio_t CardWriteProt;
     cyhal_gpio_t LedControl;
     cyhal_gpio_t EmmcReset;
+    cyhal_clock_t *BlockClk;
     cyhal_sdhc_t Obj;         /* This HW layer passes this object to the HAL APIs.
                                * User should not access the contents of it.
                                * Provided here so that user can call the HAL APIs directly
@@ -69,7 +70,7 @@ typedef struct
 
 typedef enum
 {
-    FS_MMC_HW_CM_RESULT_OK = 0u,
+    FS_MMC_HW_CM_RESULT_OK = 0U,
     FS_MMC_HW_CM_RESULT_BADPARAM,
 } FS_MMC_HW_CM_Result_t;
 
@@ -87,7 +88,7 @@ extern const FS_MMC_HW_TYPE_CM FS_MMC_HW_CM;
 *
 **********************************************************************
 */
-FS_MMC_HW_CM_Result_t FS_MMC_HW_CM_Configure(U8 Unit, FS_MMC_HW_CM_SDHostConfig_t *Config);
+FS_MMC_HW_CM_Result_t FS_MMC_HW_CM_Configure(U8 Unit, FS_MMC_HW_CM_SDHostConfig_t *UserConfig);
 
 #endif  // FS_MMC_HW_CM_H
 

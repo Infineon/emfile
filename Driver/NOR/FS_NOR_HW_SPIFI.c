@@ -39,7 +39,7 @@ Purpose     : low-level flash driver for quad SPI.
 **********************************************************************
 */
 #ifndef FS_NOR_HW_QSPI_RW_TIMEOUT_MS
-#define FS_NOR_HW_QSPI_RW_TIMEOUT_MS    (500u) /* in milliseconds. */
+#define FS_NOR_HW_QSPI_RW_TIMEOUT_MS    (500U) /* in milliseconds. */
 #endif
 
 /*********************************************************************
@@ -48,15 +48,15 @@ Purpose     : low-level flash driver for quad SPI.
 *
 **********************************************************************
 */
-#define BUS_WIDTH_ONE               (1u)
-#define BUS_WIDTH_TWO               (2u)
-#define BUS_WIDTH_FOUR              (4u)
+#define BUS_WIDTH_ONE               (1U)
+#define BUS_WIDTH_TWO               (2U)
+#define BUS_WIDTH_FOUR              (4U)
 
-#define NUM_BITS_PER_BYTE           (8u)
+#define NUM_BITS_PER_BYTE           (8U)
 
 #if defined(COMPONENT_RTOS_AWARE)
-#define QSPI_SEMA_MAX_COUNT         (1lu)
-#define QSPI_SEMA_INIT_COUNT        (0lu)
+#define QSPI_SEMA_MAX_COUNT         (1LU)
+#define QSPI_SEMA_INIT_COUNT        (0LU)
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
 
 /*********************************************************************
@@ -65,14 +65,13 @@ Purpose     : low-level flash driver for quad SPI.
 *
 **********************************************************************
 */
-static FS_NOR_HW_SPIFI_Config_t *_config;
-static bool _qspi_init_done = false;
-static uint8_t active_hw_unit = 0;
+static FS_NOR_HW_SPIFI_Config_t *config_nor_spifi;
 
 #if defined(COMPONENT_RTOS_AWARE)
 /* Semaphore used while waiting for the QSPI event to occur. */
 static cy_semaphore_t qspi_sema;
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
+
 
 /*********************************************************************
 *
@@ -81,8 +80,12 @@ static cy_semaphore_t qspi_sema;
 **********************************************************************
 */
 #if defined(COMPONENT_RTOS_AWARE)
-static void _qspi_event_callback(void *callback_arg, cyhal_qspi_event_t event)
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Rule 8.13', 1,\
+'The third-party defines the function interface')
+
+static void qspi_event_callback(void *callback_arg, cyhal_qspi_event_t event)
 {
+    CY_MISRA_BLOCK_END('MISRA C-2012 Rule 8.13');
     FS_USE_PARA(callback_arg);
     FS_USE_PARA(event);
 
@@ -90,13 +93,14 @@ static void _qspi_event_callback(void *callback_arg, cyhal_qspi_event_t event)
 }
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
 
-static cy_rslt_t _set_active_ssel(U8 unit)
+static cy_rslt_t set_active_ssel(U8 unit)
 {
+    static uint8_t active_hw_unit = 0U;
     cy_rslt_t result = CY_RSLT_SUCCESS;
 
     if(active_hw_unit != unit)
     {
-        result = cyhal_qspi_select_active_ssel(&_config->Obj, _config->Ssel[unit]);
+        result = cyhal_qspi_select_active_ssel(&config_nor_spifi->Obj, config_nor_spifi->PinSet[unit].ssel);
 
         if(CY_RSLT_SUCCESS == result)
         {
@@ -107,7 +111,7 @@ static cy_rslt_t _set_active_ssel(U8 unit)
     return result;
 }
 
-static cyhal_qspi_bus_width_t _get_bus_width(U8 bus_width_in)
+static cyhal_qspi_bus_width_t get_bus_width(U8 bus_width_in)
 {
     cyhal_qspi_bus_width_t bus_width_out;
 
@@ -124,41 +128,64 @@ static cyhal_qspi_bus_width_t _get_bus_width(U8 bus_width_in)
         break;
     default:
         bus_width_out = CYHAL_QSPI_CFG_BUS_SINGLE;
+        break;
     }
 
     return bus_width_out;
 }
 
-static inline cyhal_qspi_size_t _get_size(unsigned num_bytes)
+static inline cyhal_qspi_size_t get_size(uint32_t num_bytes)
 {
-    /* Multiply by 8 to convert num_bytes to number of bits. */
-    return (cyhal_qspi_size_t)(num_bytes << 3u);
+    cyhal_qspi_size_t qspi_size;
+
+    /* Multiply by 8 to convert num_bytes to number of bits. */    
+    switch(num_bytes)
+    {
+    case 1U:
+        qspi_size = CYHAL_QSPI_CFG_SIZE_8;
+        break;
+    case 2U:
+        qspi_size = CYHAL_QSPI_CFG_SIZE_32;
+        break;
+    case 3U:
+        qspi_size = CYHAL_QSPI_CFG_SIZE_24;
+        break;
+    default:
+        qspi_size = CYHAL_QSPI_CFG_SIZE_32;
+        break;
+    }
+    return qspi_size;
 }
 
-static void _get_qspi_cmd(cyhal_qspi_command_t *qspi_cmd, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U16 BusWidth)
+static void get_qspi_cmd(cyhal_qspi_command_t *qspi_cmd, U8 Cmd, const U8 * pPara, uint32_t NumBytesPara, uint32_t NumBytesAddr, U16 BusWidth, uint32_t *address)
 {
-    uint32_t num_dummy_bytes = 0;
+    uint32_t num_dummy_bytes = 0U;
 
-    qspi_cmd->instruction.bus_width = _get_bus_width(FS_BUSWIDTH_GET_CMD(BusWidth));
+    qspi_cmd->instruction.bus_width = get_bus_width((uint8_t)FS_BUSWIDTH_GET_CMD(BusWidth));
     qspi_cmd->instruction.value = Cmd;
     qspi_cmd->instruction.disabled = false;
+    qspi_cmd->instruction.two_byte_cmd = false;
+    qspi_cmd->instruction.data_rate = config_nor_spifi->DataRate;
 
-    if(NumBytesAddr > 0)
+    if(NumBytesAddr > 0U)
     {
-        qspi_cmd->address.bus_width = _get_bus_width(FS_BUSWIDTH_GET_ADDR(BusWidth));
-        qspi_cmd->address.size = _get_size(NumBytesAddr);
-        qspi_cmd->address.value = 0;
+        const U8 *buf_pPara = pPara;
+        qspi_cmd->address.bus_width = get_bus_width((uint8_t)FS_BUSWIDTH_GET_ADDR(BusWidth));
+        qspi_cmd->address.size = get_size(NumBytesAddr);
+        *address = 0U;
 
         /* Convert byte array to uint32_t. Value at index 0 of the array is the
          * MSB of the address.
          */
-        for(uint32_t count = 0; count < NumBytesAddr; count++)
+        for(uint32_t count = 0U; count < NumBytesAddr; count++)
         {
-            qspi_cmd->address.value <<= NUM_BITS_PER_BYTE;
-            qspi_cmd->address.value |= *pPara++;
+            *address <<= NUM_BITS_PER_BYTE;
+            *address |= *buf_pPara;
+            buf_pPara++;
         }
 
         qspi_cmd->address.disabled = false;
+        qspi_cmd->address.data_rate = config_nor_spifi->DataRate;
     }
     else
     {
@@ -174,45 +201,49 @@ static void _get_qspi_cmd(cyhal_qspi_command_t *qspi_cmd, U8 Cmd, const U8 * pPa
         /* Dummy bytes have the same bus width as the address bytes.
          * dummy_count is specified in number of clock cycles.
          */
-        qspi_cmd->dummy_count = num_dummy_bytes * (NUM_BITS_PER_BYTE / FS_BUSWIDTH_GET_ADDR(BusWidth));
+        qspi_cmd->dummy_cycles.dummy_count = num_dummy_bytes * (NUM_BITS_PER_BYTE / FS_BUSWIDTH_GET_ADDR((uint32_t)BusWidth));
+        qspi_cmd->dummy_cycles.data_rate = config_nor_spifi->DataRate;
+        qspi_cmd->dummy_cycles.bus_width = CYHAL_QSPI_CFG_BUS_SINGLE; 
     }
     else
     {
-        qspi_cmd->dummy_count = 0;
+        qspi_cmd->dummy_cycles.dummy_count = 0U;
     }
 
-    qspi_cmd->data.bus_width = _get_bus_width(FS_BUSWIDTH_GET_DATA(BusWidth));
+    qspi_cmd->data.bus_width = get_bus_width((uint8_t)FS_BUSWIDTH_GET_DATA(BusWidth));
+    qspi_cmd->data.data_rate = config_nor_spifi->DataRate;
 }
 
-static void _transfer_data(bool is_read, U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 * pData, unsigned NumBytesData, U16 BusWidth)
+static void transfer_data(bool is_read, U8 Unit, U8 Cmd, const U8 * pPara, uint32_t NumBytesPara, uint32_t NumBytesAddr, U8 * pData, size_t NumBytesData, U16 BusWidth)
 {
     cyhal_qspi_command_t qspi_cmd;
+    uint32_t address = 0U;
 
-    cy_rslt_t result = _set_active_ssel(Unit);
+    cy_rslt_t result = set_active_ssel(Unit);
 
     if(CY_RSLT_SUCCESS == result)
     {
-        _get_qspi_cmd(&qspi_cmd, Cmd, pPara, NumBytesPara, NumBytesAddr, BusWidth);
+        get_qspi_cmd(&qspi_cmd, Cmd, pPara, NumBytesPara, NumBytesAddr, BusWidth, &address);
 
         /* Use cyhal_qspi_transfer() when pData is NULL and NumBytesData is 0 since
          * only command needs to be exchanged. Also, cyhal_qspi_transfer()
          * terminates the transfer for a command-only transfer whereas
          * cyhal_qspi_read() does not.
          */
-        if(pData == NULL || NumBytesData == 0)
+        if((pData == NULL) || (NumBytesData == 0U))
         {
-            result = cyhal_qspi_transfer(&_config->Obj, &qspi_cmd, NULL, 0, NULL, 0);
+            result = cyhal_qspi_transfer(&config_nor_spifi->Obj, &qspi_cmd, address, NULL, 0, NULL, 0);
         }
         else
         {
 #if defined(COMPONENT_RTOS_AWARE)
             if(is_read)
             {
-                result = cyhal_qspi_read_async(&_config->Obj, &qspi_cmd, pData, &NumBytesData);
+                 result = cyhal_qspi_read_async(&config_nor_spifi->Obj, &qspi_cmd, address, pData, &NumBytesData);
             }
             else
             {
-                result = cyhal_qspi_write_async(&_config->Obj, &qspi_cmd, pData, &NumBytesData);
+                result = cyhal_qspi_write_async(&config_nor_spifi->Obj, &qspi_cmd, address, pData, &NumBytesData);
             }
 
             if(CY_RSLT_SUCCESS == result)
@@ -223,11 +254,11 @@ static void _transfer_data(bool is_read, U8 Unit, U8 Cmd, const U8 * pPara, unsi
 #else
             if(is_read)
             {
-                result = cyhal_qspi_read(&_config->Obj, &qspi_cmd, pData, &NumBytesData); /* Blocking read. */
+                result = cyhal_qspi_read(&config_nor_spifi->Obj, &qspi_cmd, address, pData, &NumBytesData); /* Blocking read. */
             }
             else
             {
-                result = cyhal_qspi_write(&_config->Obj, &qspi_cmd, pData, &NumBytesData); /* Blocking write. */
+                result = cyhal_qspi_write(&config_nor_spifi->Obj, &qspi_cmd, address, pData, &NumBytesData); /* Blocking write. */
             }
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
         }
@@ -243,7 +274,12 @@ static void _transfer_data(bool is_read, U8 Unit, U8 Cmd, const U8 * pPara, unsi
 *
 **********************************************************************
 */
-
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Directive 4.6', 8,\
+'The third-party defines the function interface with basic numeral type')
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Rule 5.9', 4,\
+'The third-party defines the names of the API: _HW_Init, _HW_ReadData, _HW_WriteData, _HW_Delay. Both drivers must have instances of these API')
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Rule 21.2', 9,\
+'The third-party defines the names of the functions: _HW_Init, _HW_SetCmdMode, _HW_ExecCmd, _HW_ReadData, _HW_WriteData, _HW_Poll, _HW_Delay, _HW_Lock, _HW_Unlock. The underscore should be part of the names of these functions ')
 /*******************************************************************************
 * Function Name: FS_NOR_HW_SPI_Configure
 ****************************************************************************//**
@@ -258,13 +294,13 @@ static void _transfer_data(bool is_read, U8 Unit, U8 Cmd, const U8 * pPara, unsi
 *   FS_NOR_HW_SPI_RESULT_OK         Configured successfully.
 *
 *******************************************************************************/
-FS_NOR_HW_SPIFI_Result_t FS_NOR_HW_SPIFI_Configure(FS_NOR_HW_SPIFI_Config_t *Config)
+FS_NOR_HW_SPIFI_Result_t FS_NOR_HW_SPIFI_Configure(FS_NOR_HW_SPIFI_Config_t *UserConfig)
 {
     FS_NOR_HW_SPIFI_Result_t result = FS_NOR_HW_SPIFI_RESULT_BADPARAM;
 
-    if( Config != NULL)
+    if( UserConfig != NULL)
     {
-        _config = Config;
+        config_nor_spifi = UserConfig;
         result = FS_NOR_HW_SPIFI_RESULT_OK;
     }
 
@@ -290,53 +326,57 @@ FS_NOR_HW_SPIFI_Result_t FS_NOR_HW_SPIFI_Configure(FS_NOR_HW_SPIFI_Config_t *Con
 *    Frequency of the SPI clock in Hz.
 */
 static int _HW_Init(U8 Unit) {
-    int freq_hz = 0;
+    uint32_t freq_hz = 0U;
+    cy_rslt_t result;
+    static bool qspi_init_done = false;
 
-    if(!_qspi_init_done)
+    if(!qspi_init_done)
     {
+        result = cyhal_qspi_init(&config_nor_spifi->Obj, config_nor_spifi->Sclk, &config_nor_spifi->PinSet[0U],
+                        config_nor_spifi->HFClockFreqHz, 0U, NULL );
 
-      cy_rslt_t result = cyhal_qspi_init(&_config->Obj, _config->IO0, _config->IO1, _config->IO2, _config->IO3,
-                                         _config->IO4, _config->IO5, _config->IO6, _config->IO7,
-                                         _config->Sclk, _config->Ssel[Unit], _config->HFClockFreqHz, 0u);
+        if(CY_RSLT_SUCCESS == result)
+        {
+            for(uint32_t mem_slot = 1U; mem_slot < config_nor_spifi->NumMem; mem_slot++)
+            {
+                if(NC != config_nor_spifi->PinSet[mem_slot].ssel)
+                {
+                    result = cyhal_qspi_slave_configure(&config_nor_spifi->Obj, &config_nor_spifi->PinSet[mem_slot]);
 
-      if(CY_RSLT_SUCCESS == result)
-      {
-          for(uint32_t mem_slot = 0; mem_slot < _config->NumMem; mem_slot++)
-          {
-              if(NC != _config->Ssel[mem_slot])
-              {
-                  result = cyhal_qspi_slave_select_config(&_config->Obj, _config->Ssel[mem_slot]);
-
-                  if(CY_RSLT_SUCCESS != result)
-                  {
-                      break;
-                  }
-              }
-          }
-
+                    if(CY_RSLT_SUCCESS != result)
+                    {
+                        break;
+                    }
+                }
+            }
 #if defined(COMPONENT_RTOS_AWARE)
           if(CY_RSLT_SUCCESS == result)
           {
-              cyhal_qspi_register_callback(&_config->Obj, _qspi_event_callback, NULL);
-              cyhal_qspi_enable_event(&_config->Obj, (cyhal_qspi_event_t) (CYHAL_QSPI_IRQ_TRANSMIT_DONE | CYHAL_QSPI_IRQ_RECEIVE_DONE), _config->QspiIntrPriority, true);
+              cyhal_qspi_register_callback(&config_nor_spifi->Obj, qspi_event_callback, NULL);
+              CY_MISRA_DEVIATE_LINE('MISRA C-2012 Rule 10.5','In cyhal_qspi_enable_event essentially() enum type cast to essentially unsigned type');
+              cyhal_qspi_enable_event(&config_nor_spifi->Obj, (cyhal_qspi_event_t) ((uint32_t)CYHAL_QSPI_IRQ_TRANSMIT_DONE | (uint32_t)CYHAL_QSPI_IRQ_RECEIVE_DONE), config_nor_spifi->QspiIntrPriority, true);
               result = cy_rtos_init_semaphore(&qspi_sema, QSPI_SEMA_MAX_COUNT, QSPI_SEMA_INIT_COUNT);
           }
 #endif /* #if defined(COMPONENT_RTOS_AWARE) */
-
-          if(CY_RSLT_SUCCESS == result)
-          {
-              freq_hz = cyhal_qspi_get_frequency(&_config->Obj);
-              _qspi_init_done = true;
-          }
-      }
+            result = set_active_ssel(Unit);
+            if(CY_RSLT_SUCCESS == result)
+            {
+                freq_hz = cyhal_qspi_get_frequency(&config_nor_spifi->Obj);
+                qspi_init_done = true;
+            }
+        }
     }
     else
     {
+        result = set_active_ssel(Unit);
         /* QSPI is already initialized. Just return the frequency value. */
-        freq_hz = cyhal_qspi_get_frequency(&_config->Obj);
+        if(CY_RSLT_SUCCESS == result)
+        {        
+            freq_hz = cyhal_qspi_get_frequency(&config_nor_spifi->Obj);
+        }
     }
 
-    return freq_hz;
+    return (int32_t) freq_hz;
 }
 
 /*********************************************************************
@@ -365,19 +405,30 @@ static void _HW_SetCmdMode(U8 Unit) {
 */
 static void _HW_ExecCmd(U8 Unit, U8 Cmd, U8 BusWidth) {
     cyhal_qspi_command_t qspi_cmd;
+    uint32_t address = 0U;
 
-    cy_rslt_t result = _set_active_ssel(Unit);
+    cy_rslt_t result = set_active_ssel(Unit);
 
     if(CY_RSLT_SUCCESS == result)
     {
-        qspi_cmd.instruction.bus_width = _get_bus_width(BusWidth);
+        qspi_cmd.instruction.bus_width = get_bus_width(BusWidth);
         qspi_cmd.instruction.value = Cmd;
         qspi_cmd.instruction.disabled = false;
-        qspi_cmd.address.disabled = true;
-        qspi_cmd.mode_bits.disabled = true;
-        qspi_cmd.dummy_count = 0;
+        qspi_cmd.instruction.data_rate = config_nor_spifi->DataRate; 
+        qspi_cmd.instruction.two_byte_cmd = false; 
 
-        result = cyhal_qspi_transfer(&_config->Obj, &qspi_cmd, NULL, 0, NULL, 0);
+        qspi_cmd.address.disabled = true;
+
+        qspi_cmd.mode_bits.disabled = true;
+        
+        qspi_cmd.dummy_cycles.bus_width = CYHAL_QSPI_CFG_BUS_SINGLE;
+        qspi_cmd.dummy_cycles.data_rate = config_nor_spifi->DataRate;
+        qspi_cmd.dummy_cycles.dummy_count = 0U;
+        
+        qspi_cmd.data.data_rate = config_nor_spifi->DataRate; 
+        qspi_cmd.data.bus_width = get_bus_width(BusWidth);
+
+        result = cyhal_qspi_transfer(&config_nor_spifi->Obj, &qspi_cmd, address, NULL, 0, NULL, 0);
     }
 
     CY_ASSERT(CY_RSLT_SUCCESS == result);
@@ -393,7 +444,7 @@ static void _HW_ExecCmd(U8 Unit, U8 Cmd, U8 BusWidth) {
 *    The HW has to be in SPI mode.
 */
 static void _HW_ReadData(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 * pData, unsigned NumBytesData, U16 BusWidth) {
-    _transfer_data(true, Unit, Cmd, pPara, NumBytesPara, NumBytesAddr, pData, NumBytesData, BusWidth);
+    transfer_data(true, Unit, Cmd, pPara, NumBytesPara, NumBytesAddr, pData, NumBytesData, BusWidth);
 }
 
 /*********************************************************************
@@ -405,7 +456,8 @@ static void _HW_ReadData(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPar
 *    The HW has to be in SPI mode.
 */
 static void _HW_WriteData(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, const U8 * pData, unsigned NumBytesData, U16 BusWidth) {
-    _transfer_data(false, Unit, Cmd, pPara, NumBytesPara, NumBytesAddr, (U8 *) pData, NumBytesData, BusWidth);
+    CY_MISRA_DEVIATE_LINE('MISRA C-2012 Rule 11.8','The third-party defines the function interface');
+    transfer_data(false, Unit, Cmd, pPara, NumBytesPara, NumBytesAddr, (U8 *) pData, NumBytesData, BusWidth);
 }
 
 /*********************************************************************
@@ -429,7 +481,7 @@ static void _HW_WriteData(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPa
 *    position of the least significant bit in the byte.
 */
 static int _HW_Poll(U8 Unit, U8 Cmd, U8 BitPos, U8 BitValue, U32 Delay, U32 TimeOut_ms, U16 BusWidth) {
-  int r;
+  int32_t r;
 
   /* This function is not implemented since the QSPI block does not support HW
    * based polling of register bits of a QSPI memory. emFile uses SW based
@@ -462,7 +514,7 @@ static int _HW_Poll(U8 Unit, U8 Cmd, U8 BitPos, U8 BitValue, U32 Delay, U32 Time
 static int _HW_Delay(U8 Unit, U32 ms) {
   FS_USE_PARA(Unit);
 
-  FS_X_OS_Delay(ms);
+  FS_X_OS_Delay((int32_t)ms);
 
   return 0;
 }
@@ -513,4 +565,7 @@ const FS_NOR_HW_TYPE_SPIFI FS_NOR_HW_SPIFI = {
   _HW_Unlock
 };
 
+CY_MISRA_BLOCK_END('MISRA C-2012 Directive 4.6')
+CY_MISRA_BLOCK_END('MISRA C-2012 Rule 5.9')
+CY_MISRA_BLOCK_END('MISRA C-2012 Rule 21.2')
 /*************************** End of file ****************************/

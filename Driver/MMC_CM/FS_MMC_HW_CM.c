@@ -19,7 +19,7 @@ SUA period:               2010-12-01 - 2022-07-27
 Contact to extend SUA:    sales@segger.com
 -------------------------- END-OF-HEADER -----------------------------
 
-File        : FS_MMC_HW_CM_PSoC6.c
+File        : FS_MMC_HW_CM.c
 Purpose     : Generic HW layer for the MMC / SD driver working in card mode.
 Literature  :
   [1] SD Specifications Part 1 Physical Layer Simplified Specification Version 2.00
@@ -82,7 +82,7 @@ Literature  :
 typedef struct
 {
     bool is_init_done;                                      /* Indicates whether the driver is initialized or not. */
-    FS_MMC_HW_CM_SDHostConfig_t *config;                    /* User-provided driver configuration. */
+    FS_MMC_HW_CM_SDHostConfig_t *config_sd_mmc;             /* User-provided driver configuration. */
     cy_rslt_t send_cmd_status;                              /* Stores the return value of the cyhal_sdhc_send_cmd() function. */
     void *data_ptr;                                         /* Destination/source buffer for the DMA transfers. */
     U16  block_size;                                        /* Size of the block to transfer as set by the upper layer. */
@@ -95,7 +95,7 @@ typedef struct
 *
 **********************************************************************
 */
-static cy_sd_host_inst_t _sd_host_inst[FS_MMC_NUM_UNITS];
+static cy_sd_host_inst_t sd_host_inst[FS_MMC_NUM_UNITS];
 
 /*********************************************************************
 *
@@ -105,7 +105,7 @@ static cy_sd_host_inst_t _sd_host_inst[FS_MMC_NUM_UNITS];
 */
 
 /*******************************************************************************
-* Function Name: _reset_cmd_and_data_lines
+* Function Name: reset_cmd_and_data_lines
 ****************************************************************************//**
 *
 *  Issues software resets to command and data lines. This function also clears
@@ -115,19 +115,19 @@ static cy_sd_host_inst_t _sd_host_inst[FS_MMC_NUM_UNITS];
 *   Unit            Index of the SD / MMC host controller (0-based).
 *
 *******************************************************************************/
-static void _reset_cmd_and_data_lines(U8 Unit)
+static void reset_cmd_and_data_lines(U8 Unit)
 {
-    cyhal_sdhc_software_reset(&_sd_host_inst[Unit].config->Obj);
+    cyhal_sdhc_software_reset(&sd_host_inst[Unit].config_sd_mmc->Obj);
 
     /* Clear the error status bits after the reset is complete. */
-    cyhal_sdhc_clear_errors(&_sd_host_inst[Unit].config->Obj);
+    cyhal_sdhc_clear_errors(&sd_host_inst[Unit].config_sd_mmc->Obj);
 
-    FS_DEBUG_WARN((FS_MTYPE_DRIVER, "_reset_cmd_and_data_lines: SW reset of CMD & DATA lines!\n"));
+    FS_DEBUG_WARN((FS_MTYPE_DRIVER, "reset_cmd_and_data_lines: SW reset of CMD & DATA lines!\n"));
 }
 
 
 /*******************************************************************************
-* Function Name: _clear_interrupt_status_registers
+* Function Name: clear_interrupt_status_registers
 ****************************************************************************//**
 *
 *  Clears Error Interrupt Status registers. Resets CMD and DATA lines if an
@@ -137,14 +137,14 @@ static void _reset_cmd_and_data_lines(U8 Unit)
 *   Unit            Index of the SD / MMC host controller (0-based).
 *
 *******************************************************************************/
-static void _clear_interrupt_status_registers(U8 Unit)
+static void clear_interrupt_status_registers(U8 Unit)
 {
-    cyhal_sdhc_error_type_t err = cyhal_sdhc_get_last_command_errors(&_sd_host_inst[Unit].config->Obj);
+    cyhal_sdhc_error_type_t err = cyhal_sdhc_get_last_command_errors(&sd_host_inst[Unit].config_sd_mmc->Obj);
 
     /* Check if an error has occurred in the previous transaction. */
-    if (err)
+    if (err != CYHAL_SDHC_NO_ERR)
     {
-        _reset_cmd_and_data_lines(Unit);
+        reset_cmd_and_data_lines(Unit);
     }
 }
 
@@ -154,6 +154,10 @@ static void _clear_interrupt_status_registers(U8 Unit)
 *
 **********************************************************************
 */
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Directive 4.6', 9,\
+'The third-party defines the function interface with basic numeral type')
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Rule 21.2', 18,\
+'The third-party defines the names of the functions')
 
 /*******************************************************************************
 * Function Name: FS_MMC_HW_CM_Configure
@@ -170,15 +174,15 @@ static void _clear_interrupt_status_registers(U8 Unit)
 *   FS_MMC_HW_CM_RESULT_OK          Configured successfully.
 *
 *******************************************************************************/
-FS_MMC_HW_CM_Result_t FS_MMC_HW_CM_Configure(U8 Unit, FS_MMC_HW_CM_SDHostConfig_t *Config)
+FS_MMC_HW_CM_Result_t FS_MMC_HW_CM_Configure(U8 Unit, FS_MMC_HW_CM_SDHostConfig_t *UserConfig)
 {
     FS_MMC_HW_CM_Result_t result = FS_MMC_HW_CM_RESULT_BADPARAM;
 
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
 
-    if(Config != NULL)
+    if(UserConfig != NULL)
     {
-        _sd_host_inst[Unit].config = Config;
+        sd_host_inst[Unit].config_sd_mmc = UserConfig;
         result = FS_MMC_HW_CM_RESULT_OK;
     }
 
@@ -206,20 +210,20 @@ static void _HW_Init(U8 Unit) {
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
 
     cy_rslt_t result = CY_RSLT_SUCCESS;
-    FS_MMC_HW_CM_SDHostConfig_t *cfg = _sd_host_inst[Unit].config;
+    FS_MMC_HW_CM_SDHostConfig_t *cfg = sd_host_inst[Unit].config_sd_mmc;
 
     FS_DEBUG_LOG((FS_MTYPE_DRIVER, "_HW_Init\n"));
 
-    if(!_sd_host_inst[Unit].is_init_done)
+    if(!sd_host_inst[Unit].is_init_done)
     {
         result = cyhal_sdhc_init_hw(&cfg->Obj, &cfg->Config,
                                     cfg->Cmd, cfg->Clk,
                                     cfg->Data0, cfg->Data1, cfg->Data2, cfg->Data3,
                                     cfg->Data4, cfg->Data5, cfg->Data6, cfg->Data7,
                                     cfg->CardDetect, cfg->IoVoltSel, cfg->CardPwrEn,
-                                    cfg->CardWriteProt, cfg->LedControl, cfg->EmmcReset);
+                                    cfg->CardWriteProt, cfg->LedControl, cfg->EmmcReset, cfg->BlockClk);
 
-        _sd_host_inst[Unit].is_init_done = true;
+        sd_host_inst[Unit].is_init_done = true;
     }
 
     /* emFile calls this function many times during initialization.
@@ -229,22 +233,22 @@ static void _HW_Init(U8 Unit) {
     if(CY_RSLT_SUCCESS == result)
     {
         /* Set the initial host bus width */
-        result = cyhal_sdhc_set_bus_width(&_sd_host_inst[Unit].config->Obj, SD_HOST_BUS_WIDTH_1_BIT, false);
+        result = cyhal_sdhc_set_bus_width(&sd_host_inst[Unit].config_sd_mmc->Obj, SD_HOST_BUS_WIDTH_1_BIT, false);
 
         if( (CY_RSLT_SUCCESS == result) && (NC != cfg->IoVoltSel) )
         {
             /* Controls IoVoltSel pin. */
-            result = cyhal_sdhc_set_io_voltage(&_sd_host_inst[Unit].config->Obj, CYHAL_SDHC_IO_VOLTAGE_3_3V, CYHAL_SDHC_IO_VOLT_ACTION_NONE);
+            result = cyhal_sdhc_set_io_voltage(&sd_host_inst[Unit].config_sd_mmc->Obj, CYHAL_SDHC_IO_VOLTAGE_3_3V, CYHAL_SDHC_IO_VOLT_ACTION_NONE);
         }
 
         if( (CY_RSLT_SUCCESS == result) && (NC != cfg->CardPwrEn) )
         {
             /* Controls the CardPwrEn pin */
-            cyhal_sdhc_enable_card_power(&_sd_host_inst[Unit].config->Obj, true);
+            result = cyhal_sdhc_enable_card_power(&sd_host_inst[Unit].config_sd_mmc->Obj, true);
         }
 
         /* Wait to the stable voltage and the stable clock */
-        FS_X_OS_Delay(CY_SD_HOST_SUPPLY_RAMP_UP_TIME_MS);
+        FS_X_OS_Delay((int32_t)CY_SD_HOST_SUPPLY_RAMP_UP_TIME_MS);
     }
 
     CY_ASSERT(CY_RSLT_SUCCESS == result);
@@ -287,7 +291,7 @@ static void _HW_Delay(int ms) {
 static int _HW_IsPresent(U8 Unit) {
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
 
-    return (cyhal_sdhc_is_card_inserted(&_sd_host_inst[Unit].config->Obj) ? FS_MEDIA_IS_PRESENT : FS_MEDIA_NOT_PRESENT);
+    return (cyhal_sdhc_is_card_inserted(&sd_host_inst[Unit].config_sd_mmc->Obj) ? FS_MEDIA_IS_PRESENT : FS_MEDIA_NOT_PRESENT);
 }
 
 /*********************************************************************
@@ -307,7 +311,7 @@ static int _HW_IsPresent(U8 Unit) {
 static int _HW_IsWriteProtected(U8 Unit) {
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
 
-    return (cyhal_sdhc_is_card_mech_write_protected(&_sd_host_inst[Unit].config->Obj) ? 1 : 0);
+    return (cyhal_sdhc_is_card_mech_write_protected(&sd_host_inst[Unit].config_sd_mmc->Obj) ? 1 : 0);
 }
 
 /*********************************************************************
@@ -337,21 +341,21 @@ static int _HW_IsWriteProtected(U8 Unit) {
 *    the frequency specified via Freq.
 */
 static U16 _HW_SetMaxSpeed(U8 Unit, U16 Freq) {
-    uint32_t actual_freq_khz = 0;
+    uint32_t actual_freq_khz = 0U;
 
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
-    CY_ASSERT(0u < Freq);
+    CY_ASSERT(0U < Freq);
 
-    cy_rslt_t result = cyhal_sdhc_set_frequency(&_sd_host_inst[Unit].config->Obj, (Freq * 1000lu), false);
+    cy_rslt_t result = cyhal_sdhc_set_frequency(&sd_host_inst[Unit].config_sd_mmc->Obj, (Freq * 1000LU), false);
 
     if(CY_RSLT_SUCCESS == result)
     {
-        actual_freq_khz = cyhal_sdhc_get_frequency(&_sd_host_inst[Unit].config->Obj) / 1000lu;
+        actual_freq_khz = cyhal_sdhc_get_frequency(&sd_host_inst[Unit].config_sd_mmc->Obj) / 1000LU;
     }
 
     FS_DEBUG_LOG((FS_MTYPE_DRIVER, "_HW_SetMaxClock: ReqFreq = %d KHz, Actual Freq = %d KHz\n", Freq, actual_freq_khz));
 
-    return actual_freq_khz;
+    return (uint16_t)actual_freq_khz;
 }
 
 /*********************************************************************
@@ -390,7 +394,7 @@ static void _HW_SetReadDataTimeOut(U8 Unit, U32 Value) {
      * clock cycles (specified through Value). In that case, reconfigure the
      * delay using the FS_MMC_READ_DATA_TIMEOUT macro in FS_Conf.h.
      */
-    cy_rslt_t result = cyhal_sdhc_set_data_read_timeout(&_sd_host_inst[Unit].config->Obj, Value, false);
+    cy_rslt_t result = cyhal_sdhc_set_data_read_timeout(&sd_host_inst[Unit].config_sd_mmc->Obj, Value, false);
 
     CY_ASSERT(CY_RSLT_SUCCESS == result);
     FS_USE_PARA(result);
@@ -419,14 +423,15 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
      *  FS_MMC_CMD_FLAG_SWITCH_VOLTAGE
      */
     cy_rslt_t result = CY_RSLT_SUCCESS;
-    cyhal_sdhc_cmd_config_t cmd_config = { 0u };
-    cyhal_sdhc_data_config_t data_config = { 0u };
+    cyhal_sdhc_cmd_config_t cmd_config = { 0U };
+    cyhal_sdhc_data_config_t data_config = { 0U };
 
-    if (CmdFlags & FS_MMC_CMD_FLAG_DATATRANSFER)
+    if ((CmdFlags & FS_MMC_CMD_FLAG_DATATRANSFER) != 0x0UL)
     {
-        data_config.data_ptr             = _sd_host_inst[Unit].data_ptr;
-        data_config.block_size           = _sd_host_inst[Unit].block_size,
-        data_config.number_of_blocks     = _sd_host_inst[Unit].num_blocks,
+        CY_MISRA_DEVIATE_LINE('MISRA C-2012 Rule 11.5','The third-party defines the function interface');
+        data_config.data_ptr             = sd_host_inst[Unit].data_ptr;
+        data_config.block_size           = sd_host_inst[Unit].block_size;
+        data_config.number_of_blocks     = sd_host_inst[Unit].num_blocks;
 
         /* data_config.auto_command must be set to AUTO_CMD_NONE since the
          * emFile driver already takes care of issuing CMD23 (SET_BLOCK_COUNT)
@@ -434,10 +439,10 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
          * read (CMD18) or a multi-block write (CMD25) command respectively.
          */
         data_config.auto_command         = CYHAL_SDHC_AUTO_CMD_NONE;
-        data_config.is_read              = (CmdFlags & FS_MMC_CMD_FLAG_WRITETRANSFER) ? false : true;
+        data_config.is_read              = ((CmdFlags & FS_MMC_CMD_FLAG_WRITETRANSFER) != 0x0UL)? false : true;
 
         cmd_config.data_config = &data_config;
-        result = cyhal_sdhc_config_data_transfer(&_sd_host_inst[Unit].config->Obj, &data_config);
+        result = cyhal_sdhc_config_data_transfer(&sd_host_inst[Unit].config_sd_mmc->Obj, &data_config);
     }
     else
     {
@@ -446,21 +451,24 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
 
     if(CY_RSLT_SUCCESS == result)
     {
-        if (CmdFlags & FS_MMC_CMD_FLAG_USE_SD4MODE)
+        if ((CmdFlags & FS_MMC_CMD_FLAG_USE_SD4MODE) != 0x0UL)
         {
-            result = cyhal_sdhc_set_bus_width(&_sd_host_inst[Unit].config->Obj, SD_HOST_BUS_WIDTH_4_BIT, false);
+            result = cyhal_sdhc_set_bus_width(&sd_host_inst[Unit].config_sd_mmc->Obj, SD_HOST_BUS_WIDTH_4_BIT, false);
         }
-        else if (CmdFlags & FS_MMC_CMD_FLAG_USE_MMC8MODE)
+        else if ((CmdFlags & FS_MMC_CMD_FLAG_USE_MMC8MODE) != 0x0UL)
         {
-            result = cyhal_sdhc_set_bus_width(&_sd_host_inst[Unit].config->Obj, SD_HOST_BUS_WIDTH_8_BIT, false);
+            result = cyhal_sdhc_set_bus_width(&sd_host_inst[Unit].config_sd_mmc->Obj, SD_HOST_BUS_WIDTH_8_BIT, false);
         }
-
+        else
+        {
+            /* Command flags invalid */
+        }
         if(CY_RSLT_SUCCESS == result)
         {
             cmd_config.command_index = (uint32_t)Cmd;
             cmd_config.command_argument = Arg;
 
-            if(cmd_config.command_index == 0)
+            if(cmd_config.command_index == 0U)
             {
                 FS_DEBUG_LOG((FS_MTYPE_DRIVER, "CMD0!\n"));
             }
@@ -468,7 +476,7 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
             /* CRC Check enable must be set to 0 for the command with no
              * response, R3 response, and R4 response.
              */
-            cmd_config.enable_crc_check = (CmdFlags & FS_MMC_CMD_FLAG_NO_CRC_CHECK) ? false : true;
+            cmd_config.enable_crc_check = ((CmdFlags & FS_MMC_CMD_FLAG_NO_CRC_CHECK) != 0x0UL) ? false : true;
 
             /* Must be set to false for the command with no response, R2
              * response, R3 response, and R4 response.
@@ -484,7 +492,7 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
                     cmd_config.enable_crc_check = false;
                     break;
                 case FS_MMC_RESPONSE_FORMAT_R1:
-                    if(CmdFlags & FS_MMC_CMD_FLAG_SETBUSY)
+                    if((CmdFlags & FS_MMC_CMD_FLAG_SETBUSY) != 0x0UL)
                     {
                         cmd_config.response_type = CYHAL_SDHC_RESPONSE_LEN_48B;
                     }
@@ -503,15 +511,16 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
                     cmd_config.enable_idx_check = false;
                     break;
                 default:
+                    /* Response type invalid */
                     break;
             }
 
             /* FS_MMC_CMD_FLAG_INITIALIZE is set when CMD0 is sent.
              * command_type must be set to ABORT for CMD0.
              *
-             * FS_MMC_CMD_FLAG_STOP_TRANS is set when CMD12 is sent.
+             * FS_MMC_CMD_FLAG_STOP_TRANS is set whensCMD12 is sent.
              */
-            if (CmdFlags & (FS_MMC_CMD_FLAG_INITIALIZE | FS_MMC_CMD_FLAG_STOP_TRANS) )
+            if ((CmdFlags & (FS_MMC_CMD_FLAG_INITIALIZE | FS_MMC_CMD_FLAG_STOP_TRANS)) != 0x0UL)
             {
                 cmd_config.command_type = CYHAL_SDHC_CMD_ABORT;
             }
@@ -521,24 +530,24 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
             }
 
             /* Clean all the interrupts before sending commands */
-            _clear_interrupt_status_registers(Unit);
-            result = cyhal_sdhc_send_cmd(&_sd_host_inst[Unit].config->Obj, &cmd_config);
+            clear_interrupt_status_registers(Unit);
+            result = cyhal_sdhc_send_cmd(&sd_host_inst[Unit].config_sd_mmc->Obj, &cmd_config);
 
             /* FS_MMC_CMD_FLAG_INITIALIZE is set when CMD0 is sent.
              * SW reset of CMD and DATA lines must be performed after CMD0 is
              * sent.
              */
-            if (CmdFlags & FS_MMC_CMD_FLAG_INITIALIZE)
+            if ((CmdFlags & FS_MMC_CMD_FLAG_INITIALIZE) != 0x0UL)
             {
                 cyhal_system_delay_us(SD_HOST_NCC_MIN_US);
 
                 /* Software reset for the CMD line. */
-                Cy_SD_Host_SoftwareReset(_sd_host_inst[Unit].config->Obj.base, CY_SD_HOST_RESET_CMD_LINE);
-                FS_DEBUG_WARN((FS_MTYPE_DRIVER, "_HW_SendCmd: SW reset of CMD line!\n"));         
+                cyhal_sdhc_software_reset(&sd_host_inst[Unit].config_sd_mmc->Obj);
+                FS_DEBUG_WARN((FS_MTYPE_DRIVER, "_HW_SendCmd: SW reset of CMD line!\n"));
             }
             else
             {
-                _sd_host_inst[Unit].send_cmd_status = result;
+                sd_host_inst[Unit].send_cmd_status = result;
 
                 if (CY_RSLT_SUCCESS == result)
                 {
@@ -547,7 +556,7 @@ static void _HW_SendCmd(U8 Unit, unsigned Cmd, unsigned CmdFlags, unsigned Respo
                 else
                 {
                     /* Software reset for the CMD and DATA lines. */
-                    _reset_cmd_and_data_lines(Unit);
+                    reset_cmd_and_data_lines(Unit);
                     FS_DEBUG_WARN((FS_MTYPE_DRIVER, "cyhal_sdhc_send_cmd: error 0x%08"PRIx32"\n", result));
                 }
             }
@@ -583,28 +592,33 @@ static int _HW_GetResponse(U8 Unit, void * pBuffer, U32 Size) {
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
     CY_ASSERT(pBuffer != NULL);
 
-    cyhal_sdhc_error_type_t err;
+    uint32_t err;
+    CY_MISRA_DEVIATE_LINE('MISRA C-2012 Rule 11.5','The third-party defines the function interface');
     uint8_t *pResponse = (uint8_t *) pBuffer;
     uint8_t i;
-    uint32_t response[SD_HOST_RESPONSE_SIZE] = { 0u };
-    int ret = FS_MMC_CARD_RESPONSE_GENERIC_ERROR;
+    uint32_t response[SD_HOST_RESPONSE_SIZE] = { 0U };
+    int32_t ret = FS_MMC_CARD_RESPONSE_GENERIC_ERROR;
 
-    if(CY_RSLT_SUCCESS == _sd_host_inst[Unit].send_cmd_status)
+    if(CY_RSLT_SUCCESS == sd_host_inst[Unit].send_cmd_status)
     {
-        err = cyhal_sdhc_get_last_command_errors(&_sd_host_inst[Unit].config->Obj);
+        err = (uint32_t)cyhal_sdhc_get_last_command_errors(&sd_host_inst[Unit].config_sd_mmc->Obj);
         FS_DEBUG_LOG((FS_MTYPE_DRIVER, "\terror = 0x%04"PRIx32"\n", err));
 
-        if(CYHAL_SDHC_NO_ERR == err)
+        if ((uint32_t)CYHAL_SDHC_NO_ERR == err)
         {
             ret = FS_MMC_CARD_NO_ERROR;
         }
-        else if(err & CYHAL_SDHC_CMD_CRC_ERR)
+        else if ((err & (uint32_t)CYHAL_SDHC_CMD_CRC_ERR) != 0x0UL)
         {
             ret = FS_MMC_CARD_RESPONSE_CRC_ERROR;
         }
-        else if(err & CYHAL_SDHC_CMD_TOUT_ERR)
+        else if ((err & (uint32_t)CYHAL_SDHC_CMD_TOUT_ERR) != 0x0UL)
         {
             ret = FS_MMC_CARD_RESPONSE_TIMEOUT;
+        }
+        else
+        {
+            /* An error was generated wShile writing. Return FS_MMC_CARD_WRITE_GENERIC_ERROR */
         }
     }
     else
@@ -620,9 +634,9 @@ static int _HW_GetResponse(U8 Unit, void * pBuffer, U32 Size) {
          */
 
         /* Check the response. */
-        cy_rslt_t result = cyhal_sdhc_get_response(&_sd_host_inst[Unit].config->Obj,
+        cy_rslt_t result = cyhal_sdhc_get_response(&sd_host_inst[Unit].config_sd_mmc->Obj,
                                          (uint32_t *)&response,
-                                         Size > SD_HOST_RESP_LEN_SIX_BYTES ? true : false);
+                                         (Size > SD_HOST_RESP_LEN_SIX_BYTES) ? true : false);
 
         if(CY_RSLT_SUCCESS == result)
         {
@@ -630,22 +644,22 @@ static int _HW_GetResponse(U8 Unit, void * pBuffer, U32 Size) {
             if (Size <= SD_HOST_RESP_LEN_SIX_BYTES)
             {
                 pResponse[4] = (uint8_t) (response[0]);
-                pResponse[3] = (uint8_t) (response[0] >> 8u);
-                pResponse[2] = (uint8_t) (response[0] >> 16u);
-                pResponse[1] = (uint8_t) (response[0] >> 24u);
+                pResponse[3] = (uint8_t) (response[0] >> 8U);
+                pResponse[2] = (uint8_t) (response[0] >> 16U);
+                pResponse[1] = (uint8_t) (response[0] >> 24U);
             }
             else
             {
-                i = Size - 2u;
+                i = (uint8_t)(Size - 2U);
 
-                for (uint32_t index = 0; index < ((Size - 1) / sizeof(uint32_t)); index++)
+                for (uint32_t index = 0U; index < ((Size - 1U) / sizeof(uint32_t)); index++)
                 {
-                    pResponse[i - 0u] = (uint8_t) (response[index]);
-                    pResponse[i - 1u] = (uint8_t) (response[index] >> 8u);
-                    pResponse[i - 2u] = (uint8_t) (response[index] >> 16u);
-                    pResponse[i - 3u] = (uint8_t) (response[index] >> 24u);
+                    pResponse[i - 0U] = (uint8_t) (response[index]);
+                    pResponse[i - 1U] = (uint8_t) (response[index] >> 8U);
+                    pResponse[i - 2U] = (uint8_t) (response[index] >> 16U);
+                    pResponse[i - 3U] = (uint8_t) (response[index] >> 24U);
 
-                    i = i - sizeof(uint32_t);
+                    i = (uint8_t) (i - sizeof(uint32_t));
                 }
             }
         }
@@ -680,32 +694,40 @@ static int _HW_GetResponse(U8 Unit, void * pBuffer, U32 Size) {
 *  Additional information
 *    The total number of bytes to be transferred is NumBytes * NumBlocks.
 */
+CY_MISRA_DEVIATE_BLOCK_START('MISRA C-2012 Rule 8.13',1,\
+'The third-party defines the function interface')
+
 static int _HW_ReadData(U8 Unit, void * pBuffer, unsigned NumBytes, unsigned NumBlocks) {
+    CY_MISRA_BLOCK_END('MISRA C-2012 Rule 8.13');
     FS_USE_PARA(pBuffer);
     FS_USE_PARA(NumBytes);
     FS_USE_PARA(NumBlocks);
 
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
 
-    int ret = FS_MMC_CARD_READ_GENERIC_ERROR;
-    cyhal_sdhc_error_type_t err;
+    int32_t ret = FS_MMC_CARD_READ_GENERIC_ERROR;
+    uint32_t err;
 
-    if(CY_RSLT_SUCCESS == cyhal_sdhc_wait_transfer_complete(&_sd_host_inst[Unit].config->Obj))
+    if(CY_RSLT_SUCCESS == cyhal_sdhc_wait_transfer_complete(&sd_host_inst[Unit].config_sd_mmc->Obj))
     {
-        err = cyhal_sdhc_get_last_command_errors(&_sd_host_inst[Unit].config->Obj);
+        err = (uint32_t)cyhal_sdhc_get_last_command_errors(&sd_host_inst[Unit].config_sd_mmc->Obj);
         FS_DEBUG_LOG((FS_MTYPE_DRIVER, "\terror = 0x%04"PRIx32"\n", err));
 
-        if(CYHAL_SDHC_NO_ERR == err)
+        if ((uint32_t)CYHAL_SDHC_NO_ERR == err)
         {
             ret = FS_MMC_CARD_NO_ERROR;
         }
-        else if(err & CYHAL_SDHC_DATA_CRC_ERR)
+        else if ((err & (uint32_t)CYHAL_SDHC_DATA_CRC_ERR) != 0x0UL)
         {
             ret = FS_MMC_CARD_READ_CRC_ERROR;
         }
-        else if(err & CYHAL_SDHC_DATA_TOUT_ERR)
+        else if ((err & (uint32_t)CYHAL_SDHC_DATA_TOUT_ERR) != 0x0UL)
         {
             ret = FS_MMC_CARD_READ_TIMEOUT;
+        }
+        else
+        {
+            /* An error was generated while writing. Return FS_MMC_CARD_WRITE_GENERIC_ERROR */
         }
     }
     else
@@ -713,7 +735,7 @@ static int _HW_ReadData(U8 Unit, void * pBuffer, unsigned NumBytes, unsigned Num
         ret = FS_MMC_CARD_READ_TIMEOUT;
     }
 
-    if(FS_MMC_CARD_NO_ERROR != ret)
+    if (FS_MMC_CARD_NO_ERROR != ret)
     {
         FS_DEBUG_WARN((FS_MTYPE_DRIVER, "_HW_ReadData, ret = %d\n", ret));
     }
@@ -748,25 +770,29 @@ static int _HW_WriteData(U8 Unit, const void * pBuffer, unsigned NumBytes, unsig
 
     CY_ASSERT(FS_MMC_NUM_UNITS > Unit);
 
-    int ret = FS_MMC_CARD_WRITE_GENERIC_ERROR;
-    cyhal_sdhc_error_type_t err;
+    int32_t ret = FS_MMC_CARD_WRITE_GENERIC_ERROR;
+    uint32_t err;
 
-    if(CY_RSLT_SUCCESS == cyhal_sdhc_wait_transfer_complete(&_sd_host_inst[Unit].config->Obj))
+    if(CY_RSLT_SUCCESS == cyhal_sdhc_wait_transfer_complete(&sd_host_inst[Unit].config_sd_mmc->Obj))
     {
-        err = cyhal_sdhc_get_last_command_errors(&_sd_host_inst[Unit].config->Obj);
+        err = (uint32_t)cyhal_sdhc_get_last_command_errors(&sd_host_inst[Unit].config_sd_mmc->Obj);
         FS_DEBUG_LOG((FS_MTYPE_DRIVER, "\terror = 0x%04"PRIx32"\n", err));
 
-        if(CYHAL_SDHC_NO_ERR == err)
+        if ((uint32_t)CYHAL_SDHC_NO_ERR == err)
         {
             ret = FS_MMC_CARD_NO_ERROR;
         }
-        else if(err & CYHAL_SDHC_DATA_CRC_ERR)
+        else if ((err & (uint32_t)CYHAL_SDHC_DATA_CRC_ERR) != 0x0UL)
         {
             ret = FS_MMC_CARD_WRITE_CRC_ERROR;
         }
-        else if(err & CYHAL_SDHC_DATA_TOUT_ERR)
+        else if ((err & (uint32_t)CYHAL_SDHC_DATA_TOUT_ERR) != 0x0UL)
         {
             ret = FS_MMC_CARD_RESPONSE_TIMEOUT;
+        }
+        else
+        {
+            /* An error was generated while writing. Return FS_MMC_CARD_WRITE_GENERIC_ERROR */
         }
     }
     else
@@ -774,7 +800,7 @@ static int _HW_WriteData(U8 Unit, const void * pBuffer, unsigned NumBytes, unsig
         ret = FS_MMC_CARD_RESPONSE_TIMEOUT;
     }
 
-    if(FS_MMC_CARD_NO_ERROR != ret)
+    if (FS_MMC_CARD_NO_ERROR != ret)
     {
         FS_DEBUG_WARN((FS_MTYPE_DRIVER, "_HW_WriteData, ret = %d\n", ret));
     }
@@ -802,7 +828,8 @@ static int _HW_WriteData(U8 Unit, const void * pBuffer, unsigned NumBytes, unsig
 */
 static void _HW_SetDataPointer(U8 Unit, const void * p) {
     FS_USE_PARA(Unit);
-    _sd_host_inst[Unit].data_ptr = (void *) p;
+    CY_MISRA_DEVIATE_LINE('MISRA C-2012 Rule 11.8','The third-party defines the function interface');
+    sd_host_inst[Unit].data_ptr = (void *) p;
 }
 
 /*********************************************************************
@@ -817,7 +844,7 @@ static void _HW_SetDataPointer(U8 Unit, const void * p) {
 */
 static void _HW_SetBlockLen(U8 Unit, U16 BlockSize) {
     FS_USE_PARA(Unit);
-    _sd_host_inst[Unit].block_size = BlockSize;
+    sd_host_inst[Unit].block_size = BlockSize;
 }
 
 /*********************************************************************
@@ -832,7 +859,7 @@ static void _HW_SetBlockLen(U8 Unit, U16 BlockSize) {
 */
 static void _HW_SetNumBlocks(U8 Unit, U16 NumBlocks) {
     FS_USE_PARA(Unit);
-    _sd_host_inst[Unit].num_blocks = NumBlocks;
+    sd_host_inst[Unit].num_blocks = NumBlocks;
 }
 
 /*********************************************************************
@@ -963,6 +990,8 @@ const FS_MMC_HW_TYPE_CM FS_MMC_HW_CM = {
   NULL
 };
 
+CY_MISRA_BLOCK_END('MISRA C-2012 Directive 4.6')
+CY_MISRA_BLOCK_END('MISRA C-2012 Rule 21.2')
 /*************************** End of file ****************************/
 
 #endif /* #ifdef CY_IP_MXSDHC */

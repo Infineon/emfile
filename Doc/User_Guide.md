@@ -67,7 +67,7 @@ The header file *FS_ConfCommon.h* under the *FS* directory contains the common c
 
 ### Using emFile in an RTOS Environment
 
-The OS layer and the HW layer implementations use the [abstraction-rtos](http://github.com/cypresssemiconductorco/abstraction-rtos) library for implementing RTOS functionalities. Therefore, emFile can be used with the RTOSes supported by the abstraction-rtos library. Do the following to configure your application for using emFile with FreeRTOS.
+The OS layer and the HW layer implementations use the [abstraction-rtos](https://github.com/Infineon/abstraction-rtos) library for implementing RTOS functionalities. Therefore, emFile can be used with the RTOSes supported by the abstraction-rtos library. Do the following to configure your application for using emFile with FreeRTOS.
 
 1. Open Library Manager and add FreeRTOS to your project.
 
@@ -124,4 +124,4 @@ Configure the HW layer for the SD/MMC driver in `FS_X_AddDevices()` before addin
 </div>
 
 ---
-© 2021 Cypress Semiconductor Corporation, an Infineon Technologies Company.
+© 2021-2023 Cypress Semiconductor Corporation, an Infineon Technologies Company.

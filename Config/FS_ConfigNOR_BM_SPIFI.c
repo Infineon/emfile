@@ -63,18 +63,26 @@ static U32 _aMemBlock[ALLOC_SIZE / 4];
 
 static FS_NOR_HW_SPIFI_Config_t QspiConfig =
 {
-    .IO0 = CYBSP_QSPI_D0,
-    .IO1 = CYBSP_QSPI_D1,
-    .IO2 = CYBSP_QSPI_D2,
-    .IO3 = CYBSP_QSPI_D3,
-    .IO4 = NC,
-    .IO5 = NC,
-    .IO6 = NC,
-    .IO7 = NC,
+    .PinSet [0u] =
+    {
+        .io[0u] = CYBSP_QSPI_D0,
+        .io[1u] = CYBSP_QSPI_D1,
+        .io[2u] = CYBSP_QSPI_D2,
+        .io[3u] = CYBSP_QSPI_D3,
+        .io[4u] = NC,
+        .io[5u] = NC,
+        .io[6u] = NC,
+        .io[7u] = NC,
+        .ssel  = CYBSP_QSPI_SS,
+    },
+    .PinSet [1u] = { .io[0u] = NC, .io[1u] = NC, .io[2u] = NC, .io[3u] = NC, .io[4u] = NC, .io[5u] = NC, .io[6u] = NC, .io[7u] = NC, .ssel  = NC, },
+    .PinSet [2u] = { .io[0u] = NC, .io[1u] = NC, .io[2u] = NC, .io[3u] = NC, .io[4u] = NC, .io[5u] = NC, .io[6u] = NC, .io[7u] = NC, .ssel  = NC, },
+    .PinSet [3u] = { .io[0u] = NC, .io[1u] = NC, .io[2u] = NC, .io[3u] = NC, .io[4u] = NC, .io[5u] = NC, .io[6u] = NC, .io[7u] = NC, .ssel  = NC, },
     .Sclk = CYBSP_QSPI_SCK,
+    .Clk = NULL,
     .NumMem = 1,
-    .Ssel = { CYBSP_QSPI_SS, NC, NC, NC },
     .HFClockFreqHz = QSPI_BUS_FREQ_HZ,
+    .DataRate = CYHAL_QSPI_DATARATE_SDR,
 
 #if defined(COMPONENT_RTOS_AWARE)
     .QspiIntrPriority = QSPI_DEFAULT_INTR_PRIORITY  /* Interrupt priority for the QSPI block. */

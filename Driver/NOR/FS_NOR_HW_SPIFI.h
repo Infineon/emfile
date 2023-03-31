@@ -59,39 +59,32 @@ Purpose     : low-level flash driver for quad SPI.
  * Note: Though the QSPI HAL supports octal SPI connection, emFile does not
  * support it.
  */
+
 typedef struct
 {
-    cyhal_gpio_t IO0;         /* Data/IO pin 0 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO1;         /* Data/IO pin 1 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO2;         /* Data/IO pin 2 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO3;         /* Data/IO pin 3 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO4;         /* Data/IO pin 4 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO5;         /* Data/IO pin 1 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO6;         /* Data/IO pin 2 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t IO7;         /* Data/IO pin 3 connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t Sclk;        /* Clock pin connected to the memory. */
-    uint8_t NumMem;           /* Number of memory devices used. */
-    cyhal_gpio_t Ssel[FS_NOR_HW_SPIFI_MAX_MEM_SUPPORTED]; /* Slave select pins connected to the memories.
-                                                           * The index of this array corresponds to the HW
-                                                           * unit number used with the emFile APIs.
-                                                           */
-    uint32_t HFClockFreqHz;   /* HF clock frequency (in hertz) input to the QSPI block. Refer to the
-                               * device datasheet for the limitations.
-                               */
-#if defined(COMPONENT_RTOS_AWARE)
-    uint8_t QspiIntrPriority; /* Interrupt priority for the QSPI block. */
-#endif
+    cyhal_qspi_slave_pin_config_t PinSet [FS_NOR_HW_SPIFI_MAX_MEM_SUPPORTED]; /* Data/IO pins connected to the memory, Pass NC when unused. */
+    cyhal_gpio_t Sclk;                                                        /* Clock pin connected to the memory. */
+    uint8_t NumMem;                                                           /* Number of memory devices used. */
 
-    cyhal_qspi_t Obj;         /* This HW layer passes this object to the HAL APIs.
-                               * User should not access the contents of it.
-                               * Provided here so that user can call the HAL APIs directly
-                               * if required.
-                               */
+    cyhal_qspi_datarate_t DataRate;                                           /* Field added for future updates */ 
+
+    uint32_t HFClockFreqHz;                                                   /* HF clock frequency (in hertz) input to the QSPI block. Refer to the
+                                                                               * device datasheet for the limitations.
+                                                                               */
+#if defined(COMPONENT_RTOS_AWARE)
+    uint8_t QspiIntrPriority;                                                 /* Interrupt priority for the QSPI block. */
+#endif
+    cyhal_clock_t *Clk;
+    cyhal_qspi_t Obj;                                                         /* This HW layer passes this object to the HAL APIs.
+                                                                               * User should not access the contents of it.
+                                                                               * Provided here so that user can call the HAL APIs directly
+                                                                               * if required.
+                                                                               */
 } FS_NOR_HW_SPIFI_Config_t;
 
 typedef enum
 {
-    FS_NOR_HW_SPIFI_RESULT_OK = 0u,
+    FS_NOR_HW_SPIFI_RESULT_OK = 0U,
     FS_NOR_HW_SPIFI_RESULT_BADPARAM,
 } FS_NOR_HW_SPIFI_Result_t;
 
@@ -109,7 +102,7 @@ extern const FS_NOR_HW_TYPE_SPIFI FS_NOR_HW_SPIFI;
 *
 **********************************************************************
 */
-FS_NOR_HW_SPIFI_Result_t FS_NOR_HW_SPIFI_Configure(FS_NOR_HW_SPIFI_Config_t *Config);
+FS_NOR_HW_SPIFI_Result_t FS_NOR_HW_SPIFI_Configure(FS_NOR_HW_SPIFI_Config_t *UserConfig);
 
 #endif  // FS_NOR_HW_SPIFI_H
 

@@ -6,11 +6,9 @@
 
 ## What's Included?
 
-- SEGGER emFile (in the form of pre-built static libraries)
+- Support HAL 2.0
 
-- Hardware layer implementations for Card mode MMC/SD and Block Map NOR drivers
-
-- OS layer implementation using the [abstraction-rtos](https://github.com/cypresssemiconductorco/abstraction-rtos) API
+- Support connecting multiple memories to different QSPI data lines of the MCU.
 
 - Documentation
 
@@ -20,21 +18,19 @@
 
 - Simultaneous use of MMC/SD (card mode) and NOR flash storage devices is not supported. However, you can use them simultaneously if you use an SDHC0 hardware instance when available. The MMC/SD driver picks an instance based on the data and clock pins provided by the user. See the PSoC&trade; 6 MCU datasheets for information on the pin assignment. This will be addressed in a future release.
 
-- The NOR flash driver does not support connecting multiple memories to different QSPI data lines of the MCU. This means that all memories must be connected to the same set of data line. This will be addressed in a future release.
-
 ## Supported Software and Tools
 
 This version was validated for compatibility with the following software and tools:
 
 | Software and Tools                         | Version |
 | :---                                       | :----  |
-| ModusToolbox&trade; software environment   | 2.2     |
-| GCC Compiler                               | 9.3     |
-| IAR Compiler                               | 8.4     |
-| Arm® Compiler 6                            | 6.13    |
+| ModusToolbox&trade; software environment   | 3.0     |
+| GCC Compiler                               | 10.3.1  |
+| IAR Compiler                               | 9.30.1   |
+| Arm® Compiler 6                            | 6.16    |
 
-Minimum required ModusToolbox Software Environment: v2.2.
-
+Minimum required ModusToolbox Software Environment: v3.0.
+Minimum required mtb-hal-cat1: v2.0.
 ## More information
 
 - [emFile Middleware User Guide](./Doc/User_Guide.md)
@@ -43,18 +39,18 @@ Minimum required ModusToolbox Software Environment: v2.2.
 
 - [README.md](./README.md)
 
-- [mtb-example-psoc6-filesystem-emfile-freertos](https://github.com/cypresssemiconductorco/mtb-example-psoc6-filesystem-emfile-freertos) code example
+- [mtb-example-psoc6-filesystem-emfile-freertos](https://github.com/Infineon/mtb-example-psoc6-filesystem-emfile-freertos) code example
 
-- [Cypress Semiconductor GitHub](https://github.com/cypresssemiconductorco)
+- [Infineon Semiconductor GitHub](https://github.com/Infineon)
 
-- [ModusToolbox software](https://www.cypress.com/products/modustoolbox-software-environment)
+- [ModusToolbox software](https://www.Infineon.com/cms/en/design-support/tools/sdk/modustoolbox-software)
 
-- [PSoC 6 MCU Code Examples using ModusToolbox](https://github.com/cypresssemiconductorco/Code-Examples-for-ModusToolbox-Software)
+- [PSoC 6 MCU Code Examples using ModusToolbox](https://github.com/Infineon/Code-Examples-for-ModusToolbox-Software)
 
-- [PSoC 6 MCU Middleware](https://github.com/cypresssemiconductorco/psoc6-middleware)
+- [PSoC 6 MCU Middleware](https://github.com/Infineon/psoc6-middleware)
 
-- [PSoC 6 MCU Resources - KBA223067](https://community.cypress.com/docs/DOC-14644)
+- [PSoC 6 MCU Resources - KBA223067](https://community.Infineon.com/docs/DOC-14644)
 
 
 ---
-© 2021 Cypress Semiconductor Corporation, an Infineon Technologies Company.
+© 2021-2023 Cypress Semiconductor Corporation, an Infineon Technologies Company.

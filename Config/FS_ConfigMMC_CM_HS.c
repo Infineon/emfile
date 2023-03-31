@@ -75,7 +75,8 @@ static FS_MMC_HW_CM_SDHostConfig_t SDConfig =
     .CardPwrEn      = NC,
     .CardWriteProt  = NC,
     .LedControl     = NC,
-    .EmmcReset      = NC
+    .EmmcReset      = NC, 
+    .BlockClk       = NULL
 };
 
 /*********************************************************************
