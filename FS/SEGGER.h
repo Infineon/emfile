@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,16 +32,17 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
-----------------------------------------------------------------------
+-------------------------- END-OF-HEADER -----------------------------
+
 File    : SEGGER.h
-Purpose : Global types etc & general purpose utility functions
-Revision: $Rev: 18102 $
----------------------------END-OF-HEADER------------------------------
+Purpose : Global types etc & general purpose utility functions.
+Revision: $Rev: 31583 $
 */
 
 #ifndef SEGGER_H            // Guard against multiple inclusion
@@ -62,35 +63,38 @@ extern "C" {     /* Make sure we have C-declarations in C++ programs */
 */
 
 #ifndef INLINE
-  #if (defined(__ICCARM__) || defined(__RX) || defined(__ICCRX__))
+  #if (defined(__ICCARM__) || defined(__RX) || defined(__ICCRX__) || defined(__ICC430__))
     //
-    // Other known compilers.
+    // Various known compilers.
     //
     #define INLINE  inline
   #else
-    #if (defined(_WIN32) && !defined(__clang__))
+    #if   defined(_MSC_VER)
+      #if (_MSC_VER >= 1200)
+        //
+        // Microsoft VC6 and newer.
+        // Force inlining without cost checking.
+        //
+        #define INLINE  __forceinline
+      #endif
+    #elif defined(__GNUC__) || defined(__clang__) || defined(__SEGGER_CC__)
       //
-      // Microsoft VC6 and newer.
-      // Force inlining without cost checking.
-      //
-      #define INLINE  __forceinline
-    #elif defined(__GNUC__) || defined(__clang__)
-      //
-      // Force inlining with GCC + clang
+      // Force inlining with GCC & clang.
       //
       #define INLINE inline __attribute__((always_inline))
-    #elif (defined(__CC_ARM))
+    #elif defined(__CC_ARM)
       //
-      // Force inlining with ARMCC (Keil)
+      // Force inlining with ARMCC (Keil).
       //
       #define INLINE  __inline
-    #else
-      //
-      // Unknown compilers.
-      //
-      #define INLINE
     #endif
   #endif
+#endif
+#ifndef INLINE
+  //
+  // Unknown compiler.
+  //
+  #define INLINE
 #endif
 
 /*********************************************************************
@@ -108,9 +112,15 @@ extern "C" {     /* Make sure we have C-declarations in C++ programs */
   #define SEGGER_USE_PARA(Para) (void)Para  // This works for most compilers.
 #endif
 
-#define SEGGER_ADDR2PTR(Type, Addr)  (/*lint -e(923) -e(9078)*/((Type*)((PTR_ADDR)(Addr))))    // Allow cast from address to pointer.
-#define SEGGER_PTR2ADDR(p)           (/*lint -e(923) -e(9078)*/((PTR_ADDR)(p)))                // Allow cast from pointer to address.
-#define SEGGER_PTR2PTR(Type, p)      (/*lint -e(740) -e(826) -e(9079) -e(9087)*/((Type*)(p)))  // Allow cast from one pointer type to another (ignore different size).
+#define SEGGER_ADDR2PTR(Type, Addr)  (/*lint -e(923) -e(9078)*/((Type*)((PTR_ADDR)(Addr))))                    // Allow cast from address to pointer.
+#define SEGGER_PTR2ADDR(p)           (/*lint -e(923) -e(9078)*/((PTR_ADDR)(p)))                                // Allow cast from pointer to address.
+#define SEGGER_PTR2PTR(Type, p)      (/*lint -e(740) -e(826) -e(9079) -e(9087)*/((Type*)((void*)(p))))         // Allow cast from one pointer type to another (ignore different size).
+                                                                                                               // Cast into void* first as some architectures/compilers might output
+                                                                                                               // a warning when casting from potentially unaligned types like U8 to
+                                                                                                               // higher aligned types (e.g. CC-RL compiler).
+#define SEGGER_CONSTPTR2PTR(Type, p)  (/*lint -e(740) -e(826) -e(9079) -e(9087)*/((Type*)((void const*)(p))))  // Allow cast from one pointer type to another (ignore different size).
+                                                                                                               // Same as SEGGER_PTR2PTR() but for const source pointers so the const
+                                                                                                               // modifier is not removed during the cast and causes a warning.
 #define SEGGER_PTR_DISTANCE(p0, p1)  (SEGGER_PTR2ADDR(p0) - SEGGER_PTR2ADDR(p1))
 
 /*********************************************************************
@@ -174,6 +184,84 @@ typedef struct {
   int (*pfGetUID)        (U8 abUID[16]);  // Optional,  pfGetUID
 } SEGGER_BSP_API;
 
+typedef enum {
+  SEGGER_PARSE_IP_STATUS_OK = 0,              // O.K., address successfully parsed.
+  SEGGER_PARSE_IP_STATUS_ERROR,               // Other error (parameter error; not an IPv4/6 address but a domain ?).
+  SEGGER_PARSE_IP_STATUS_INVALID_CHAR,        // Error, invalid character found (valid characters are upper/lower '0'-'f' and ':' for IPv6).
+  SEGGER_PARSE_IP_STATUS_NUM_CHARS_IN_BLOCK,  // Error, too many characters in address block.
+  SEGGER_PARSE_IP_STATUS_INVALID_COMP,        // Error, illegal number of colons in a row (":::") in IPv6 address.
+  SEGGER_PARSE_IP_STATUS_START_SINGLE_COLON,  // Error, address starts with a single colon.
+  SEGGER_PARSE_IP_STATUS_END_SINGLE_COLON,    // Error, address ends with a single colon.
+  SEGGER_PARSE_IP_STATUS_MULTIPLE_COMP,       // Error, zero compression used more than once.
+  SEGGER_PARSE_IP_STATUS_TOO_LONG,            // Error, too many characters in address.
+  SEGGER_PARSE_IP_STATUS_TOO_SHORT,           // Error, not enough characters in address.
+  SEGGER_PARSE_IP_STATUS_SEPARATOR_ERROR      // Too many or not enough '.' or ':' found in address or in an unexpected position.
+} SEGGER_PARSE_IP_STATUS;
+
+typedef enum {
+  SEGGER_PARSE_IP_TYPE_OTHER = 0,  // IP address not parsed, host name ?
+  SEGGER_PARSE_IP_TYPE_IPV4,       // Parsed address is an IPv4 address.
+  SEGGER_PARSE_IP_TYPE_IPV6        // Parsed address is an IPv6 address.
+} SEGGER_PARSE_IP_TYPE;
+
+/*********************************************************************
+*
+*       Macros
+*
+*  Pre-selection for various stdlib functions via macro to be able to
+*  switch between implementations across various SEGGER products from
+*  a central point.
+*
+*  Decisions whether to use a stdlib routine or not as the default
+*  might depend upon knowledge of standard librarie internals.
+*
+**********************************************************************
+*/
+
+#ifndef   SEGGER_MEMCPY
+  #define SEGGER_MEMCPY       memcpy
+#endif
+
+#ifndef   SEGGER_MEMSET
+  #define SEGGER_MEMSET       memset
+#endif
+
+#ifndef   SEGGER_ATOI
+  #define SEGGER_ATOI         SEGGER_atoi
+#endif
+
+#ifndef   SEGGER_ISALNUM
+  #define SEGGER_ISALNUM      SEGGER_isalnum
+#endif
+
+#ifndef   SEGGER_ISALPHA
+  #define SEGGER_ISALPHA      SEGGER_isalpha
+#endif
+
+#ifndef   SEGGER_STRLEN
+  #define SEGGER_STRLEN       SEGGER_strlen
+#endif
+
+#ifndef   SEGGER_TOLOWER
+  #define SEGGER_TOLOWER      SEGGER_tolower
+#endif
+
+#ifndef   SEGGER_STRCASECMP
+  #define SEGGER_STRCASECMP   SEGGER_strcasecmp
+#endif
+
+#ifndef   SEGGER_STRNCASECMP
+  #define SEGGER_STRNCASECMP  SEGGER_strncasecmp
+#endif
+
+#ifndef   SEGGER_SNPRINTF
+  #define SEGGER_SNPRINTF     SEGGER_snprintf
+#endif
+
+#ifndef   SEGGER_VSNPRINTF
+  #define SEGGER_VSNPRINTF    SEGGER_vsnprintf
+#endif
+
 /*********************************************************************
 *
 *       Utility functions
@@ -229,7 +317,8 @@ void SEGGER_BSP_SeedUID (void);
 //
 // Other API.
 //
-void SEGGER_VERSION_GetString(char acText[8], unsigned Version);
+void                   SEGGER_VERSION_GetString(char acText[8], unsigned Version);
+SEGGER_PARSE_IP_STATUS SEGGER_ParseIP          (const char* sHost, U8* pBuffer, unsigned BufferSize, SEGGER_PARSE_IP_TYPE* pType);
 
 #if defined(__cplusplus)
 }                /* Make sure we have C-declarations in C++ programs */

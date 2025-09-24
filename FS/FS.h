@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 ----------------------------------------------------------------------
 File        : FS.h
@@ -52,13 +53,14 @@ Purpose     : Define global functions and types to be used by an
 
 /*********************************************************************
 *
-*       #include Section
+*       #include section
 *
 **********************************************************************
 */
 #include "FS_ConfDefaults.h"
 #include "FS_Types.h"
 #include "FS_Storage.h"
+#include "FS_Debug.h"
 
 #ifdef _WIN32
   #define WIN32_LEAN_AND_MEAN
@@ -80,10 +82,10 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 *
 *       File system version
 */
-#define FS_VERSION                              50601u
-#define FS_VERSION_MAJOR                        (FS_VERSION / 10000u)
-#define FS_VERSION_MINOR                        ((FS_VERSION / 100u) % 100u)
-#define FS_VERSION_PATCH                        (FS_VERSION % 100u)
+#define FS_VERSION                                    52200u
+#define FS_VERSION_MAJOR                              (FS_VERSION / 10000u)
+#define FS_VERSION_MINOR                              ((FS_VERSION / 100u) % 100u)
+#define FS_VERSION_PATCH                              (FS_VERSION % 100u)
 
 /*********************************************************************
 *
@@ -95,53 +97,56 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 *  Additional information
 *    The last error code of an file handle can be checked using FS_FError().
 */
-#define FS_ERRCODE_OK                           0         // No error
-#define FS_ERRCODE_EOF                          (-1)      // End of file reached
-#define FS_ERRCODE_PATH_TOO_LONG                (-2)      // Path to file or directory is too long
-#define FS_ERRCODE_INVALID_PARA                 (-3)      // Invalid parameter passed
-#define FS_ERRCODE_WRITE_ONLY_FILE              (-5)      // File can only be written
-#define FS_ERRCODE_READ_ONLY_FILE               (-6)      // File can not be written
-#define FS_ERRCODE_READ_FAILURE                 (-7)      // Error while reading from storage medium
-#define FS_ERRCODE_WRITE_FAILURE                (-8)      // Error while writing to storage medium
-#define FS_ERRCODE_FILE_IS_OPEN                 (-9)      // Trying to delete a file which is open
-#define FS_ERRCODE_PATH_NOT_FOUND               (-10)     // Path to file or directory not found
-#define FS_ERRCODE_FILE_DIR_EXISTS              (-11)     // File or directory already exists
-#define FS_ERRCODE_NOT_A_FILE                   (-12)     // Trying to open a directory instead of a file
-#define FS_ERRCODE_TOO_MANY_FILES_OPEN          (-13)     // Exceeded number of files opened at once (trial version)
-#define FS_ERRCODE_INVALID_FILE_HANDLE          (-14)     // The file handle has been invalidated
-#define FS_ERRCODE_VOLUME_NOT_FOUND             (-15)     // The volume name specified in a path is does not exist
-#define FS_ERRCODE_READ_ONLY_VOLUME             (-16)     // Trying to write to a volume mounted in read-only mode
-#define FS_ERRCODE_VOLUME_NOT_MOUNTED           (-17)     // Trying access a volume which is not mounted
-#define FS_ERRCODE_NOT_A_DIR                    (-18)     // Trying to open a file instead of a directory
-#define FS_ERRCODE_FILE_DIR_NOT_FOUND           (-19)     // File or directory not found
-#define FS_ERRCODE_NOT_SUPPORTED                (-20)     // Functionality not supported
-#define FS_ERRCODE_CLUSTER_NOT_FREE             (-21)     // Trying to allocate a cluster which is not free
-#define FS_ERRCODE_INVALID_CLUSTER_CHAIN        (-22)     // Detected a shorter than expected cluster chain
-#define FS_ERRCODE_STORAGE_NOT_PRESENT          (-23)     // Trying to access a removable storage which is not inserted
-#define FS_ERRCODE_BUFFER_NOT_AVAILABLE         (-24)     // No more sector buffers available
-#define FS_ERRCODE_STORAGE_TOO_SMALL            (-25)     // Not enough sectors on the storage medium
-#define FS_ERRCODE_STORAGE_NOT_READY            (-26)     // Storage device can not be accessed
-#define FS_ERRCODE_BUFFER_TOO_SMALL             (-27)     // Sector buffer smaller than sector size of storage medium
-#define FS_ERRCODE_INVALID_FS_FORMAT            (-28)     // Storage medium is not formatted or the format is not valid
-#define FS_ERRCODE_INVALID_FS_TYPE              (-29)     // Type of file system is invalid or not configured
-#define FS_ERRCODE_FILENAME_TOO_LONG            (-30)     // The name of the file is too long
-#define FS_ERRCODE_VERIFY_FAILURE               (-31)     // Data verification failure
-#define FS_ERRCODE_VOLUME_FULL                  (-32)     // No more space on storage medium
-#define FS_ERRCODE_DIR_NOT_EMPTY                (-33)     // Trying to delete a directory which is not empty
-#define FS_ERRCODE_IOCTL_FAILURE                (-34)     // Error while executing a driver control command
-#define FS_ERRCODE_INVALID_MBR                  (-35)     // Invalid information in the Master Boot Record
-#define FS_ERRCODE_OUT_OF_MEMORY                (-36)     // Could not allocate memory
-#define FS_ERRCODE_UNKNOWN_DEVICE               (-37)     // Storage device is not configured
-#define FS_ERRCODE_ASSERT_FAILURE               (-38)     // FS_DEBUG_ASSERT() macro failed
-#define FS_ERRCODE_TOO_MANY_TRANSACTIONS_OPEN   (-39)     // Maximum number of opened journal transactions exceeded
-#define FS_ERRCODE_NO_OPEN_TRANSACTION          (-40)     // Trying to close a journal transaction which is not opened
-#define FS_ERRCODE_INIT_FAILURE                 (-41)     // Error while initializing the storage medium
-#define FS_ERRCODE_FILE_TOO_LARGE               (-42)     // Trying to write to a file which is larger than 4 Gbytes
-#define FS_ERRCODE_HW_LAYER_NOT_SET             (-43)     // The HW layer is not configured
-#define FS_ERRCODE_INVALID_USAGE                (-44)     // Trying to call a function in an invalid state
-#define FS_ERRCODE_TOO_MANY_INSTANCES           (-45)     // Trying to create one instance more than maximum configured
-#define FS_ERRCODE_TRANSACTION_ABORTED          (-46)     // A journal transaction has been stopped by the application
-#define FS_ERRCODE_INVALID_CHAR                 (-47)     // Invalid character in the name of a file
+#define FS_ERRCODE_OK                                 0         // No error
+#define FS_ERRCODE_EOF                                (-1)      // End of file reached
+#define FS_ERRCODE_PATH_TOO_LONG                      (-2)      // Path to file or directory is too long
+#define FS_ERRCODE_INVALID_PARA                       (-3)      // Invalid parameter passed
+#define FS_ERRCODE_WRITE_ONLY_FILE                    (-5)      // File can only be written
+#define FS_ERRCODE_READ_ONLY_FILE                     (-6)      // File can not be written
+#define FS_ERRCODE_READ_FAILURE                       (-7)      // Error while reading from storage medium
+#define FS_ERRCODE_WRITE_FAILURE                      (-8)      // Error while writing to storage medium
+#define FS_ERRCODE_FILE_IS_OPEN                       (-9)      // Trying to delete a file which is open
+#define FS_ERRCODE_PATH_NOT_FOUND                     (-10)     // Path to file or directory not found
+#define FS_ERRCODE_FILE_DIR_EXISTS                    (-11)     // File or directory already exists
+#define FS_ERRCODE_NOT_A_FILE                         (-12)     // Trying to open a directory instead of a file
+#define FS_ERRCODE_TOO_MANY_FILES_OPEN                (-13)     // Exceeded number of files opened at once
+#define FS_ERRCODE_INVALID_FILE_HANDLE                (-14)     // The file handle has been invalidated
+#define FS_ERRCODE_VOLUME_NOT_FOUND                   (-15)     // The volume name specified in a path is does not exist
+#define FS_ERRCODE_READ_ONLY_VOLUME                   (-16)     // Trying to write to a volume mounted in read-only mode
+#define FS_ERRCODE_VOLUME_NOT_MOUNTED                 (-17)     // Trying access a volume which is not mounted
+#define FS_ERRCODE_NOT_A_DIR                          (-18)     // Trying to open a file instead of a directory
+#define FS_ERRCODE_FILE_DIR_NOT_FOUND                 (-19)     // File or directory not found
+#define FS_ERRCODE_NOT_SUPPORTED                      (-20)     // Functionality not supported
+#define FS_ERRCODE_CLUSTER_NOT_FREE                   (-21)     // Trying to allocate a cluster which is not free
+#define FS_ERRCODE_INVALID_CLUSTER_CHAIN              (-22)     // Detected a shorter than expected cluster chain
+#define FS_ERRCODE_STORAGE_NOT_PRESENT                (-23)     // Trying to access a removable storage which is not inserted
+#define FS_ERRCODE_BUFFER_NOT_AVAILABLE               (-24)     // No more sector buffers available
+#define FS_ERRCODE_STORAGE_TOO_SMALL                  (-25)     // Not enough sectors on the storage medium
+#define FS_ERRCODE_STORAGE_NOT_READY                  (-26)     // Storage device can not be accessed
+#define FS_ERRCODE_BUFFER_TOO_SMALL                   (-27)     // Sector buffer smaller than sector size of storage medium
+#define FS_ERRCODE_INVALID_FS_FORMAT                  (-28)     // Storage medium is not formatted or the format is not valid
+#define FS_ERRCODE_INVALID_FS_TYPE                    (-29)     // Type of file system is invalid or not configured
+#define FS_ERRCODE_FILENAME_TOO_LONG                  (-30)     // The name of the file is too long
+#define FS_ERRCODE_VERIFY_FAILURE                     (-31)     // Data verification failure
+#define FS_ERRCODE_VOLUME_FULL                        (-32)     // No more space on storage medium
+#define FS_ERRCODE_DIR_NOT_EMPTY                      (-33)     // Trying to delete a directory which is not empty
+#define FS_ERRCODE_IOCTL_FAILURE                      (-34)     // Error while executing a driver control command
+#define FS_ERRCODE_INVALID_MBR                        (-35)     // Invalid information in the Master Boot Record
+#define FS_ERRCODE_OUT_OF_MEMORY                      (-36)     // Could not allocate memory
+#define FS_ERRCODE_UNKNOWN_DEVICE                     (-37)     // Storage device is not configured
+#define FS_ERRCODE_ASSERT_FAILURE                     (-38)     // FS_DEBUG_ASSERT() macro failed
+#define FS_ERRCODE_TOO_MANY_TRANSACTIONS_OPEN         (-39)     // Maximum number of opened journal transactions exceeded
+#define FS_ERRCODE_NO_OPEN_TRANSACTION                (-40)     // Trying to close a journal transaction which is not opened
+#define FS_ERRCODE_INIT_FAILURE                       (-41)     // Error while initializing the storage medium
+#define FS_ERRCODE_FILE_TOO_LARGE                     (-42)     // Trying to write to a file which is larger than 4 Gbytes
+#define FS_ERRCODE_HW_LAYER_NOT_SET                   (-43)     // The HW layer is not configured
+#define FS_ERRCODE_INVALID_USAGE                      (-44)     // Trying to call a function in an invalid state
+#define FS_ERRCODE_TOO_MANY_INSTANCES                 (-45)     // Trying to create one instance more than maximum configured
+#define FS_ERRCODE_TRANSACTION_ABORTED                (-46)     // A journal transaction has been stopped by the application
+#define FS_ERRCODE_INVALID_CHAR                       (-47)     // Invalid character in the name of a file
+#define FS_ERRCODE_INVALID_GPT                        (-48)     // Invalid information in the GUID partition
+#define FS_ERRCODE_INVALID_CONTENT                    (-49)     // The content of a file is invalid
+#define FS_ERRCODE_COMPRESS_FAILURE                   (-50)     // Error while compressing or decompressing the data.
 
 /*********************************************************************
 *
@@ -150,58 +155,124 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 *  Description
 *    Reference point when changing the file position.
 */
-#define FS_SEEK_SET                     0     // The reference is the beginning of the file.
-#define FS_SEEK_CUR                     1     // The reference is the current position of the file pointer.
-#define FS_SEEK_END                     2     // The reference is the end-of-file position.
+#define FS_SEEK_SET                                   0     // The reference is the beginning of the file.
+#define FS_SEEK_CUR                                   1     // The reference is the current position of the file pointer.
+#define FS_SEEK_END                                   2     // The reference is the end-of-file position.
 
 /*********************************************************************
 *
-*       I/O commands for driver (internal)
-*/
-#define FS_CMD_REQUIRES_FORMAT          1003
-#define FS_CMD_GET_DEVINFO              1004
-#define FS_CMD_FORMAT_LOW_LEVEL         1005            // Used internally by FS_FormatLow() to command the driver to perform low-level format
-#define FS_CMD_FREE_SECTORS             1006            // Used internally: Allows the FS layer to inform driver about free sectors
-#define FS_CMD_SET_DELAY                1007            // Used in the simulation to simulate a slow device with RAM driver
-#define FS_CMD_UNMOUNT                  1008            // Used internally by FS_STORAGE_Unmount() to inform the driver. Driver invalidates caches and all other information about medium.
-#define FS_CMD_UNMOUNT_FORCED           1009            // Used internally by FS_STORAGE_UnmountForced() to inform the driver about an unforced remove of the device.
-                                                        // Driver invalidates caches and all other information about medium.
-#define FS_CMD_SYNC                     1010            // Tells the driver to clean caches. Typically, all dirty sectors are written.
-#define FS_CMD_UNMOUNT_VOLUME           FS_CMD_UNMOUNT  // Obsolete: FS_CMD_UNMOUNT shall be used instead of FS_CMD_UNMOUNT_VOLUME.
-#define FS_CMD_DEINIT                   1011            // Frees the resources allocated by the file system.
-#define FS_CMD_CLEAN_ONE                1012            // Tells the driver to perform one clean operation. Usually this operation erases some data block on the storage medium which stores invalid information.
-                                                        // Aux                    Not used
-                                                        // pBuffer  [*int, OUT]   ==0 A second command will do nothing
-                                                        //                        ==1 A second command will perform a clean operation
-#define FS_CMD_CLEAN                    1013            // Executes the clean operation until all the invalid data on the storage medium has been erased
-#define FS_CMD_GET_SECTOR_USAGE         1014            // Queries the driver about the usage of a logical sector.
-                                                        // Aux      [int,  IN]    Index of the sector to be queried
-                                                        // pBuffer  [*int, OUT]   ==0 Sector in use
-                                                        //                        ==1 Sector not used
-                                                        //                        ==2 Unknown
-#define FS_CMD_ENABLE_READ_AHEAD        1015            // Requests the driver to start reading sectors in advance
-#define FS_CMD_DISABLE_READ_AHEAD       1016            // Requests the driver to stop reading sectors in advance
-#define FS_CMD_GET_CLEAN_CNT            1017            // Returns the number of clean operations which should be performed before all the invalid data on the storage medium has been erased
-                                                        // pBuffer  [*int, OUT]   Number of clean operations
-#define FS_CMD_SET_READ_ERROR_CALLBACK  1018            // Registers a callback function which should be invoked by a driver when a read error occurs.
-                                                        // Aux      not used
-                                                        // pBuffer  [*FS_ON_READ_ERROR_CALLBACK, IN]  Pointer to callback function
-#define FS_CMD_SYNC_SECTORS             1019            // Informs the driver about the sectors which must be synchronized. Typically, the sectors are written to storage if cached.
-                                                        // Aux      [int,  IN]    Index of the fist sector to be synchronized
-                                                        // pBuffer  [*int, IN]    Number of sectors to synchronize
-
-/*********************************************************************
+*       I/O command codes
 *
-*       CACHE Commands (internal)
+*  Description
+*    Command codes sent by the file system to device and logical drivers.
+*
+*  Additional information
+*    FS_CMD_GET_DEVINFO is mandatory to be implemented. In addition,
+*    the driver implementation has to return 0 in response to
+*    FS_CMD_FREE_SECTORS if it does not implement this command.
+*    The other commands are  optional and the driver
+*    is permitted to return -1 if it does not implement them.
+*
+*    FS_CMD_REQUIRES_FORMAT and FS_CMD_FORMAT_LOW_LEVEL must be implemented
+*    by any device driver that uses a storage device which has to be
+*    initialize once before use. FS_CMD_FORMAT_LOW_LEVEL is used
+*    by FS_FormatLow().
+*
+*    FS_CMD_SET_DELAY is used only by the FS simulation to test the
+*    RAM Disk driver.
+*
+*    The handling of FS_CMD_UNMOUNT and FS_CMD_UNMOUNT_FORCED has to
+*    invalidate any cached information related to the storage device.
+*
+*    The handling of FS_CMD_SYNC must write any dirty cached sector data
+*    to the storage device.
+*
+*    FS_CMD_DEINIT has to be handled only if the driver allocates dynamic
+*    memory and only when the file system is built with FS_SUPPORT_DEINIT
+*    set to 1.
+*
+*    The following tables details the usage of the Aux and pBuffer
+*    parameters specified in the call to FS_DEVICE_TYPE_IOCTL for
+*    each command code as well as the meaning of the return value.
+*    The commands that are not specified in a table do not make
+*    use of that parameter.
+*    +--------------------------------+-------------------------------------------------------+
+*    | Cmd                            | Aux                                                   |
+*    +--------------------------------+-------------------------------------------------------+
+*    | FS_CMD_FREE_SECTORS            | Index of the first unused logical sector.             |
+*    +--------------------------------+-------------------------------------------------------+
+*    | FS_CMD_SET_DELAY               | Read delay in milliseconds.                           |
+*    +--------------------------------+-------------------------------------------------------+
+*    | FS_CMD_GET_SECTOR_USAGE        | Index of the logical sector to be queried.            |
+*    +--------------------------------+-------------------------------------------------------+
+*    | FS_CMD_SYNC_SECTORS            | Index of the first logical sector to be synchronized. |
+*    +--------------------------------+-------------------------------------------------------+
+*
+*    +--------------------------------+-----------------------------------------------------------------+
+*    | Cmd                            | pBuffer (input)                                                 |
+*    +--------------------------------+-----------------------------------------------------------------+
+*    | FS_CMD_FREE_SECTORS            | Number of logical sectors as pointer to U32 value.              |
+*    +--------------------------------+-----------------------------------------------------------------+
+*    | FS_CMD_SET_DELAY               | Write delay in milliseconds as an int value.                    |
+*    +--------------------------------+-----------------------------------------------------------------+
+*    | FS_CMD_SET_READ_ERROR_CALLBACK | Handling function as pointer to a FS_READ_ERROR_DATA structure. |
+*    +--------------------------------+-----------------------------------------------------------------+
+*    | FS_CMD_SYNC_SECTORS            | Number of logical sectors as pointer to U32 value.              |
+*    +--------------------------------+-----------------------------------------------------------------+
+*
+*    +--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+*    | Cmd                            | pBuffer (output)                                                                                                                                     |
+*    +--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_GET_DEVINFO             | Device information as pointer to a FS_DEV_INFO structure.                                                                                            |
+*    +--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_CLEAN_ONE               | Indicates if more operations are required as pointer to int: ==0 - the next command does nothing, ==1 - the next command performs a clean operation. |
+*    +--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_GET_SECTOR_USAGE        | Sector usage a pointer to int: ==0 - sector in use, ==1 - sector not used, ==2 - unknown usage                                                       |
+*    +--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_GET_CLEAN_CNT           | Number of FS_CMD_CLEAN_ONE commands required to completely clean the storage device as pointer to int.                                               |
+*    +--------------------------------+------------------------------------------------------------------------------------------------------------------------------------------------------+
+*
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | Cmd                            | Return value                                                                                           |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_REQUIRES_FORMAT         | ==1 - low-level format required, ==0 - storage device is low-level formatted, < 0 - An error occurred. |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_GET_DEVINFO             | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_FORMAT_LOW_LEVEL        | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_FREE_SECTORS            | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_SET_DELAY               | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_CLEAN_ONE               | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_CLEAN                   | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_GET_SECTOR_USAGE        | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_GET_CLEAN_CNT           | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
+*    | FS_CMD_SYNC_SECTORS            | ==0 - OK, operation succeeded, < 0 - An error occurred.                                                |
+*    +--------------------------------+--------------------------------------------------------------------------------------------------------+
 */
-#define FS_CMD_CACHE_SET_MODE           6000L
-#define FS_CMD_CACHE_CLEAN              6001L   // Write out all dirty sectors
-#define FS_CMD_CACHE_SET_QUOTA          6002L
-#define FS_CMD_CACHE_FREE_SECTORS       6003L
-#define FS_CMD_CACHE_INVALIDATE         6004L   // Invalidate all sectors in cache
-#define FS_CMD_CACHE_SET_ASSOC_LEVEL    6005L   // Sets the associativity level for the multi-way cache
-#define FS_CMD_CACHE_GET_NUM_SECTORS    6006L   // Returns the number of sectors the cache is able to store
-#define FS_CMD_CACHE_GET_TYPE           6007L   // Returns the type of the cache configured
+#define FS_CMD_REQUIRES_FORMAT                        1003            // Checks if the storage device is low-level formatted.
+#define FS_CMD_GET_DEVINFO                            1004            // Returns information about the storage device.
+#define FS_CMD_FORMAT_LOW_LEVEL                       1005            // Performs a low-level format operation.
+#define FS_CMD_FREE_SECTORS                           1006            // Informs the driver about unused logical sectors.
+#define FS_CMD_SET_DELAY                              1007            // Configures an access delay.
+#define FS_CMD_UNMOUNT                                1008            // Invalidates all information about the storage device.
+#define FS_CMD_UNMOUNT_FORCED                         1009            // Invalidates all information about the storage device.
+#define FS_CMD_SYNC                                   1010            // Request the driver to write any cached information to the storage device.
+#define FS_CMD_DEINIT                                 1011            // Frees all resources allocated by all the driver instances.
+#define FS_CMD_CLEAN_ONE                              1012            // Requests the driver to perform one clean operation.
+#define FS_CMD_CLEAN                                  1013            // Requests the driver to completely clean the storage device.
+#define FS_CMD_GET_SECTOR_USAGE                       1014            // Queries the driver about the usage of a logical sector.
+#define FS_CMD_ENABLE_READ_AHEAD                      1015            // Requests the driver to start reading sectors in advance.
+#define FS_CMD_DISABLE_READ_AHEAD                     1016            // Requests the driver to stop reading sectors in advance.
+#define FS_CMD_GET_CLEAN_CNT                          1017            // Returns the number of operations required to completely clean the storage device.
+#define FS_CMD_SET_READ_ERROR_CALLBACK                1018            // Registers a handler for sector read errors.
+#define FS_CMD_SYNC_SECTORS                           1019            // Informs the driver about the sectors that must be synchronized.
 
 /*********************************************************************
 *
@@ -283,7 +354,7 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 *    The error codes are reported via the ErrCode parameter of
 *    the callback function.
 */
-#define FS_CHECKDISK_ERRCODE_0FILE                    0x10      // A cluster chain is assigned to a file that do not contain data (file size is 0)
+#define FS_CHECKDISK_ERRCODE_0FILE                    0x10      // A cluster chain is assigned to a file that does not contain any data.
 #define FS_CHECKDISK_ERRCODE_SHORTEN_CLUSTER          0x11      // The cluster chain assigned to a file is longer than the size of the file.
 #define FS_CHECKDISK_ERRCODE_CROSSLINKED_CLUSTER      0x12      // A cluster is assigned to more than one file or directory.
 #define FS_CHECKDISK_ERRCODE_FEW_CLUSTER              0x13      // The size of the file is larger than the cluster chain assigned to file.
@@ -292,6 +363,7 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 #define FS_CHECKDISK_ERRCODE_INVALID_CLUSTER          0x16      // Invalid cluster id.
 #define FS_CHECKDISK_ERRCODE_INVALID_DIRECTORY_ENTRY  0x17      // Invalid directory entry.
 #define FS_CHECKDISK_ERRCODE_SECTOR_NOT_IN_USE        0x18      // A logical sector that stores data is not marked as in use in the device driver.
+#define FS_CHECKDISK_ERRCODE_INVALID_FILE             0x19      // A fragment file was found that does not belong to any big file.
 
 /*********************************************************************
 *
@@ -330,7 +402,8 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 *  Description
 *    Flags that control the information returned by FS_GetVolumeInfoEx().
 */
-#define FS_DISKINFO_FLAG_FREE_SPACE                   0x01       // Returns the available free space on the storage medium
+#define FS_DISKINFO_FLAG_FREE_SPACE                   0x01       // Returns the available free space on the storage device.
+#define FS_DISKINFO_FLAG_WORK_BUFFER                  0x02       // Specifies a working buffer for the read operations.
 
 /*********************************************************************
 *
@@ -362,36 +435,31 @@ extern "C" {     // Make sure we have C-declarations in C++ programs
 
 /*********************************************************************
 *
-*       OS locking
-*
-*  Description
-*    Types of locking for multitasking access.
-*
-*  Additional information
-*    These values can be assigned to FS_OS_LOCKING compile-time
-*    configuration define.
-*/
-#define FS_OS_LOCKING_NONE                            0           // No locking against concurrent access.
-#define FS_OS_LOCKING_API                             1           // Locking is performed at API function level (coarse locking).
-#define FS_OS_LOCKING_DRIVER                          2           // Locking is performed at device driver level (fine locking).
-
-/*********************************************************************
-*
 *       File open flags
 *
 *  Description
-*    Specify how to open a file.
+*    Options to open a file.
 *
 *  Additional information
 *    These flags can be used as values for the Flags parameter
-*    of FS_BIGFILE_Open(). More than one flag can be specified
-*    and in this case they have to be separated by a bitwise OR
-*    operator ('|').
+*    of FS_BIGFAT_Open(). The flags are bitmasks
+*    that can be combined by a bitwise-or operator.
 */
-#define FS_BIGFILE_OPEN_FLAG_READ                     0x01u       // The application can read from the opened file.
-#define FS_BIGFILE_OPEN_FLAG_WRITE                    0x02u       // The application can write to the opened file.
-#define FS_BIGFILE_OPEN_FLAG_CREATE                   0x04u       // The file is created if it does not exists or it is truncated to 0 if it exists.
-#define FS_BIGFILE_OPEN_FLAG_APPEND                   0x08u       // The application can write only at the end of the file.
+#define FS_BIGFAT_OPEN_FLAG_READ                      0x01u       // The application can read from the opened file.
+#define FS_BIGFAT_OPEN_FLAG_WRITE                     0x02u       // The application can write to the opened file.
+#define FS_BIGFAT_OPEN_FLAG_CREATE                    0x04u       // The file is created if it does not exists or it is truncated to 0 if it exists.
+#define FS_BIGFAT_OPEN_FLAG_APPEND                    0x08u       // The application can write only at the end of the file.
+
+/*********************************************************************
+*
+*       Partitioning schemes
+*
+*  Description
+*    Methods for partitioning a storage device.
+*/
+#define FS_PARTITIONING_SCHEME_NONE                   0           // The storage device is not partitioned.
+#define FS_PARTITIONING_SCHEME_MBR                    1           // The storage device is partitioned as MBR.
+#define FS_PARTITIONING_SCHEME_GPT                    2           // The storage device is partitioned as GPT.
 
 /*********************************************************************
 *
@@ -562,17 +630,219 @@ typedef U32 FS_TIME_DATE_CALLBACK(void);
 
 /*********************************************************************
 *
+*       FS_DEVICE_TYPE_GET_NAME
+*
+*  Function description
+*    Returns the driver name.
+*
+*  Parameters
+*    Unit   Index of the driver instance (0-based).
+*
+*  Return value
+*    Name of the driver as 0-terminated string.
+*
+*  Additional information
+*    The returned name is used by the file system to create the volume name.
+*    The name must be unique between all device and logical drivers configured
+*    by the application.
+*/
+typedef const char * FS_DEVICE_TYPE_GET_NAME(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_ADD_DEVICE
+*
+*  Function description
+*    Initializes a new driver instance.
+*
+*  Return value
+*    >=0    OK, index of the created driver instance.
+*    < 0    An error occurred.
+*
+*  Additional information
+*    This is the first function called by the file system. Typically,
+*    it is called from FS_AddDevice() or FS_AddPhysDevice()
+*    at the file system initialization.
+*/
+typedef int FS_DEVICE_TYPE_ADD_DEVICE(void);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_READ
+*
+*  Function description
+*    Reads one or more logical sectors from storage device.
+*
+*  Parameters
+*    Unit           Index of the driver instance (0-based).
+*    SectorIndex    First logical sector to be read from the device.
+*    pData          Pointer to buffer that receives the sector data.
+*    NumSectors     Number of logical sectors to be read.
+*
+*  Return value
+*    ==0    OK, data successfully written.
+*    !=0    An error occurred.
+*
+*  Additional information
+*    The sector data has to be stored at the following bytes offsets in pData:
+*    +------------------------------------+--------------------------------+
+*    | Byte offset                        | Logical sector index           |
+*    +------------------------------------+--------------------------------+
+*    | 0                                  | SectorIndex                    |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector                     | SectorIndex + 1                |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector * 2                 | SectorIndex + 2                |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector * 3                 | SectorIndex + 3                |
+*    +------------------------------------+--------------------------------+
+*    | ...                                | ...                            |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector * (NumSectors - 1)  | SectorIndex + (NumSectors - 1) |
+*    +------------------------------------+--------------------------------+
+*/
+typedef int FS_DEVICE_TYPE_READ(U8 Unit, U32 SectorIndex, void * pBuffer, U32 NumSectors);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_WRITE
+*
+*  Function description
+*    Writes one or more logical sectors to storage device.
+*
+*  Parameters
+*    Unit         Index of the driver instance (0-based).
+*    SectorNo     First sector to be written to the device.
+*    pData        Pointer to buffer containing the sector data to be written.
+*    NumSectors   Number of logical sectors to write.
+*    RepeatSame   Specifies how the sector data has to be written
+*                 *  0 - Different data is stored to each sector.
+*                 *  1 - Same data is stored to all sectors.
+*
+*  Return value
+*    ==0    OK, data successfully written.
+*    !=0    An error occurred.
+*
+*  Additional information
+*    The sector data is stored at the following bytes offsets in pData
+*    if RepeatSame is set to 0:
+*    +------------------------------------+--------------------------------+
+*    | Byte offset                        | Logical sector index           |
+*    +------------------------------------+--------------------------------+
+*    | 0                                  | SectorIndex                    |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector                     | SectorIndex + 1                |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector * 2                 | SectorIndex + 2                |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector * 3                 | SectorIndex + 3                |
+*    +------------------------------------+--------------------------------+
+*    | ...                                | ...                            |
+*    +------------------------------------+--------------------------------+
+*    | BytesPerSector * (NumSectors - 1)  | SectorIndex + (NumSectors - 1) |
+*    +------------------------------------+--------------------------------+
+*
+*    If RepeatSame is set to 1 then pData points to a memory region that
+*    is BytePerSector bytes large. This block of data has to be stored
+*    repeatedly to the logical sector indexes SectorIndex to
+*    SectorIndex + (NumSectors - 1)
+*/
+typedef int FS_DEVICE_TYPE_WRITE(U8 Unit, U32 SectorIndex, const void * pBuffer, U32 NumSectors, U8 RepeatSame);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_IOCTL
+*
+*  Function description
+*    Executes driver command.
+*
+*  Parameters
+*    Unit      Index of the driver instance (0-based).
+*    Cmd       Command to be executed.
+*    Aux       Command parameter.
+*    pBuffer   [IN] Command parameter.
+*              [OUT] Command response.
+*
+*  Return value
+*    >=0      OK, command executed successfully.
+*    < 0      An error occurred.
+*
+*  Additional information
+*    Cmd can be one of the codes listed in \ref{I/O command codes}.
+*    Aux and pBuffer are optional parameters to the command.
+*    pBuffer is used by some of the commands to return a value
+*    to the caller.
+*/
+typedef int FS_DEVICE_TYPE_IOCTL(U8 Unit, I32 Cmd, I32 Aux, void * pBuffer);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_INIT_MEDIUM
+*
+*  Function description
+*    Initializes the storage device.
+*
+*  Parameters
+*    Unit   Index of the driver instance (0-based).
+*
+*  Return value
+*    ==0    OK, storage device initialized.
+*    !=0    An error occurred.
+*
+*  Additional information
+*    This function is typically called when formatting or mounting
+*    a storage device.
+*/
+typedef int FS_DEVICE_TYPE_INIT_MEDIUM(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_GET_STATUS
+*
+*  Function description
+*    Returns the presence status of the storage device.
+*
+*  Parameters
+*    Unit     Index of the driver instance (0-based).
+*
+*  Return value
+*    FS_MEDIA_STATE_UNKNOWN   The state of the media is unknown.
+*    FS_MEDIA_NOT_PRESENT     No card is present.
+*    FS_MEDIA_IS_PRESENT      If a card is present.
+*
+*  Additional information
+*    This function is relevant only for drivers that access a removable
+*    storage device such as an SD card. For other storage devices or
+*    for a logical driver this function can simply return FS_MEDIA_IS_PRESENT.
+*/
+typedef int FS_DEVICE_TYPE_GET_STATUS(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_DEVICE_TYPE_GET_NUM_UNITS
+*
+*  Function description
+*    Returns the number of driver instances.
+*
+*  Return value
+*    >=0    Number of driver instances.
+*    < 0    An error occurred.
+*/
+typedef int FS_DEVICE_TYPE_GET_NUM_UNITS(void);
+
+/*********************************************************************
+*
 *       FS_DEVICE_TYPE
 */
 typedef struct {
-  const char * (*pfGetName)    (U8 Unit);
-  int          (*pfAddDevice)  (void);                                                  // Called from AddDevice. Usually the first call to the driver
-  int          (*pfRead)       (U8 Unit, U32 SectorIndex,       void * pBuffer, U32 NumSectors);
-  int          (*pfWrite)      (U8 Unit, U32 SectorIndex, const void * pBuffer, U32 NumSectors, U8 RepeatSame);
-  int          (*pfIoCtl)      (U8 Unit, I32 Cmd, I32 Aux, void * pBuffer);
-  int          (*pfInitMedium) (U8 Unit);                                               // Called when formatting or mounting a device
-  int          (*pfGetStatus)  (U8 Unit);
-  int          (*pfGetNumUnits)(void);
+  FS_DEVICE_TYPE_GET_NAME      * pfGetName;             // Returns the name of the driver.
+  FS_DEVICE_TYPE_ADD_DEVICE    * pfAddDevice;           // Creates a new driver instance.
+  FS_DEVICE_TYPE_READ          * pfRead;                // Reads sector data.
+  FS_DEVICE_TYPE_WRITE         * pfWrite;               // Writes sector data.
+  FS_DEVICE_TYPE_IOCTL         * pfIoCtl;               // Executes command.
+  FS_DEVICE_TYPE_INIT_MEDIUM   * pfInitMedium;          // Initializes the storage device.
+  FS_DEVICE_TYPE_GET_STATUS    * pfGetStatus;           // Returns presence status of the storage device.
+  FS_DEVICE_TYPE_GET_NUM_UNITS * pfGetNumUnits;         // Returns the number of driver instances.
 } FS_DEVICE_TYPE;
 
 /*********************************************************************
@@ -581,23 +851,38 @@ typedef struct {
 *
 *  Function description
 *    The function is called when a driver encounters an error while
-*    reading sector data. Typically called by the NAND driver to get
-*    corrected sector data when a bit error occurs.
+*    reading sector data.
 *
 *  Parameters
-*    pDeviceType    Type of storage device which encountered the read error
-*    DeviceUnit     Unit number of the storage device where the read error occurred
-*    SectorIndex    Index of the sector where the read error occurred
-*    pBuffer        [OUT] Corrected sector data
-*    NumSectors     Number of sectors on which the read error occurred
+*    pDeviceType    Type of storage device which encountered the read error.
+*    DeviceUnit     Unit number of the storage device where the read error occurred.
+*    SectorIndex    Index of the sector where the read error occurred.
+*    pBuffer        [OUT] Corrected sector data.
+*    NumSectors     Number of sectors on which the read error occurred.
 *
 *  Return value
-*    ==0    OK, sector data returned
-*    !=0    An error occurred
+*    ==0    OK, sector data returned.
+*    !=0    An error occurred.
+*
+*  Additional information
+*    Typically, called by the NAND driver to get corrected sector data
+*    when a bit error occurs.
+*/
+typedef int FS_ON_READ_ERROR_CALLBACK(const FS_DEVICE_TYPE * pDeviceType, U32 DeviceUnit, U32 SectorIndex, void * pBuffer, U32 NumSectors);
+
+/*********************************************************************
+*
+*       FS_READ_ERROR_DATA
+*
+*  Description
+*    Data passed as parameter to the FS_CMD_SET_READ_ERROR_CALLBACK command.
+*
+*  Additional information
+*    This structure is passed via pBuffer to FS_DEVICE_TYPE_IOCTL.
 */
 typedef struct {
-  int (*pfCallback)(const FS_DEVICE_TYPE * pDeviceType, U32 DeviceUnit, U32 SectorIndex, void * pBuffer, U32 NumSectors);
-} FS_ON_READ_ERROR_CALLBACK;
+  FS_ON_READ_ERROR_CALLBACK * pfCallback;         // Function to be called on a read error.
+} FS_READ_ERROR_DATA;
 
 /*********************************************************************
 *
@@ -665,7 +950,7 @@ typedef struct {
 *
 *       FS_DIR
 */
-struct FS_DIR {                       //lint -esym(9058, FS_DIR) tag unused outside of typedefs. Rationale: the typedef is used as forward declaration.
+struct FS_DIR {                       //lint -esym(9058, FS_DIR) tag unused outside of typedefs N:999. Rationale: the type definition is used as forward declaration.
   FS_DIR_OBJ   DirObj;
   FS_DIRENT  * pDirEntry;
   U8           InUse;
@@ -712,6 +997,23 @@ typedef struct {
 *    has been correctly unmounted before a system reset. IsDirty
 *    is set to 1 at file system initialization if the file system
 *    was not properly unmounted.
+*
+*    The members pBuffer and SizeOfBuffer can be used to specify
+*    a work buffer for the operation that calculates the available
+*    free space. This work buffer is used by the file system to read
+*    data from the allocation table of the file system. Specifying
+*    a work buffer larger than a logical sector size can help
+*    increasing the performance of the operation when using a storage
+*    device that can efficiently perform read burst operations such as
+*    SD card, eMMC device or USB drive.
+*    The file system is able to use the work buffer for burst operations
+*    only if pBuffer is aligned according to the value configured via
+*    FS_DRIVER_ALIGNMENT.
+*    The work buffer is used only when the flag FS_DISKINFO_FLAG_WORK_BUFFER
+*    is set in the Flags parameter passed to FS_GetVolumeInfoEx() and
+*    the file system is built with FS_SUPPORT_SECTOR_BUFFER_BURST
+*    set to 1. The file system uses an internal sector buffer for the
+*    operation if either pBuffer is set to NULL or SizeOfBuffer is set to 0.
 */
 typedef struct {
   U32          NumTotalClusters;    // Total number of clusters on the storage device.
@@ -730,6 +1032,8 @@ typedef struct {
                                     // is valid only for volumes formatted as FAT.
   const char * sAlias;              // Alternative name of the volume (0-terminated).
                                     // Set to NULL if the volume alias feature is disabled.
+  void       * pBuffer;             // Buffer to be used for the access to the storage device.
+  int          SizeOfBuffer;        // Number of bytes in pBuffer.
 } FS_DISK_INFO;
 
 /*********************************************************************
@@ -833,7 +1137,7 @@ typedef struct {
 
 /*********************************************************************
 *
-*       FS_PARTITION_INFO
+*       FS_PARTITION_INFO_MBR
 *
 *  Description
 *    Information about a MBR partition.
@@ -846,7 +1150,47 @@ typedef struct {
   FS_CHS_ADDR EndAddr;          // Address of the last sector in the partition in CHS format.
   U8          Type;             // Type of the partition.
   U8          IsActive;         // Set to 1 if the partition is bootable.
-} FS_PARTITION_INFO;
+} FS_PARTITION_INFO_MBR;
+
+/*********************************************************************
+*
+*       FS_GPT_INFO
+*
+*  Description
+*    Information about a GUID partition table.
+*
+*  Additional information
+*    The partitioning information can be obtained via FS_GetGPTInfo().
+*/
+typedef struct {
+  U64 StartSector;                  // Index of the first logical sector that can be used for partition data (FirstUsableLBA field).
+  U64 NumSectors;                   // Index of the last logical sector that can be used for partition data (LastUsableLBA field - FirstUsableLBA field + 1).
+  U16 NumPartitions;                // Number of partitions present on the storage device (NumberOfPartitionEntries field).
+  U8  IsValidMain;                  // Indicates if the main partition table is valid.
+  U8  IsValidBackup;                // Indicates if the backup partition table is valid.
+  U8  abId[FS_NUM_BYTES_GUID];      // GUID that uniquely identifies the storage device (DiskGUID field)
+} FS_GPT_INFO;
+
+/*********************************************************************
+*
+*       FS_PARTITION_INFO_GPT
+*
+*  Description
+*    Information about a GPT partition.
+*
+*  Additional information
+*    The name of the partition returned via acName member is a
+*    0-terminated string encoded as UTF-8. The size of this member
+*    can be configured via FS_MAX_NUM_BYTES_PART_NAME.
+*/
+typedef struct {
+  U8   abType[FS_NUM_BYTES_GUID];               // Partition type as GUID (PartitionTypeGUID field).
+  U8   abId[FS_NUM_BYTES_GUID];                 // Unique id of the partition as GUID (UniquePartitionGUID field).
+  U64  StartSector;                             // Index of the first logical sector in the partition (StartingLBA field).
+  U64  NumSectors;                              // Index of the last logical sector in the partition (EndingLBA field - StartingLBA field + 1).
+  U64  Attributes;                              // Partition attributes (Attributes field).
+  char acName[FS_MAX_NUM_BYTES_PART_NAME];      // Partition name as 0-terminated string, UTF-8 encoded (PartitionName field).
+} FS_PARTITION_INFO_GPT;
 
 /*********************************************************************
 *
@@ -856,8 +1200,8 @@ typedef struct {
 *    Information about a file or directory.
 *
 *  Additional information
-*    The Attributes member is an or-combination of the following
-*    values: FS_ATTR_READ_ONLY, FS_ATTR_HIDDEN, FS_ATTR_SYSTEM,
+*    The Attributes member is an bitwise-or combination of the following
+*    flags: FS_ATTR_READ_ONLY, FS_ATTR_HIDDEN, FS_ATTR_SYSTEM,
 *    FS_ATTR_ARCHIVE, or FS_ATTR_DIRECTORY.
 *
 *    For directories the FileSize member is always 0.
@@ -940,14 +1284,14 @@ typedef struct {
 
 /*********************************************************************
 *
-*       FS_BIGFILE_INFO
+*       FS_BIGFAT_INFO
 *
 *  Description
 *    Information about a big file.
 *
 *  Additional information
-*    The Attributes member is an or-combination of the following
-*    values: FS_ATTR_READ_ONLY, FS_ATTR_HIDDEN, FS_ATTR_SYSTEM,
+*    The Attributes member is a bitwise-or combination of the following
+*    flags: FS_ATTR_READ_ONLY, FS_ATTR_HIDDEN, FS_ATTR_SYSTEM,
 *    FS_ATTR_ARCHIVE, or FS_ATTR_DIRECTORY.
 */
 typedef struct {
@@ -956,20 +1300,20 @@ typedef struct {
   U32 LastAccessTime;   // Date and time when the file was accessed last.
   U32 LastWriteTime;    // Date and time when the file was written to last.
   U64 FileSize;         // Size of the file in bytes.
-} FS_BIGFILE_INFO;
+} FS_BIGFAT_INFO;
 
 /*********************************************************************
 *
-*       FS_BIGFILE_OBJ
+*       FS_BIGFAT_FILE
 *
 *  Description
-*    Identifies an opened file.
+*    Handle to an opened big file.
 *
 *  Additional information
 *    The application has to allocate a structure of this type for
 *    each file it opens. The structure is filled with data by
-*    FS_BIGFILE_Open() and it has to stay valid until the application
-*    calls FS_BIGFILE_Close() with the same structure as parameter.
+*    FS_BIGFAT_Open() and it has to remain valid until the application
+*    calls FS_BIGFAT_Close() with the same structure as parameter.
 *
 *    Index points to the fragment file that is currently opened.
 *    The base file has the index 0, the first extension file has
@@ -978,16 +1322,16 @@ typedef struct {
 */
 typedef struct {
   char      acName[FS_MAX_LEN_FULL_FILE_NAME];      // Fully qualified name of the base file (0-terminated string)
-  U8        Flags;                                  // Stores the value passed to Flags parameter in the call to FS_BIGFILE_Open().
+  U8        Flags;                                  // Stores the value passed to Flags parameter in the call to FS_BIGFAT_Open().
   U64       Size;                                   // Size of the big file in bytes.
   U64       Pos;                                    // Read and write position inside the big file (0-based byte offset).
   U16       Index;                                  // Index of the current regular file opened (0-based)
   FS_FILE * pFile;                                  // Handle to the current regular file opened.
-} FS_BIGFILE_OBJ;
+} FS_BIGFAT_FILE;
 
 /*********************************************************************
 *
-*       FS_BIGFILE_FIND_DATA
+*       FS_BIGFAT_FIND_DATA
 *
 *  Description
 *    Information about a file or directory.
@@ -995,8 +1339,8 @@ typedef struct {
 *  Additional information
 *    This structure contains also the context for the file listing
 *    operation. These members are considered internal and should
-*    not be used by the application. FS_BIGFILE_FIND_DATA is used as context
-*    by the FS_BIGFILE_FindFirst() and FS_BIGFILE_FindNext() pair of functions.
+*    not be used by the application. FS_BIGFAT_FIND_DATA is used as context
+*    by the FS_BIGFAT_FindFirst() and FS_BIGFAT_FindNext() pair of functions.
 */
 typedef struct {
   U8               Attributes;          // Attributes of the file or directory.
@@ -1006,11 +1350,11 @@ typedef struct {
   U64              FileSize;            // Size of the file in bytes.
   char           * sFileName;           // Name of the file or directory as 0-terminated string.
                                         // It points to the buffer passed as argument to
-                                        // FS_BIGFILE_FindFirst().
+                                        // FS_BIGFAT_FindFirst().
   U16              SizeOfFileName;      // Internal. Not to be used by the application.
   FS_FIND_DATA     FindData;            // Internal. Not to be used by the application.
-  FS_BIGFILE_OBJ   FileObj;             // Internal. Not to be used by the application.
-} FS_BIGFILE_FIND_DATA;
+  FS_BIGFAT_FILE   BigFile;             // Internal. Not to be used by the application.
+} FS_BIGFAT_FIND_DATA;
 
 /*********************************************************************
 *
@@ -1051,11 +1395,13 @@ typedef struct {
 
 /*********************************************************************
 *
-*       "Standard" file I/O functions
+*       Standard file I/O functions
 */
 FS_FILE * FS_FOpen  (const char * sFileName, const char * sMode);
-int       FS_FOpenEx(const char * sFileName, const char * sMode, FS_FILE ** ppFile);
 int       FS_FClose (FS_FILE    * pFile);
+char    * FS_FGets  (char       * sData, int SizeOfData, FS_FILE * pFile);
+int       FS_FPrintf(FS_FILE    * pFile, const char * sFormat, ...);
+int       FS_FPuts  (const char * sData, FS_FILE * pFile);
 U32       FS_FRead  (      void * pData, U32 ItemSize, U32 NumItems, FS_FILE * pFile);
 U32       FS_FWrite (const void * pData, U32 ItemSize, U32 NumItems, FS_FILE * pFile);
 
@@ -1063,8 +1409,9 @@ U32       FS_FWrite (const void * pData, U32 ItemSize, U32 NumItems, FS_FILE * p
 *
 *       Non-standard file I/O functions
 */
-U32 FS_Read (FS_FILE * pFile,       void * pData, U32 NumBytes);
-U32 FS_Write(FS_FILE * pFile, const void * pData, U32 NumBytes);
+int       FS_FOpenEx(const char * sFileName, const char * sMode, FS_FILE ** ppFile);
+U32       FS_Read   (FS_FILE * pFile,       void * pData, U32 NumBytes);
+U32       FS_Write  (FS_FILE * pFile, const void * pData, U32 NumBytes);
 
 /*********************************************************************
 *
@@ -1129,12 +1476,11 @@ int            FS_MountEx                (const char * sVolumeName, U8 MountType
 int            FS_GetVolumeInfo          (const char * sVolumeName, FS_DISK_INFO * pInfo);
 int            FS_GetVolumeInfoEx        (const char * sVolumeName, FS_DISK_INFO * pInfo, int Flags);
 int            FS_IsVolumeMounted        (const char * sVolumeName);
-int            FS_GetVolumeLabel         (const char * sVolumeName, char * sVolumeLabel, unsigned VolumeLabelSize);
+int            FS_GetVolumeLabel         (const char * sVolumeName, char * sVolumeLabel, unsigned SizeOfVolumeLabel);
 int            FS_SetVolumeLabel         (const char * sVolumeName, const char * sVolumeLabel);
 void           FS_UnmountForced          (const char * sVolumeName);
 void           FS_SetAutoMount           (const char * sVolumeName, U8 MountType);
 int            FS_GetVolumeStatus        (const char * sVolumeName);
-void           FS_RemoveDevice           (const char * sVolumeName);
 int            FS_Sync                   (const char * sVolumeName);
 int            FS_FreeSectors            (const char * sVolumeName);
 int            FS_GetVolumeFreeSpaceFirst(FS_FREE_SPACE_DATA * pFSD, const char * sVolumeName, void * pBuffer, int SizeOfBuffer);
@@ -1144,13 +1490,14 @@ int            FS_GetVolumeFreeSpaceNext (FS_FREE_SPACE_DATA * pFSD);
   const char * FS_GetVolumeAlias         (const char * sVolumeName);
 #endif // FS_SUPPORT_VOLUME_ALIAS
 int            FS_GetMountType           (const char * sVolumeName);
+int            FS_GetAutoMount           (const char * sVolumeName);
 
 /*********************************************************************
 *
 *       File write mode
 */
 void         FS_SetFileWriteMode  (FS_WRITEMODE WriteMode);
-void         FS_SetFileWriteModeEx(FS_WRITEMODE WriteMode, const char * sVolumeName);
+int          FS_SetFileWriteModeEx(FS_WRITEMODE WriteMode, const char * sVolumeName);
 FS_WRITEMODE FS_GetFileWriteMode  (void);
 FS_WRITEMODE FS_GetFileWriteModeEx(const char * sVolumeName);
 
@@ -1171,16 +1518,21 @@ FS_WRITEMODE FS_GetFileWriteModeEx(const char * sVolumeName);
 *    The application can use FS_JOURNAL_ResetStatCounters() to set all
 *    the statistical counters to 0.
 *
-*    MaxWriteSectorCnt can be used to fine tune the size of the journal file.
+*    MaxWriteSectorCnt can be used to fine tune the size of the journal file
+*    by comparing its value with the number of sectors that can be stored
+*    in the journal file. The number of sectors that can be stored in the
+*    journal file can be read via FS_JOURNAL_GetInfo().
 */
 typedef struct {
-  U32 WriteSectorCnt;         // Number of sectors written by the file system to journal.
-  U32 NumTransactions;        // Number of journal transactions performed.
-  U32 FreeSectorCnt;          // Number of sectors freed.
-  U32 OverflowCnt;            // Number of times the journal has been cleaned before the end of a transaction.
-  U32 WriteSectorCntStorage;  // Number of sectors written by the journal to the storage device.
-  U32 ReadSectorCntStorage;   // Number of sectors read by the journal from the storage device.
-  U32 MaxWriteSectorCnt;      // Maximum number of sectors written by the file system to journal file in any transaction.
+  U32 WriteSectorCnt;           // Number of sectors written by the file system to journal.
+  U32 NumTransactions;          // Number of journal transactions performed.
+  U32 FreeSectorCnt;            // Number of sectors freed by the file system and recorded to journal.
+  U32 OverflowCnt;              // Number of times the journal was cleaned before the end of a transaction.
+  U32 WriteSectorCntStorage;    // Number of sectors written by the journal to the storage device.
+  U32 ReadSectorCntStorage;     // Number of sectors read by the journal from the storage device.
+  U32 MaxWriteSectorCnt;        // Maximum number of sectors written by the file system to journal file in any journal transaction.
+  U32 FreeSectorCntStorage;     // Number of sectors freed by journal on the storage device.
+  U32 FreeOperationCntStorage;  // Number of free sector operations performed by the journal on the storage device.
 } FS_JOURNAL_STAT_COUNTERS;
 
 /*********************************************************************
@@ -1272,7 +1624,7 @@ typedef struct {
 */
 int  FS_JOURNAL_Begin                  (const char * sVolumeName);
 int  FS_JOURNAL_Create                 (const char * sVolumeName, U32 NumBytes);
-int  FS_JOURNAL_CreateEx               (const char * sVolumeName, U32 NumBytes, U8 SupportFreeSector);
+int  FS_JOURNAL_CreateEx               (const char * sVolumeName, U32 NumBytes, U8 IsFreeSectorSupported);
 int  FS_JOURNAL_Disable                (const char * sVolumeName);
 int  FS_JOURNAL_Enable                 (const char * sVolumeName);
 int  FS_JOURNAL_End                    (const char * sVolumeName);
@@ -1374,9 +1726,14 @@ int          FS_IsHLFormatted     (const char * sVolumeName);
 *
 *       Partitioning
 */
-#define FS_NUM_PARTITIONS  4
-int          FS_CreateMBR       (const char * sVolumeName, FS_PARTITION_INFO * pPartInfo, int NumPartitions);
-int          FS_GetPartitionInfo(const char * sVolumeName, FS_PARTITION_INFO * pPartInfo, U8 PartIndex);
+int          FS_CreateMBR            (const char * sVolumeName, FS_PARTITION_INFO_MBR * pPartInfo, int NumPartitions);
+int          FS_GetPartitionInfoMBR  (const char * sVolumeName, FS_PARTITION_INFO_MBR * pPartInfo, U8 PartIndex);
+int          FS_GetPartitioningScheme(const char * sVolumeName);
+#if FS_SUPPORT_GPT
+  int        FS_CreateGPT            (const char * sVolumeName, FS_GPT_INFO * pGPTInfo, FS_PARTITION_INFO_GPT * pPartInfo, int NumPartitions);
+  int        FS_GetGPTInfo           (const char * sVolumeName, FS_GPT_INFO * pGPTInfo);
+  int        FS_GetPartitionInfoGPT  (const char * sVolumeName, FS_PARTITION_INFO_GPT * pPartInfo, unsigned PartIndex);
+#endif // FS_SUPPORT_GPT
 
 /*********************************************************************
 *
@@ -1470,6 +1827,9 @@ void FS_SetCharSetType(const FS_CHARSET_TYPE * pCharSetType);
 */
 extern const FS_CHARSET_TYPE FS_CHARSET_CP437;            // Latin characters
 extern const FS_CHARSET_TYPE FS_CHARSET_CP932;            // Japanese characters (encoded as Shift JIS)
+extern const FS_CHARSET_TYPE FS_CHARSET_CP936;            // Simplified Chinese characters (encoded as GBK)
+extern const FS_CHARSET_TYPE FS_CHARSET_CP949;            // Korean characters (encoded as UHC)
+extern const FS_CHARSET_TYPE FS_CHARSET_CP950;            // Chinese characters (encoded as Big5)
 
 /*********************************************************************
 *
@@ -1477,41 +1837,86 @@ extern const FS_CHARSET_TYPE FS_CHARSET_CP932;            // Japanese characters
 */
 extern const FS_UNICODE_CONV FS_UNICODE_CONV_CP437;       // Unicode <-> CP437 (DOS Latin US) converter
 extern const FS_UNICODE_CONV FS_UNICODE_CONV_CP932;       // Unicode <-> CP932 (Shift JIS) converter
+extern const FS_UNICODE_CONV FS_UNICODE_CONV_CP936;       // Unicode <-> CP936 (GBK) converter
+extern const FS_UNICODE_CONV FS_UNICODE_CONV_CP949;       // Unicode <-> CP949 (UHC) converter
+extern const FS_UNICODE_CONV FS_UNICODE_CONV_CP950;       // Unicode <-> CP950 (Big5) converter
 extern const FS_UNICODE_CONV FS_UNICODE_CONV_UTF8;        // Unicode <-> UTF-8 converter
+
+#if FS_SUPPORT_FAT
 
 /*********************************************************************
 *
-*       FAT specific functions.
+*       FAT specific API
 */
-#if FS_SUPPORT_FAT
 
-int    FS_FAT_FormatSD                  (const char * sVolumeName);
-U32    FS_FAT_GrowRootDir               (const char * sVolumeName, U32 NumAddEntries);
-void   FS_FAT_SupportLFN                (void);
-void   FS_FAT_DisableLFN                (void);
+/*********************************************************************
+*
+*       FS_FAT_CONFIG
+*
+*  Description
+*    Information about the FAT configuration.
+*/
+typedef struct {
+  U8 IsLFNSupported;                // Indicates if the support for long file names is enabled.
+  U8 IsFSInfoSectorUsed;            // Indicates if the information about the free clusters is read from the FSInfo sector.
+  U8 IsATCopyMaintained;            // Indicates if the copy of the allocation table is update.
+  U8 IsROFileMovePermitted;         // Indicates if the file system is allowed to move file that have the read-only attribute set.
+  U8 IsDirtyFlagUpdated;            // Indicates if the updates the dirty flag in the BPB sector.
+  U8 IsFAT32Supported;              // Indicates if the support for FAT32 formatted volumes is enabled.
+  U8 IsDeleteOptimized;             // Indicates if the optimization for the deletion of large files is enabled.
+  U8 LinearAccessOptimizationLevel; // Optimization level for the access to linearly allocated files.
+  U8 IsFreeClusterCacheSupported;   // Indicates if the support for the cache of free clusters is enabled.
+  U8 IsLowerCaseSFNSupported;       // Indicates if the optimization for storing of short file names in lower case is enabled.
+} FS_FAT_CONFIG;
+
+int                       FS_FAT_FormatSD                  (const char * sVolumeName);
+U32                       FS_FAT_GrowRootDir               (const char * sVolumeName, U32 NumAddEntries);
+void                      FS_FAT_SupportLFN                (void);
+void                      FS_FAT_DisableLFN                (void);
 #if FS_SUPPORT_FILE_NAME_ENCODING
-  void FS_FAT_SetLFNConverter           (const FS_UNICODE_CONV * pUnicodeConv);
+  void                    FS_FAT_SetLFNConverter           (const FS_UNICODE_CONV * pUnicodeConv);
+  const FS_UNICODE_CONV * FS_FAT_GetLFNConverter           (void);
 #endif
 #if FS_FAT_USE_FSINFO_SECTOR
-  void FS_FAT_ConfigFSInfoSectorUse     (int OnOff);
+  void                    FS_FAT_ConfigFSInfoSectorUse     (int OnOff);
 #endif
 #if FS_MAINTAIN_FAT_COPY
-  void FS_FAT_ConfigFATCopyMaintenance  (int OnOff);
+  void                    FS_FAT_ConfigFATCopyMaintenance  (int OnOff);
 #endif
 #if FS_FAT_PERMIT_RO_FILE_MOVE
-  void FS_FAT_ConfigROFileMovePermission(int OnOff);
+  void                    FS_FAT_ConfigROFileMovePermission(int OnOff);
 #endif
 #if FS_FAT_UPDATE_DIRTY_FLAG
-  void FS_FAT_ConfigDirtyFlagUpdate     (int OnOff);
+  void                    FS_FAT_ConfigDirtyFlagUpdate     (int OnOff);
 #endif
+int                       FS_FAT_GetConfig                 (FS_FAT_CONFIG * pConfig);
 
 #endif // FS_SUPPORT_FAT
 
+#if FS_SUPPORT_EFS
+
 /*********************************************************************
 *
-*       EFS runtime configuration functions.
+*       EFS specific API
 */
-#if FS_SUPPORT_EFS
+
+/*********************************************************************
+*
+*       FS_EFS_CONFIG
+*
+*  Description
+*    Information about the EFS configuration.
+*/
+typedef struct {
+  U8 IsStatusSectorSupported;       // Indicates if the information of the status sector is updated.
+  U8 IsCaseSensitiveName;           // Indicates if the comparison of file names is case sensitive.
+  U8 IsDirEntryBufferSupported;     // Indicates if the support for directory entry buffers is enabled.
+  U8 NumDirEntryBuffers;            // Number of configured directory entry buffers.
+  U8 IsDeleteOptimized;             // Indicates if the optimization for the deletion of large files is enabled.
+  U8 LinearAccessOptimizationLevel; // Optimization level for the access to linearly allocated files.
+  U8 IsFreeClusterCacheSupported;   // Indicates if the support for the cache of free clusters is enabled.
+  U8 MaxDirEntrySize;               // Maximum number of bytes in a directory entry.
+} FS_EFS_CONFIG;
 
 #if FS_EFS_SUPPORT_STATUS_SECTOR
   void FS_EFS_ConfigStatusSectorSupport (int OnOff);
@@ -1522,44 +1927,53 @@ void   FS_FAT_DisableLFN                (void);
 #if FS_SUPPORT_FILE_NAME_ENCODING
   void FS_EFS_SetFileNameConverter      (const FS_UNICODE_CONV * pUnicodeConv);
 #endif // FS_SUPPORT_FILE_NAME_ENCODING
+int FS_EFS_GetConfig                    (FS_EFS_CONFIG * pConfig);
 
 #endif // FS_SUPPORT_EFS
 
 /*********************************************************************
 *
-*       BigFile API
+*       BigFAT API
 */
 
 /*********************************************************************
 *
-*       API functions that work with file objects
+*       API functions that work with file handles
 */
-int FS_BIGFILE_Close      (FS_BIGFILE_OBJ * pFileObj);
-int FS_BIGFILE_GetPos     (FS_BIGFILE_OBJ * pFileObj, U64 * pPos);
-int FS_BIGFILE_GetSize    (FS_BIGFILE_OBJ * pFileObj, U64 * pSize);
-int FS_BIGFILE_Open       (FS_BIGFILE_OBJ * pFileObj, const char * sFileName, unsigned Flags);
-int FS_BIGFILE_Read       (FS_BIGFILE_OBJ * pFileObj,       void * pData, U32 NumBytesToRead, U32 * pNumBytesRead);
-int FS_BIGFILE_SetPos     (FS_BIGFILE_OBJ * pFileObj, U64 Pos);
-int FS_BIGFILE_SetSize    (FS_BIGFILE_OBJ * pFileObj, U64 Size);
-int FS_BIGFILE_Sync       (FS_BIGFILE_OBJ * pFileObj);
-int FS_BIGFILE_Write      (FS_BIGFILE_OBJ * pFileObj, const void * pData, U32 NumBytesToWrite, U32 * pNumBytesWritten);
+int FS_BIGFAT_Close     (FS_BIGFAT_FILE * pBigFile);
+int FS_BIGFAT_GetPos    (FS_BIGFAT_FILE * pBigFile, U64 * pPos);
+int FS_BIGFAT_GetSize   (FS_BIGFAT_FILE * pBigFile, U64 * pSize);
+int FS_BIGFAT_Open      (FS_BIGFAT_FILE * pBigFile, const char * sFileName, unsigned Flags);
+int FS_BIGFAT_Read      (FS_BIGFAT_FILE * pBigFile,       void * pData, U32 NumBytesToRead, U32 * pNumBytesRead);
+int FS_BIGFAT_SetPos    (FS_BIGFAT_FILE * pBigFile, U64 Pos);
+int FS_BIGFAT_SetSize   (FS_BIGFAT_FILE * pBigFile, U64 Size);
+int FS_BIGFAT_Sync      (FS_BIGFAT_FILE * pBigFile);
+int FS_BIGFAT_Write     (FS_BIGFAT_FILE * pBigFile, const void * pData, U32 NumBytesToWrite, U32 * pNumBytesWritten);
 
 /*********************************************************************
 *
 *       API functions that work with file names
 */
-int FS_BIGFILE_Copy      (const char * sFileNameSrc, const char * sFileNameDest, void * pBuffer, U32 NumBytes);
-int FS_BIGFILE_FindFirst (FS_BIGFILE_FIND_DATA * pFD, const char * sDirName, char * sFileName, int SizeOfFileName);
-int FS_BIGFILE_FindNext  (FS_BIGFILE_FIND_DATA * pFD);
-int FS_BIGFILE_FindClose (FS_BIGFILE_FIND_DATA * pFD);
-int FS_BIGFILE_GetInfo   (const char * sFileName, FS_BIGFILE_INFO * pInfo);
-int FS_BIGFILE_ModifyAttr(const char * sFileName, unsigned SetMask, unsigned ClrMask);
-int FS_BIGFILE_Move      (const char * sFileNameSrc, const char * sFileNameDest);
-int FS_BIGFILE_Remove    (const char * sFileName);
+int FS_BIGFAT_Copy      (const char * sFileNameSrc, const char * sFileNameDest, void * pBuffer, U32 NumBytes);
+int FS_BIGFAT_FindFirst (FS_BIGFAT_FIND_DATA * pFD, const char * sDirName, char * sFileName, int SizeOfFileName);
+int FS_BIGFAT_FindNext  (FS_BIGFAT_FIND_DATA * pFD);
+int FS_BIGFAT_FindClose (FS_BIGFAT_FIND_DATA * pFD);
+int FS_BIGFAT_GetInfo   (const char * sFileName, FS_BIGFAT_INFO * pInfo);
+int FS_BIGFAT_GetTime   (const char * sFileName, U32 * pTimeStamp, int TimeType);
+int FS_BIGFAT_ModifyAttr(const char * sFileName, unsigned SetMask, unsigned ClrMask);
+int FS_BIGFAT_Move      (const char * sFileNameSrc, const char * sFileNameDest);
+int FS_BIGFAT_Remove    (const char * sFileName);
+int FS_BIGFAT_SetTime   (const char * sFileName, U32 TimeStamp, int TimeType);
 
 /*********************************************************************
 *
-*       File buffer related functions.
+*       API functions that work with volumes
+*/
+int FS_BIGFAT_CheckDisk(const char * sVolumeName, void * pBuffer, U32 BufferSize, int MaxRecursionLevel, FS_CHECKDISK_ON_ERROR_CALLBACK * pfOnError);
+
+/*********************************************************************
+*
+*       File buffer related functions
 */
 
 /*********************************************************************
@@ -1610,7 +2024,7 @@ int FS_BIGFILE_Remove    (const char * sFileName);
 *       Misc. functions
 */
 int FS_GetFileId             (const char * sFileName, U8 * pId);
-U16 FS_GetVersion            (void);
+U32 FS_GetVersion            (void);
 #if FS_SUPPORT_BUSY_LED
   int FS_SetBusyLEDCallback (const char * sVolumeName, FS_BUSY_LED_CALLBACK * pfBusyLED);
 #endif // FS_SUPPORT_BUSY_LED
@@ -1647,12 +2061,15 @@ int  FS_CONF_GetDebugLevel        (void);
 #define FS_BUSWIDTH_CMD_1BIT                (1uL << FS_BUSWIDTH_CMD_SHIFT)
 #define FS_BUSWIDTH_CMD_2BIT                (2uL << FS_BUSWIDTH_CMD_SHIFT)
 #define FS_BUSWIDTH_CMD_4BIT                (4uL << FS_BUSWIDTH_CMD_SHIFT)
+#define FS_BUSWIDTH_CMD_8BIT                (8uL << FS_BUSWIDTH_CMD_SHIFT)
 #define FS_BUSWIDTH_ADDR_1BIT               (1uL << FS_BUSWIDTH_ADDR_SHIFT)
 #define FS_BUSWIDTH_ADDR_2BIT               (2uL << FS_BUSWIDTH_ADDR_SHIFT)
 #define FS_BUSWIDTH_ADDR_4BIT               (4uL << FS_BUSWIDTH_ADDR_SHIFT)
+#define FS_BUSWIDTH_ADDR_8BIT               (8uL << FS_BUSWIDTH_ADDR_SHIFT)
 #define FS_BUSWIDTH_DATA_1BIT               (1uL << FS_BUSWIDTH_DATA_SHIFT)
 #define FS_BUSWIDTH_DATA_2BIT               (2uL << FS_BUSWIDTH_DATA_SHIFT)
 #define FS_BUSWIDTH_DATA_4BIT               (4uL << FS_BUSWIDTH_DATA_SHIFT)
+#define FS_BUSWIDTH_DATA_8BIT               (8uL << FS_BUSWIDTH_DATA_SHIFT)
 #define FS_BUSWIDTH_MAKE(Cmd, Addr, Data)   (((Cmd) << FS_BUSWIDTH_CMD_SHIFT)   | \
                                              ((Addr) << FS_BUSWIDTH_ADDR_SHIFT) | \
                                              ((Data) << FS_BUSWIDTH_DATA_SHIFT))
@@ -1698,7 +2115,8 @@ int  FS_CONF_GetDebugLevel        (void);
 *
 *       Driver types
 */
-extern const FS_DEVICE_TYPE FS_RAMDISK_Driver;         // Driver that uses RAM as storage
+extern const FS_DEVICE_TYPE FS_RAMDISK_Driver;         // Driver that uses system memory as storage
+extern const FS_DEVICE_TYPE FS_RAMDISK_UNI_Driver;     // Driver that uses system memory and serial RAM device as storage
 extern const FS_DEVICE_TYPE FS_WINDRIVE_Driver;        // Driver for Windows drives and file images
 extern const FS_DEVICE_TYPE FS_MMC_CM_Driver;          // Driver for SD/MMC using card controller
 extern const FS_DEVICE_TYPE FS_MMC_CM_RO_Driver;       // Driver for SD/MMC using card controller (read-only mode)
@@ -1707,6 +2125,7 @@ extern const FS_DEVICE_TYPE FS_IDE_Driver;             // Driver for IDE and Com
 extern const FS_DEVICE_TYPE FS_NOR_Driver;             // Driver for NOR flashes (fast write)
 extern const FS_DEVICE_TYPE FS_NAND_Driver;            // Driver for SLC NAND flashes
 extern const FS_DEVICE_TYPE FS_NOR_BM_Driver;          // Driver for NOR flashes (reduced RAM usage)
+extern const FS_DEVICE_TYPE FS_NOR_BM_RO_Driver;       // Driver for NOR flashes (read-only mode)
 extern const FS_DEVICE_TYPE FS_NAND_UNI_Driver;        // Driver for SLC NAND flashes with ECC engine
 extern const FS_DEVICE_TYPE FS_NAND_UNI_RO_Driver;     // Driver for SLC NAND flashes with ECC engine (read-only mode)
 extern const FS_DEVICE_TYPE FS_DISKPART_Driver;        // Logical driver for disk partitions
@@ -1728,7 +2147,7 @@ extern const FS_DEVICE_TYPE FS_LOGVOL_Driver;          // Logical driver for com
 *       NOR block types
 *
 *  Description
-*    Type of data stored by the Block map NOR driver to a physical sector.
+*    Type of data stored by the Block Map NOR driver to a physical sector.
 */
 #define FS_NOR_BLOCK_TYPE_UNKNOWN               0             // Unknown data type.
 #define FS_NOR_BLOCK_TYPE_DATA                  1             // Physical sector stores a data block.
@@ -1751,7 +2170,7 @@ extern const FS_DEVICE_TYPE FS_LOGVOL_Driver;          // Logical driver for com
 *       NOR sector types
 *
 *  Description
-*    Type of data stored by the Sector map NOR driver to a physical sector.
+*    Type of data stored by the Sector Map NOR driver to a physical sector.
 */
 #define FS_NOR_SECTOR_TYPE_UNKNOWN              0             // Unknown data type.
 #define FS_NOR_SECTOR_TYPE_DATA                 1             // Physical sector stores file system data.
@@ -1760,10 +2179,30 @@ extern const FS_DEVICE_TYPE FS_LOGVOL_Driver;          // Logical driver for com
 
 /*********************************************************************
 *
+*       NOR HW layer flags
+*
+*  Description
+*    Additional options for data exchanged by the SPI NOR HW layers.
+*/
+#define FS_NOR_HW_FLAG_DTR_DATA                 (1uL << 0)    // Exchange the data on each clock transition.
+#define FS_NOR_HW_FLAG_DTR_ADDR                 (1uL << 1)    // Send the address on each clock transition.
+#define FS_NOR_HW_FLAG_DTR_CMD                  (1uL << 2)    // Send the command on each clock transition.
+#define FS_NOR_HW_FLAG_DQS_ACTIVE               (1uL << 3)    // Enable the data strobe signal.
+#define FS_NOR_HW_FLAG_DQS_INVERTED             (1uL << 4)    // Data strobe signal is inverted in reference to clock signal.
+#define FS_NOR_HW_FLAG_DTR_D1_D0                (1uL << 5)    // Send odd-numbered bytes on the rising edge of the clock signal.
+#define FS_NOR_HW_FLAG_ADDR_3BYTE               (1uL << 6)    // Send a 3-byte address to NOR flash device.
+#define FS_NOR_HW_FLAG_DUMMY_4BIT               (1uL << 7)    // Generate additional dummy cycles equivalent to four bits of data.
+#define FS_NOR_HW_FLAG_DUMMY_2BIT               (1uL << 8)    // Generate additional dummy cycles equivalent to two bits of data.
+#define FS_NOR_HW_FLAG_DUMMY_1BIT               (1uL << 9)    // Generate additional dummy cycles equivalent to one bit of data.
+#define FS_NOR_HW_FLAG_MODE_8BIT                (1uL << 10)   // Send eight mode bits after the data address.
+#define FS_NOR_HW_FLAG_MODE_4BIT                (1uL << 11)   // Send four mode bits after the data address.
+
+/*********************************************************************
+*
 *       FS_NOR_SECTOR_INFO
 *
 *  Description
-*    Information about a physical sector maintained by the sector map NOR driver.
+*    Information about a physical sector maintained by the Sector Map NOR driver.
 */
 typedef struct {
   U32 Off;                    // Position of the physical sector relative to the first byte of NOR flash device
@@ -1780,7 +2219,7 @@ typedef struct {
 *       FS_NOR_DISK_INFO
 *
 *  Description
-*    Management information maintained by the sector map NOR driver.
+*    Management information maintained by the Sector Map NOR driver.
 */
 typedef struct {
   U32 NumPhysSectors;         // Number of physical sectors available for data storage.
@@ -1794,7 +2233,7 @@ typedef struct {
 *       FS_NOR_STAT_COUNTERS
 *
 *  Description
-*    Statistical counters maintained by the sector map NOR driver.
+*    Statistical counters maintained by the Sector Map NOR driver.
 */
 typedef struct {
   U32 EraseCnt;               // Number of sector erase operations.
@@ -1812,7 +2251,7 @@ typedef struct {
 *       FS_NOR_BM_SECTOR_INFO
 *
 *  Description
-*    Information about a physical sector maintained by the block map NOR driver.
+*    Information about a physical sector maintained by the Block Map NOR driver.
 */
 typedef struct {
   U32 Off;                    // Position of the physical sector relative to the first byte of NOR flash device
@@ -1827,7 +2266,7 @@ typedef struct {
 *       FS_NOR_BM_DISK_INFO
 *
 *  Description
-*    Management information maintained by the block map NOR driver.
+*    Management information maintained by the Block Map NOR driver.
 */
 typedef struct {
   U16 NumPhySectors;          // Number of physical sectors available for data storage.
@@ -1854,7 +2293,7 @@ typedef struct {
 *       FS_NOR_BM_STAT_COUNTERS
 *
 *  Description
-*    Statistical counters maintained by the block map NOR driver.
+*    Statistical counters maintained by the Block Map NOR driver.
 *
 *  Additional information
 *    The statistical counters can be queried via FS_NOR_BM_GetStatCounters()
@@ -1862,6 +2301,10 @@ typedef struct {
 *
 *    aBitErrorCnt[0] stores the number of 1 bit error occurrences,
 *    aBitErrorCnt[1] stores the number of 2 bit error occurrences, and so on.
+*
+*    PreEraseCnt stores the number of times the Block Map NOR driver marked
+*    a physical sector as ready to be erased. The physical sectors are then
+*    erased before being used.
 */
 typedef struct {
   U32 NumFreeBlocks;          // Number of blocks that are not used for data storage.
@@ -1883,6 +2326,7 @@ typedef struct {
   U32 WriteByteCnt;           // Number of bytes written by the driver to the NOR flash device.
   U32 BitErrorCnt;            // Total number of bit errors corrected.
   U32 aBitErrorCnt[FS_NOR_STAT_MAX_BIT_ERRORS];   // Number of times a specific number of bit errors occurred.
+  U32 PreEraseCnt;            // Number of sector pre-erase operations.
 } FS_NOR_BM_STAT_COUNTERS;
 
 /*********************************************************************
@@ -1923,8 +2367,8 @@ typedef struct {
 *    !=0      An error occurred.
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layers.
 *    The NOR driver calls this function when it writes data to the
 *    NOR flash device. It is guaranteed that the NOR driver tries to
 *    modify memory regions of the NOR flash device that are erased.
@@ -1956,8 +2400,8 @@ typedef int FS_NOR_PHY_TYPE_WRITE_OFF(U8 Unit, U32 Off, const void * pData, U32 
 *    !=0      An error occurred.
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layers.
 *    The NOR driver calls this function when it reads data from the
 *    NOR flash device. FS_NOR_PHY_TYPE_READ_OFF has to be able to handle
 *    read request that stretch over multiple physical sectors.
@@ -1983,8 +2427,8 @@ typedef int FS_NOR_PHY_TYPE_READ_OFF(U8 Unit, void * pData, U32 Off, U32 NumByte
 *    !=0    An error occurred.
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layers.
 *    The NOR driver calls this function when it erases a physical sector
 *    NOR flash device. The erase operation must set to 1 all the bits
 *    in the specified physical sector.
@@ -2009,13 +2453,16 @@ typedef int FS_NOR_PHY_TYPE_ERASE_SECTOR(U8 Unit, unsigned int SectorIndex);
 *    pNumBytes      [OUT] Number of bytes in the NOR physical sector. Can be NULL.
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layers.
 *    The NOR driver calls this function when it tries to determine
 *    the position and the size of a physical sector.
 *
 *    The value returned via pOff and SectorIndex are relative to StartAddr
 *    value specified in the call to FS_NOR_PHY_TYPE_CONFIGURE.
+*
+*    An error can be reported by setting *pNumBytes to 0 or by setting
+*    *pOff to 0xFFFFFFFF.
 */
 typedef void FS_NOR_PHY_TYPE_GET_SECTOR_INFO(U8 Unit, unsigned int SectorIndex, U32 * pOff, U32 * pNumBytes);
 
@@ -2034,8 +2481,8 @@ typedef void FS_NOR_PHY_TYPE_GET_SECTOR_INFO(U8 Unit, unsigned int SectorIndex, 
 *    ==0      An error occurred.
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layers.
 *    The value returned by this function is the number of physical
 *    sectors located in the memory region specified by StartAddr
 *    and NumBytes values specified in the call to FS_NOR_PHY_TYPE_CONFIGURE.
@@ -2058,8 +2505,8 @@ typedef int FS_NOR_PHY_TYPE_GET_NUM_SECTORS(U8 Unit);
 *    NumBytes   Number of bytes to be used for data storage.
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layers.
 *    FS_NOR_PHY_TYPE_CONFIGURE is called by the NOR driver during the
 *    initialization of the file system.
 *
@@ -2079,8 +2526,8 @@ typedef void FS_NOR_PHY_TYPE_CONFIGURE(U8 Unit, U32 BaseAddr, U32 StartAddr, U32
 *    Unit       Index of the physical layer instance (0-based)
 *
 *  Additional information
-*    This function is a member of the NOR physical layer API
-*    and is mandatory to be implemented by each NOR physical layer.
+*    This function is a member of the NOR physical layer API.
+*    It is mandatory to be implemented by all the NOR physical layer.
 *    The NOR driver calls this function during the file system
 *    initialization when a NOR physical layer is assigned to
 *    a driver instance. Typically, FS_NOR_PHY_TYPE_ON_SELECT_PHY
@@ -2222,8 +2669,8 @@ typedef void (FS_NOR_READ_CFI_CALLBACK)(U8 Unit, U32 BaseAddr, U32 Off, U8 * pDa
 *    ==0      An error occurred.
 *
 *  Additional information
-*    This function is a member of the SPI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI NOR hardware layer API.
+*    It it has to be implemented by all the hardware layers.
 *
 *    This function is called by the NOR physical layer once and
 *    before any other function of the hardware layer each time
@@ -2242,8 +2689,8 @@ typedef int FS_NOR_HW_TYPE_SPI_INIT(U8 Unit);
 *    Unit       Index of the hardware layer (0-based).
 *
 *  Additional information
-*    This function is a member of the SPI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI NOR hardware layer API.
+*    It it has to be implemented by all the hardware layers.
 *
 *    The Chip Select (CS) signal is used to address a specific serial NOR
 *    flash device connected via SPI. Enabling is equal to setting the CS
@@ -2262,8 +2709,8 @@ typedef void FS_NOR_HW_TYPE_SPI_ENABLE_CS(U8 Unit);
 *    Unit       Index of the hardware layer (0-based).
 *
 *  Additional information
-*    This function is a member of the SPI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI NOR hardware layer API.
+*    It has to be implemented by all the hardware layers.
 *
 *    The Chip Select (CS) signal is used to address a specific serial NOR
 *    flash device connected via SPI. Disabling is equal to setting the CS
@@ -2280,12 +2727,13 @@ typedef void FS_NOR_HW_TYPE_SPI_DISABLE_CS(U8 Unit);
 *
 *  Parameters
 *    Unit       Index of the hardware layer (0-based).
-*    pData      [OUT] Data transfered from the serial NOR flash device.
+*    pData      [OUT] Data transferred from the serial NOR flash device.
 *    NumBytes   Number of bytes to be transferred.
 *
 *  Additional information
-*    This function is a member of the SPI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI NOR hardware layer API.
+*    FS_NOR_HW_TYPE_SPI_READ does not have to be implemented if
+*    the hardware layer provides an implementation for FS_NOR_HW_TYPE_SPI_READ_EX.
 */
 typedef void FS_NOR_HW_TYPE_SPI_READ(U8 Unit, U8 * pData, int NumBytes);
 
@@ -2298,12 +2746,13 @@ typedef void FS_NOR_HW_TYPE_SPI_READ(U8 Unit, U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit       Index of the hardware layer (0-based).
-*    pData      [IN] Data transfered to the serial NOR flash device.
+*    pData      [IN] Data transferred to the serial NOR flash device.
 *    NumBytes   Number of bytes to be transferred.
 *
 *  Additional information
-*    This function is a member of the SPI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI NOR hardware layer API.
+*    FS_NOR_HW_TYPE_SPI_WRITE does not have to be implemented if
+*    the hardware layer provides an implementation for FS_NOR_HW_TYPE_SPI_WRITE_EX.
 */
 typedef void FS_NOR_HW_TYPE_SPI_WRITE(U8 Unit, const U8 * pData, int NumBytes);
 
@@ -2316,7 +2765,7 @@ typedef void FS_NOR_HW_TYPE_SPI_WRITE(U8 Unit, const U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit       Index of the hardware layer (0-based).
-*    pData      [OUT] Data transfered from the serial NOR flash device.
+*    pData      [OUT] Data transferred from the serial NOR flash device.
 *    NumBytes   Number of bytes to be transferred.
 *
 *  Additional information
@@ -2341,7 +2790,7 @@ typedef void FS_NOR_HW_TYPE_SPI_READ_X2(U8 Unit, U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit       Index of the hardware layer (0-based).
-*    pData      [IN] Data transfered to the serial NOR flash device.
+*    pData      [IN] Data transferred to the serial NOR flash device.
 *    NumBytes   Number of bytes to be transferred.
 *
 *  Additional information
@@ -2366,7 +2815,7 @@ typedef void FS_NOR_HW_TYPE_SPI_WRITE_X2(U8 Unit, const U8 * pData, int NumBytes
 *
 *  Parameters
 *    Unit       Index of the hardware layer (0-based).
-*    pData      [OUT] Data transfered from the serial NOR flash device.
+*    pData      [OUT] Data transferred from the serial NOR flash device.
 *    NumBytes   Number of bytes to be transferred.
 *
 *  Additional information
@@ -2395,7 +2844,7 @@ typedef void FS_NOR_HW_TYPE_SPI_READ_X4(U8 Unit, U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit       Index of the hardware layer (0-based).
-*    pData      [IN] Data transfered to the serial NOR flash device.
+*    pData      [IN] Data transferred to the serial NOR flash device.
 *    NumBytes   Number of bytes to be transferred.
 *
 *  Additional information
@@ -2504,6 +2953,66 @@ typedef void FS_NOR_HW_TYPE_SPI_UNLOCK(U8 Unit);
 
 /*********************************************************************
 *
+*       FS_NOR_HW_TYPE_SPI_READ_EX
+*
+*  Function description
+*    Transfers data from serial NOR flash device to MCU.
+*
+*  Parameters
+*    Unit       Index of the hardware layer (0-based).
+*    pData      [OUT] Data transferred from the serial NOR flash device.
+*    NumBytes   Number of bytes to be transferred.
+*    BusWidth   Number of data lines to be used for the data transfer.
+*
+*  Return value
+*    ==0      OK, data transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI NOR hardware layer API.
+*    FS_NOR_HW_TYPE_SPI_READ_EX does not have to be implemented if
+*    the hardware layer provides an implementation for FS_NOR_HW_TYPE_SPI_READ.
+*
+*    The difference between FS_NOR_HW_TYPE_SPI_READ_EX and FS_NOR_HW_TYPE_SPI_READ
+*    is that FS_NOR_HW_TYPE_SPI_READ_EX is able to transfer the data via a specified
+*    number of data lines and to report errors via the return value.
+*
+*    BusWith permitted values are 1, 2 and 4.
+*/
+typedef int FS_NOR_HW_TYPE_SPI_READ_EX(U8 Unit, U8 * pData, U32 NumBytes, U8 BusWidth);
+
+/*********************************************************************
+*
+*       FS_NOR_HW_TYPE_SPI_WRITE_EX
+*
+*  Function description
+*    Transfers data from MCU to serial NOR flash device.
+*
+*  Parameters
+*    Unit       Index of the hardware layer (0-based).
+*    pData      [IN] Data transferred to the serial NOR flash device.
+*    NumBytes   Number of bytes to be transferred.
+*    BusWidth   Number of data lines to be used for the data transfer.
+*
+*  Return value
+*    ==0      OK, data transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI NOR hardware layer API.
+*    FS_NOR_HW_TYPE_SPI_WRITE_EX does not have to be implemented if
+*    the hardware layer provides an implementation for FS_NOR_HW_TYPE_SPI_WRITE.
+*
+*    The difference between FS_NOR_HW_TYPE_SPI_WRITE_EX and FS_NOR_HW_TYPE_SPI_WRITE
+*    is that FS_NOR_HW_TYPE_SPI_WRITE_EX is able to transfer the data via a specified
+*    number of data lines and to report errors via the return value.
+*
+*    BusWith permitted values are 1, 2 and 4.
+*/
+typedef int FS_NOR_HW_TYPE_SPI_WRITE_EX(U8 Unit, const U8 * pData, U32 NumBytes, U8 BusWidth);
+
+/*********************************************************************
+*
 *       FS_NOR_HW_TYPE_SPI
 *
 *  Description
@@ -2522,6 +3031,8 @@ typedef struct {
   FS_NOR_HW_TYPE_SPI_DELAY      * pfDelay;            // Blocks the execution for the specified time.
   FS_NOR_HW_TYPE_SPI_LOCK       * pfLock;             // Requests exclusive access to SPI bus.
   FS_NOR_HW_TYPE_SPI_UNLOCK     * pfUnlock;           // Releases the exclusive access to SPI bus.
+  FS_NOR_HW_TYPE_SPI_READ_EX    * pfReadEx;           // Transfers data from serial NOR flash device to MCU.
+  FS_NOR_HW_TYPE_SPI_WRITE_EX   * pfWriteEx;          // Transfers data from MCU to serial NOR flash device.
 } FS_NOR_HW_TYPE_SPI;
 
 /*********************************************************************
@@ -2539,20 +3050,19 @@ typedef struct {
 *    ==0      An error occurred.
 *
 *  Additional information
-*    This function is a member of the SPIFI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    It has to be implemented by all the hardware layers.
 *
-*    This function is called by the NOR physical layer once and
-*    before any other function of the hardware layer each time
-*    the file system mounts the serial NOR flash. FS_NOR_HW_TYPE_SPIFI_INIT
-*    has to perform the initialization of clock signals, GPIO ports,
-*    SPI controller, etc.
+*    This function is called by the NOR physical layer before any other
+*    function of the hardware layer each time the file system mounts the
+*    serial NOR flash. FS_NOR_HW_TYPE_SPIFI_INIT has to perform the initialization
+*    of clock signals, GPIO ports, SPI controller, etc.
 */
 typedef int FS_NOR_HW_TYPE_SPIFI_INIT(U8 Unit);
 
 /*********************************************************************
 *
-*       FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE
+*       FS_NOR_HW_TYPE_SPIFI_UNMAP
 *
 *  Function description
 *    Configures the hardware for direct access to serial NOR flash.
@@ -2561,8 +3071,8 @@ typedef int FS_NOR_HW_TYPE_SPIFI_INIT(U8 Unit);
 *    Unit       Index of the hardware layer (0-based).
 *
 *  Additional information
-*    This function is a member of the SPIFI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    It has to be implemented by all the hardware layers.
 *
 *    The physical layer calls this function before it starts sending commands
 *    directly to the serial NOR flash. Typically, the SPI hardware can operate
@@ -2573,13 +3083,13 @@ typedef int FS_NOR_HW_TYPE_SPIFI_INIT(U8 Unit);
 *    of the contents of the serial NOR flash is mapped into this memory region.
 *
 *    If the command and memory mode are mutually exclusive,
-*    FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE has to disable the memory mode.
+*    FS_NOR_HW_TYPE_SPIFI_UNMAP has to disable the memory mode.
 */
-typedef void FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE(U8 Unit);
+typedef void FS_NOR_HW_TYPE_SPIFI_UNMAP(U8 Unit);
 
 /*********************************************************************
 *
-*       FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE
+*       FS_NOR_HW_TYPE_SPIFI_MAP
 *
 *  Function description
 *    Configures the hardware for access to serial NOR flash via system memory.
@@ -2593,9 +3103,8 @@ typedef void FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the SPIFI NOR hardware layer API.
-*    The implementation of this function is optional. If the hardware layer
-*    does not implement this function then the data is read from the serial
-*    NOR flash device using FS_NOR_HW_TYPE_SPIFI_READ_DATA.
+*    The implementation of this function is not required if the
+*    hardware layer implements FS_NOR_HW_TYPE_SPIFI_MAP_EX.
 *
 *    This function is called by the physical layer when it no longer wants to send
 *    commands directly to the serial NOR flash device. After the call to this
@@ -2604,7 +3113,11 @@ typedef void FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE(U8 Unit);
 *    and that the data can be accessed by simple memory read operations.
 *
 *    If the command and memory mode are mutually exclusive,
-*    then FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE has to disable the command mode.
+*    then FS_NOR_HW_TYPE_SPIFI_MAP has to disable the command mode.
+*
+*    If the specified read command requires the generation of a number of dummy
+*    cycles that is not a multiple of eight then the hardware layer will have to
+*    implement the FS_NOR_HW_TYPE_SPIFI_MAP_EX function.
 *
 *    BusWidth encodes the number of data lines to be used when transferring the
 *    command, address and data. The value can be decoded using FS_BUSWIDTH_GET_CMD(),
@@ -2612,11 +3125,11 @@ typedef void FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE(U8 Unit);
 *    using the same number of data lines as the address. For additional information
 *    refer to \ref{SPI bus width decoding}
 */
-typedef void FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE(U8 Unit, U8 ReadCmd, unsigned NumBytesAddr, unsigned NumBytesDummy, U16 BusWidth);
+typedef void FS_NOR_HW_TYPE_SPIFI_MAP(U8 Unit, U8 ReadCmd, unsigned NumBytesAddr, unsigned NumBytesDummy, U16 BusWidth);
 
 /*********************************************************************
 *
-*       FS_NOR_HW_TYPE_SPIFI_EXEC_CMD
+*       FS_NOR_HW_TYPE_SPIFI_CONTROL
 *
 *  Function description
 *    Sends a command to serial NOR flash that does not transfer any data.
@@ -2627,26 +3140,27 @@ typedef void FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE(U8 Unit, U8 ReadCmd, unsigned Num
 *    BusWidth       Number of data lines to be used for sending the command.
 *
 *  Additional information
-*    This function is a member of the SPIFI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    The implementation of this function is not required if the
+*    hardware layer implements FS_NOR_HW_TYPE_SPIFI_CONTROL_EX.
 *
-*    Typically, the physical layer calls FS_NOR_HW_TYPE_SPIFI_EXEC_CMD
+*    Typically, the physical layer calls FS_NOR_HW_TYPE_SPIFI_CONTROL
 *    to enable or disable the write mode in the serial NOR flash, to set the
-*    number of address bytes, etc. FS_NOR_HW_TYPE_SPIFI_EXEC_CMD is called by
+*    number of address bytes, etc. FS_NOR_HW_TYPE_SPIFI_CONTROL is called by
 *    the physical layer only with the SPI hardware configured in command mode.
-*    FS_NOR_HW_TYPE_SPIFI_EXEC_CMD has to wait for the command to complete
+*    FS_NOR_HW_TYPE_SPIFI_CONTROL has to wait for the command to complete
 *    before it returns.
 *
-*    BusWidth is not encoded as is the case with the other functions of this
-*    physical layer but instead is stores the number of data lines.
-*    That is FS_BUSWIDTH_GET_CMD() is not required for decoding the value.
-*    Permitted values are 1, 2 and 4.
+*    The value of BusWidth is not encoded as is the case with the other functions of this
+*    physical layer. The value specified via BusWith is the actual number of data lines
+*    that have to be used for the data transfer of the command code.
+*    Permitted values are 1, 2, and 4.
 */
-typedef void FS_NOR_HW_TYPE_SPIFI_EXEC_CMD(U8 Unit, U8 Cmd, U8 BusWidth);
+typedef void FS_NOR_HW_TYPE_SPIFI_CONTROL(U8 Unit, U8 Cmd, U8 BusWidth);
 
 /*********************************************************************
 *
-*       FS_NOR_HW_TYPE_SPIFI_READ_DATA
+*       FS_NOR_HW_TYPE_SPIFI_READ
 *
 *  Function description
 *    Transfers data from serial NOR flash to MCU.
@@ -2662,29 +3176,32 @@ typedef void FS_NOR_HW_TYPE_SPIFI_EXEC_CMD(U8 Unit, U8 Cmd, U8 BusWidth);
 *    BusWidth       Number of data lines to be used for the data transfer.
 *
 *  Additional information
-*    This function is a member of the SPIFI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    The implementation of this function is not required if the
+*    hardware layer implements FS_NOR_HW_TYPE_SPIFI_READ_EX.
 *
 *    This function is called with the SPI hardware in command mode. Typically,
 *    the physical layer calls this function when it wants to read parameters
 *    or status information from the serial NOR flash device.
-*    FS_NOR_HW_TYPE_SPIFI_READ_DATA has to wait for the data transfer to complete
+*    FS_NOR_HW_TYPE_SPIFI_READ has to wait for the data transfer to complete
 *    before it returns.
 *
-*    If FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE is provided then the physical layer
+*    If FS_NOR_HW_TYPE_SPIFI_MAP is provided then the physical layer
 *    reads the contents of the serial NOR flash device via reads accesses to the
-*    system memory. FS_NOR_HW_TYPE_SPIFI_READ_DATA is used by the physical
+*    system memory. FS_NOR_HW_TYPE_SPIFI_READ is used by the physical
 *    layer to read the contents of the serial NOR flash device if
-*    FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE is not provided.
+*    FS_NOR_HW_TYPE_SPIFI_MAP is not provided.
 *
 *    The first address byte is stored at *pPara. NumBytesAddr is always smaller
 *    than or equal to NumBytesPara. If NumBytesAddr is equal to NumBytesPara then
-*    no dummy bytes have to be sent. The number of dummy bytes to be sent can
-*    be calculated as NumBytesPara - NumBytesAddr. If the hardware is sending
+*    no dummy bytes have to be generated. The number of dummy bytes to be generated can
+*    be calculated as NumBytesPara - NumBytesAddr. If the hardware is generating
 *    dummy cycles instead of bytes then the number of dummy bytes have to converted
 *    to clock cycles by taking into account the number of data lines used for the
-*    data transfer. The dummy bytes are sent via the same number of data lines
-*    as the address.
+*    data transfer of the address.
+*    If the specified read command requires the generation of a number of dummy
+*    cycles that is not a multiple of eight then the hardware layer will have to
+*    implement the FS_NOR_HW_TYPE_SPIFI_READ_EX function.
 *
 *    BusWidth encodes the number of data lines to be used when transferring the
 *    command, address and data. The value can be decoded using FS_BUSWIDTH_GET_CMD(),
@@ -2692,11 +3209,11 @@ typedef void FS_NOR_HW_TYPE_SPIFI_EXEC_CMD(U8 Unit, U8 Cmd, U8 BusWidth);
 *    using the same number of data lines as the address. For additional information
 *    refer to \ref{SPI bus width decoding}
 */
-typedef void FS_NOR_HW_TYPE_SPIFI_READ_DATA(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 * pData, unsigned NumBytesData, U16 BusWidth);
+typedef void FS_NOR_HW_TYPE_SPIFI_READ(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 * pData, unsigned NumBytesData, U16 BusWidth);
 
 /*********************************************************************
 *
-*       FS_NOR_HW_TYPE_SPIFI_WRITE_DATA
+*       FS_NOR_HW_TYPE_SPIFI_WRITE
 *
 *  Function description
 *    Transfers data from MCU to serial NOR flash.
@@ -2712,23 +3229,21 @@ typedef void FS_NOR_HW_TYPE_SPIFI_READ_DATA(U8 Unit, U8 Cmd, const U8 * pPara, u
 *    BusWidth       Number of data lines to be used for the data transfer.
 *
 *  Additional information
-*    This function is a member of the SPIFI NOR hardware layer API
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    The implementation of this function is not required if the
+*    hardware layer implements FS_NOR_HW_TYPE_SPIFI_WRITE_EX.
 *
 *    This function is called with the SPI hardware in command mode. Typically, the
 *    physical layer calls this function when it wants to modify the data in a page
-*    of the serial NOR flash device or when to erase a NOR physical sector.
-*    FS_NOR_HW_TYPE_SPIFI_WRITE_DATA has to wait for the data transfer to complete
+*    of the serial NOR flash device or to erase a NOR physical sector.
+*    FS_NOR_HW_TYPE_SPIFI_WRITE has to wait for the data transfer to complete
 *    before it returns.
 *
 *    The first address byte is stored at *pPara. NumBytesAddr is always smaller
 *    than or equal to NumBytesPara. If NumBytesAddr is equal to NumBytesPara then
-*    no dummy bytes have to be sent. The number of dummy bytes to be sent can
-*    be calculated as NumBytesPara - NumBytesAddr. If the hardware is sending
-*    dummy cycles instead of bytes then the number of dummy bytes have to converted
-*    to clock cycles by taking into account the number of data lines used for the
-*    data transfer. The dummy bytes are sent via the same number of data lines
-*    as the address.
+*    no additional data have to be sent. The number of additional bytes to be sent
+*    can be calculated as NumBytesPara - NumBytesAddr. This data has to be sent
+*    via the same number of data lines as the address.
 *
 *    BusWidth encodes the number of data lines to be used when transferring the
 *    command, address and data. The value can be decoded using FS_BUSWIDTH_GET_CMD(),
@@ -2736,7 +3251,7 @@ typedef void FS_NOR_HW_TYPE_SPIFI_READ_DATA(U8 Unit, U8 Cmd, const U8 * pPara, u
 *    using the same number of data lines as the address. For additional information
 *    refer to \ref{SPI bus width decoding}
 */
-typedef void FS_NOR_HW_TYPE_SPIFI_WRITE_DATA(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, const U8 * pData, unsigned NumBytesData, U16 BusWidth);
+typedef void FS_NOR_HW_TYPE_SPIFI_WRITE(U8 Unit, U8 Cmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, const U8 * pData, unsigned NumBytesData, U16 BusWidth);
 
 /*********************************************************************
 *
@@ -2754,14 +3269,20 @@ typedef void FS_NOR_HW_TYPE_SPIFI_WRITE_DATA(U8 Unit, U8 Cmd, const U8 * pPara, 
 *    TimeOut_ms     Maximum number of milliseconds to wait for the bit to be set.
 *    BusWidth       Number of data lines to be used for the data transfer.
 *
+*  Return value
+*    > 0    Timeout occurred.
+*    ==0    OK, bit set to specified value.
+*    < 0    Feature not supported.
+*
 *  Additional information
 *    This function is a member of the SPIFI NOR hardware layer API.
 *    The implementation of this function is optional.
 *
-*    This function is called with the SPI hardware in command mode and has to send
-*    periodically a command and to read one byte from the serial NOR flash device.
-*    FS_NOR_HW_TYPE_SPIFI_POLL has to wait until the bit at BitPos in the response
-*    returned by the serial NOR flash device is set to the value specified by BitValue.
+*    This function is called with the SPI hardware in command mode.
+*    FS_NOR_HW_TYPE_SPIFI_POLL has to wait for the NOR flash device to set a flag
+*    to a specified value. This has to be realized by periodically reading one
+*    byte from the serial NOR flash device via the specified command and by checking
+*    that the bit at BitPos in the read byte is set to the value specified by BitValue.
 *    A BitPos of 0 specifies the position of the least significant bit in the response.
 *
 *    BusWidth encodes the number of data lines to be used when transferring the
@@ -2852,11 +3373,215 @@ typedef void FS_NOR_HW_TYPE_SPIFI_LOCK(U8 Unit);
 *
 *    FS_NOR_HW_TYPE_SPIFI_UNLOCK and FS_NOR_HW_TYPE_SPIFI_LOCK can be used to
 *    synchronize the access to the SPI bus when other devices than the
-*    serial NAND flash are connected to it. A possible implementation would
+*    serial NOR flash are connected to it. A possible implementation would
 *    make use of an OS semaphore that is acquired FS_NOR_HW_TYPE_SPIFI_LOCK
 *    and released in FS_NOR_HW_TYPE_SPIFI_UNLOCK.
 */
 typedef void FS_NOR_HW_TYPE_SPIFI_UNLOCK(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_NOR_HW_TYPE_SPIFI_MAP_EX
+*
+*  Function description
+*    Configures the hardware for access to serial NOR flash via system memory.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be used for reading the data. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, memory mode configured successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API. The implementation
+*    of this function is optional. The function has to be implemented only by hardware
+*    layers that have to be able to transfer the data via eight data lines or in DTR mode.
+*    If the hardware layer does not implement this function then FS_NOR_HW_TYPE_SPIFI_MAP
+*    is called instead.
+*
+*    This function performs the same operation as FS_NOR_HW_TYPE_SPIFI_MAP
+*    with the difference that it can handle multi-byte commands and additional
+*    data transfer options received via Flags. Flags is a bitwise-or combination
+*    of \ref{NOR HW layer flags}. In addition, this function is able to report an error
+*    via the return value.
+*/
+typedef int FS_NOR_HW_TYPE_SPIFI_MAP_EX(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U16 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_NOR_HW_TYPE_SPIFI_CONTROL_EX
+*
+*  Function description
+*    Sends a command to serial NOR flash that does not transfer any data.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    BusWidth       Number of data lines to be used for sending the command.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, command transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API. The implementation
+*    of this function is optional. The function has to be implemented only by hardware
+*    layers that have to be able to transfer the data via eight data lines or in DTR mode.
+*    If the hardware layer does not implement this function then FS_NOR_HW_TYPE_SPIFI_CONTROL
+*    is called instead.
+*
+*    This function performs the same operation as FS_NOR_HW_TYPE_SPIFI_CONTROL
+*    with the difference that it can handle multi-byte commands and additional
+*    data transfer options specified via Flags. Flags is a bitwise-or combination
+*    of \ref{NOR HW layer flags}. In addition, this function is able to report an error
+*    via the return value.
+*
+*    The value of BusWidth is not encoded as is the case with the other functions of this
+*    physical layer. The value specified via BusWith is the actual number of data lines
+*    that have to be used for the data transfer of the command code.
+*    Permitted values are 1, 2, 4 and 8.
+*/
+typedef int FS_NOR_HW_TYPE_SPIFI_CONTROL_EX(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, U8 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_NOR_HW_TYPE_SPIFI_READ_EX
+*
+*  Function description
+*    Transfers data from serial NOR flash to MCU.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    pData          [OUT] Data read from the serial NOR flash device. Can be NULL.
+*    NumBytesData   Number of bytes to read from the serial NOR flash device. Can be 0.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, data transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API. The implementation
+*    of this function is optional. The function has to be implemented only by hardware
+*    layers that have to be able to transfer the data via eight data lines or in DTR mode.
+*    If the hardware layer does not implement this function then FS_NOR_HW_TYPE_SPIFI_READ
+*    is called instead.
+*
+*    The first address byte is stored at *pPara. NumBytesAddr is always smaller
+*    than or equal to NumBytesPara. If NumBytesAddr is equal to NumBytesPara then
+*    neither mode nor dummy bytes have to be sent. The number of mode bytes is always one
+*    and is indicated by FS_NOR_SPI_FLAG_MODE_BYTE being set in Flags. The value of the
+*    mode byte is located at *(pPara + NumBytesAddr).
+*    The number of dummy bytes to be generated can be calculated as NumBytesPara - NumBytesAddr.
+*    If FS_NOR_SPI_FLAG_MODE_BYTE is set in Flags then one has to be subtracted from the calculate value.
+*    One additional dummy nibble (half-byte) has to be generated if FS_NOR_SPI_FLAG_DUMMY_NIBBLE
+*    is set in Flags.
+*    If the hardware generates dummy cycles instead of bytes then the number
+*    of dummy bytes has to converted to clock cycles by taking into account the number
+*    of data lines used for the data transfer of the address.
+*
+*    This function performs the same operation as FS_NOR_HW_TYPE_SPIFI_READ
+*    with the difference that it can handle multi-byte commands and additional
+*    data transfer options specified via Flags. Flags is a bitwise-or combination
+*    of \ref{NOR HW layer flags}. In addition, this function is able to report an error
+*    via the return value.
+*/
+typedef int FS_NOR_HW_TYPE_SPIFI_READ_EX(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 * pData, unsigned NumBytesData, U16 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_NOR_HW_TYPE_SPIFI_WRITE_EX
+*
+*  Function description
+*    Transfers data from MCU to serial NOR flash.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    pData          [IN] Data to be sent to the serial NOR flash device. Can be NULL.
+*    NumBytesData   Number of bytes to be written the serial NOR flash device. Can be 0.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, data transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API. The implementation
+*    of this function is optional. The function has to be implemented only by hardware
+*    layers that have to be able to transfer the data via eight data lines or in DTR mode.
+*    If the hardware layer does not implement this function then FS_NOR_HW_TYPE_SPIFI_WRITE
+*    is called instead.
+*
+*    This function performs the same operation as FS_NOR_HW_TYPE_SPIFI_WRITE
+*    with the difference that it can handle multi-byte commands and additional
+*    data transfer options specified via Flags. Flags is a bitwise-or combination
+*    of \ref{NOR HW layer flags}. In addition, this function is able to report an error
+*    via the return value.
+*/
+typedef int FS_NOR_HW_TYPE_SPIFI_WRITE_EX(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, const U8 * pData, unsigned NumBytesData, U16 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_NOR_HW_TYPE_SPIFI_POLL_EX
+*
+*  Function description
+*    Checks periodically the value of a status flag.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    BitPos         Position of the bit to be checked.
+*    BitValue       Value of the bit to wait for.
+*    Delay          Number of clock cycles to wait between two queries.
+*    TimeOut_ms     Maximum number of milliseconds to wait for the bit to be set.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    > 0    Timeout occurred.
+*    ==0    OK, bit set to specified value.
+*    < 0    Feature not supported.
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    The implementation of this function is optional. The function has to be implemented
+*    only by hardware layers that have to be able to transfer the data of the polling
+*    command via eight data lines or in DTR mode. If the hardware layer does not implement
+*    this function then FS_NOR_HW_TYPE_SPIFI_POLL is called instead.
+*
+*    This function performs the same operation as FS_NOR_HW_TYPE_SPIFI_POLL
+*    with the difference that it can handle multi-byte commands and additional
+*    data transfer options specified via Flags. Flags is a bitwise-or combination
+*    of \ref{NOR HW layer flags}. In addition, this function is able to report an error
+*    via the return value.
+*/
+typedef int FS_NOR_HW_TYPE_SPIFI_POLL_EX(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 BitPos, U8 BitValue, U32 Delay, U32 TimeOut_ms, U16 BusWidth, unsigned Flags);
 
 /*********************************************************************
 *
@@ -2866,16 +3591,21 @@ typedef void FS_NOR_HW_TYPE_SPIFI_UNLOCK(U8 Unit);
 *    Hardware layer for serial NOR flash devices that are memory-mapped.
 */
 typedef struct {
-  FS_NOR_HW_TYPE_SPIFI_INIT         * pfInit;         // Initializes the hardware.
-  FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE * pfSetCmdMode;   // Configures the hardware for direct access to serial NOR flash.
-  FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE * pfSetMemMode;   // Configures the hardware for access to serial NOR flash via system memory.
-  FS_NOR_HW_TYPE_SPIFI_EXEC_CMD     * pfExecCmd;      // Sends a command to serial NOR flash that does not transfer any data.
-  FS_NOR_HW_TYPE_SPIFI_READ_DATA    * pfReadData;     // Transfers data from serial NOR flash to MCU.
-  FS_NOR_HW_TYPE_SPIFI_WRITE_DATA   * pfWriteData;    // Transfers data from MCU to serial NOR flash.
-  FS_NOR_HW_TYPE_SPIFI_POLL         * pfPoll;         // Checks periodically the value of a status flag.
-  FS_NOR_HW_TYPE_SPIFI_DELAY        * pfDelay;        // Blocks the execution for the specified time.
-  FS_NOR_HW_TYPE_SPIFI_LOCK         * pfLock;         // Requests exclusive access to SPI bus.
-  FS_NOR_HW_TYPE_SPIFI_UNLOCK       * pfUnlock;       // Releases the exclusive access to SPI bus.
+  FS_NOR_HW_TYPE_SPIFI_INIT       * pfInit;           // Initializes the hardware.
+  FS_NOR_HW_TYPE_SPIFI_UNMAP      * pfSetCmdMode;     // Configures the hardware for direct access to serial NOR flash.
+  FS_NOR_HW_TYPE_SPIFI_MAP        * pfSetMemMode;     // Configures the hardware for access to serial NOR flash via system memory.
+  FS_NOR_HW_TYPE_SPIFI_CONTROL    * pfExecCmd;        // Sends a command to serial NOR flash that does not transfer any data.
+  FS_NOR_HW_TYPE_SPIFI_READ       * pfReadData;       // Transfers data from serial NOR flash to MCU.
+  FS_NOR_HW_TYPE_SPIFI_WRITE      * pfWriteData;      // Transfers data from MCU to serial NOR flash.
+  FS_NOR_HW_TYPE_SPIFI_POLL       * pfPoll;           // Checks periodically the value of a status flag.
+  FS_NOR_HW_TYPE_SPIFI_DELAY      * pfDelay;          // Blocks the execution for the specified time.
+  FS_NOR_HW_TYPE_SPIFI_LOCK       * pfLock;           // Requests exclusive access to SPI bus.
+  FS_NOR_HW_TYPE_SPIFI_UNLOCK     * pfUnlock;         // Releases the exclusive access to SPI bus.
+  FS_NOR_HW_TYPE_SPIFI_MAP_EX     * pfMapEx;          // Configures the hardware for access to serial NOR flash via system memory.
+  FS_NOR_HW_TYPE_SPIFI_CONTROL_EX * pfControlEx;      // Sends a command to serial NOR flash that does not transfer any data.
+  FS_NOR_HW_TYPE_SPIFI_READ_EX    * pfReadEx;         // Transfers data from serial NOR flash to MCU.
+  FS_NOR_HW_TYPE_SPIFI_WRITE_EX   * pfWriteEx;        // Transfers data from MCU to serial NOR flash.
+  FS_NOR_HW_TYPE_SPIFI_POLL_EX    * pfPollEx;         // Checks periodically the value of a status flag.
 } FS_NOR_HW_TYPE_SPIFI;
 
 /*********************************************************************
@@ -2883,16 +3613,16 @@ typedef struct {
 *       FS_NOR_SPI_TYPE
 *
 *  Description
-*    Operations on serial NOR devices
+*    Operations on serial NOR devices.
 */
-typedef struct FS_NOR_SPI_TYPE FS_NOR_SPI_TYPE;   //lint -esym(9058, FS_NOR_SPI_TYPE) tag unused outside of typedefs. Rationale: this is an opaque data type.
+typedef struct FS_NOR_SPI_TYPE FS_NOR_SPI_TYPE;   //lint -esym(9058, FS_NOR_SPI_TYPE) tag unused outside of typedefs N:999. Rationale: this is an opaque data type.
 
 /*********************************************************************
 *
 *       FS_NOR_SPI_DEVICE_LIST
 *
 *  Description
-*    Defines a list of supported devices.
+*    List of supported devices.
 */
 typedef struct {
   U8                       NumDevices;
@@ -2907,14 +3637,14 @@ typedef struct {
 *    Defines the parameters of a serial NOR flash device.
 *
 *  Additional information
-*    Flags is an bitwise-OR combination of \ref{Device operation flags}.
+*    Flags is an bitwise-or combination of \ref{Device operation flags}.
 */
 typedef struct {
   U8  Id;                                         // Value to identify the serial NOR flash device. This is the 3rd byte in the response to READ ID (0x9F) command.
-  U8  ldBytesPerSector;                           // Number of bytes in a physical sector as power of 2.
-  U8  ldBytesPerPage;                             // Number of bytes in a page as a power of 2.
+  U8  ldBytesPerSector;                           // Number of bytes in a physical sector as power of 2 exponent.
+  U8  ldBytesPerPage;                             // Number of bytes in a page as a power of 2 exponent.
   U8  NumBytesAddr;                               // Number of address bytes. 4 for NOR flash devices with a capacity larger than 128 Mbit (16 Mbyte).
-  U16 NumSectors;                                 // Total number of physical sectors in the device.
+  U32 NumSectors;                                 // Total number of physical sectors in the device.
   U8  Flags;                                      // Additional functionality supported by device that requires special processing.
   U8  MfgId;                                      // Id of device manufacturer. This is the 1st byte in the response to READ ID (0x9F) command.
   U8  CmdWrite112;                                // Code of the command used to write the data to NOR flash via 2 data lines. The command itself and the address are transferred via data 1 line.
@@ -2966,7 +3696,7 @@ typedef struct {
 *  Additional information
 *    If the callback function returns a 0 the NOR driver marks the NOR flash
 *    device as read-only and it remains in this state until the NOR flash device
-*    is low-level formated. In this state, all further write operations
+*    is low-level formatted. In this state, all further write operations
 *    are rejected with an error by the NOR driver.
 *
 *    The application is responsible to handle the fatal error by for example
@@ -3105,39 +3835,70 @@ typedef struct {
 
 /*********************************************************************
 *
-*       Available physical layers for FS_NOR_Driver and FS_NOR_BM_Driver
+*       Physical layers for NOR drivers.
 */
-extern const FS_NOR_PHY_TYPE FS_NOR_PHY_CFI_1x16;            // 1 x 16-bit CFI compliant NOR flash
-extern const FS_NOR_PHY_TYPE FS_NOR_PHY_CFI_2x16;            // 2 x 16-bit CFI compliant NOR flash
-extern const FS_NOR_PHY_TYPE FS_NOR_PHY_ST_M25;              // ST M25P compliant Serial NOR flash
-extern const FS_NOR_PHY_TYPE FS_NOR_PHY_SFDP;                // Serial NOR flash that supports Serial Flash Discoverable Parameters JDEDEC standard
-extern const FS_NOR_PHY_TYPE FS_NOR_PHY_DSPI;                // Serial NOR flash that uses SPI in direct mode to access the NOR flash device (FS_NOR_PHY_ST_M25 and FS_NOR_PHY_SFDP)
-extern const FS_NOR_PHY_TYPE FS_NOR_PHY_SPIFI;               // Serial NOR flash connected via a memory-mapped SPI interface
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_CFI_1x16;            // 1 x 16-bit CFI compliant NOR flash.
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_CFI_2x16;            // 2 x 16-bit CFI compliant NOR flash.
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_ST_M25;              // ST M25P compliant Serial NOR flash.
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_SFDP;                // Serial NOR flash that supports Serial Flash Discoverable Parameters JDEDEC standard.
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_DSPI;                // Serial NOR flash that uses SPI in direct mode to access the NOR flash device (FS_NOR_PHY_ST_M25 and FS_NOR_PHY_SFDP),
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_SPIFI;               // Serial NOR flash connected via a memory-mapped SPI interface.
+extern const FS_NOR_PHY_TYPE FS_NOR_PHY_SPIFI_RO;            // Serial NOR flash connected via a memory-mapped SPI interface in read only mode.
 
 /*********************************************************************
 *
-*       Default HW layers for the NOR flash drivers.
+*       Default HW layers for the NOR drivers.
 */
 extern const FS_NOR_HW_TYPE_SPI FS_NOR_HW_ST_M25_Default;
 extern const FS_NOR_HW_TYPE_SPI FS_NOR_HW_SFDP_Default;
 
 /*********************************************************************
 *
+*       Families of supported serial NOR devices
+*/
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceAdestoStandard;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceAdestoEnhanced;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceCypress;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceDefault;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceEon;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceGigaDeviceEnhanced;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceGigaDeviceStandard;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceGigaDeviceLowVoltage;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceISSIEnhanced;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceISSIStandard;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceISSILegacy;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMacronix;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMacronixOctal;              // Octal devices working in SPI mode.
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMacronixOctalSTR;           // Octal devices working in STR octal mode
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMacronixOctalDTR;           // Octal devices working in DTR octal mode
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMicron;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMicron_x2;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceMicrochip;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceSpansion;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceSTM;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceWinbond;
+extern const FS_NOR_SPI_TYPE FS_NOR_SPI_DeviceWinbondDTR;
+
+/*********************************************************************
+*
 *       Lists of supported serial NOR devices
 */
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_All;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Default;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Micron;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Micron_x;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Micron_x2;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Spansion;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Microchip;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Winbond;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_ISSI;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Macronix;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_GigaDevice;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Cypress;
-extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceList_Adesto;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListAdesto;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListAll;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListCypress;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListDefault;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListEon;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListGigaDevice;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListISSI;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListMacronix;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListMacronixOctal;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListMicron;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListMicron_x;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListMicron_x2;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListMicrochip;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListSpansion;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListSTM;
+extern const FS_NOR_SPI_DEVICE_LIST FS_NOR_SPI_DeviceListWinbond;
 
 /*********************************************************************
 *
@@ -3159,9 +3920,10 @@ extern const FS_NOR_ECC_HOOK FS_NOR_ECC_SW_1bit_Data;   // Internal 1-bit ECC ro
 void         FS_NOR_Configure                 (U8 Unit, U32 BaseAddr, U32 StartAddr, U32 NumBytes);
 void         FS_NOR_ConfigureReserve          (U8 Unit, U8 pctToReserve);
 int          FS_NOR_EraseDevice               (U8 Unit);
+int          FS_NOR_ErasePhySector            (U8 Unit, U32 PhySectorIndex);
 int          FS_NOR_FormatLow                 (U8 Unit);
 int          FS_NOR_GetDiskInfo               (U8 Unit, FS_NOR_DISK_INFO * pDiskInfo);
-void         FS_NOR_GetSectorInfo             (U8 Unit, U32 PhySectorIndex, FS_NOR_SECTOR_INFO * pSectorInfo);
+int          FS_NOR_GetSectorInfo             (U8 Unit, U32 PhySectorIndex, FS_NOR_SECTOR_INFO * pSectorInfo);
 #if FS_NOR_ENABLE_STATS
 void         FS_NOR_GetStatCounters           (U8 Unit, FS_NOR_STAT_COUNTERS * pStat);
 #endif // FS_NOR_ENABLE_STATS
@@ -3189,6 +3951,7 @@ void         FS_NOR_SetSectorSize             (U8 Unit, U16 SectorSize);
 #if FS_NOR_VERIFY_WRITE
 void         FS_NOR_SetWriteVerification      (U8 Unit, U8 OnOff);
 #endif // FS_NOR_VERIFY_WRITE
+int          FS_NOR_WriteOff                  (U8 Unit, U32 Off, const void * pData, U32 NumBytes);
 
 /*********************************************************************
 *
@@ -3209,7 +3972,9 @@ int          FS_NOR_BM_EnableECC              (U8 Unit);
 #endif // FS_NOR_SUPPORT_ECC
 int          FS_NOR_BM_EraseDevice            (U8 Unit);
 int          FS_NOR_BM_ErasePhySector         (U8 Unit, U32 PhySectorIndex);
+#if FS_NOR_SUPPORT_FORMAT
 int          FS_NOR_BM_FormatLow              (U8 Unit);
+#endif // FS_NOR_SUPPORT_FORMAT
 int          FS_NOR_BM_GetDiskInfo            (U8 Unit, FS_NOR_BM_DISK_INFO * pDiskInfo);
 int          FS_NOR_BM_GetSectorInfo          (U8 Unit, U32 PhySectorIndex, FS_NOR_BM_SECTOR_INFO * pSectorInfo);
 #if FS_NOR_ENABLE_STATS
@@ -3274,7 +4039,7 @@ void         FS_NOR_CFI_SetReadCFICallback (U8 Unit, FS_NOR_READ_CFI_CALLBACK * 
 *
 *       ST M25 physical layer API functions
 */
-void         FS_NOR_SPI_Configure          (U8 Unit, U32 SectorSize, U16 NumSectors);
+void         FS_NOR_SPI_Configure          (U8 Unit, U32 SectorSize, U32 NumSectors);
 void         FS_NOR_SPI_SetPageSize        (U8 Unit, U16 BytesPerPage);
 void         FS_NOR_SPI_SetHWType          (U8 Unit, const FS_NOR_HW_TYPE_SPI * pHWType);
 void         FS_NOR_SPI_ReadDeviceId       (U8 Unit, U8 * pId, unsigned NumBytes);
@@ -3300,10 +4065,13 @@ void         FS_NOR_SFDP_SetDeviceParaList (U8 Unit, const FS_NOR_SPI_DEVICE_PAR
 */
 void         FS_NOR_SPIFI_Allow2bitMode    (U8 Unit, U8 OnOff);
 void         FS_NOR_SPIFI_Allow4bitMode    (U8 Unit, U8 OnOff);
+void         FS_NOR_SPIFI_AllowDTRMode     (U8 Unit, U8 OnOff);
+void         FS_NOR_SPIFI_AllowOctalMode   (U8 Unit, U8 OnOff);
 void         FS_NOR_SPIFI_SetHWType        (U8 Unit, const FS_NOR_HW_TYPE_SPIFI        * pHWType);
 void         FS_NOR_SPIFI_SetDeviceList    (U8 Unit, const FS_NOR_SPI_DEVICE_LIST      * pDeviceList);
 void         FS_NOR_SPIFI_SetSectorSize    (U8 Unit, U32 BytesPerSector);
 void         FS_NOR_SPIFI_SetDeviceParaList(U8 Unit, const FS_NOR_SPI_DEVICE_PARA_LIST * pDeviceParaList);
+int          FS_NOR_SPIFI_ExecCmd          (U8 Unit, const U8 * pCmd, unsigned NumBytes);
 
 /*********************************************************************
 *
@@ -3313,9 +4081,624 @@ void         FS_NOR_DSPI_SetHWType         (U8 Unit, const FS_NOR_HW_TYPE_SPI * 
 
 /*********************************************************************
 *
-*       RAMDISK driver
+*       RAM Disk driver
 */
-void FS_RAMDISK_Configure(U8 Unit, void * pData, U16 BytesPerSector, U32 NumSectors);
+
+/*********************************************************************
+*
+*       RAMDISK HW layer flags
+*
+*  Description
+*    Additional options for data exchanged by the SPI RAMDISK hardware layer.
+*/
+#define FS_RAMDISK_HW_FLAG_DTR_DATA             (1uL << 0)    // Exchange the data on each clock transition.
+#define FS_RAMDISK_HW_FLAG_DTR_ADDR             (1uL << 1)    // Send the address on each clock transition.
+#define FS_RAMDISK_HW_FLAG_DTR_CMD              (1uL << 2)    // Send the command on each clock transition.
+#define FS_RAMDISK_HW_FLAG_DQS_ACTIVE           (1uL << 3)    // Enable the data strobe signal.
+#define FS_RAMDISK_HW_FLAG_MODE_8BIT            (1uL << 4)    // Send eight mode bits after the data address.
+
+/*********************************************************************
+*
+*       FS_RAMDISK_SPI_TYPE
+*
+*  Description
+*    Operations on serial RAM devices.
+*/
+typedef struct FS_RAMDISK_SPI_DEVICE_TYPE FS_RAMDISK_SPI_DEVICE_TYPE;   //lint -esym(9058, FS_RAMDISK_SPI_DEVICE_TYPE) tag unused outside of typedefs N:999. Rationale: this is an opaque data type.
+
+/*********************************************************************
+*
+*       FS_RAMDISK_SPI_DEVICE_LIST
+*
+*  Description
+*    List of supported serial RAM devices.
+*/
+typedef struct {
+  U8                                  NumDevices;
+  const FS_RAMDISK_SPI_DEVICE_TYPE ** ppDevice;
+} FS_RAMDISK_SPI_DEVICE_LIST;
+
+/*********************************************************************
+*
+*       FS_RAMDISK_UNI_DISK_INFO
+*
+*  Description
+*    Management information maintained by the Universal RAM Disk driver.
+*/
+typedef struct {
+  U32 NumBytes;               // Capacity of the storage device in bytes.
+  U16 BytesPerSector;         // Size of the logical sector used by the driver in bytes.
+} FS_RAMDISK_UNI_DISK_INFO;
+
+/*********************************************************************
+*
+*       FS_RAMDISK_DEVICE_INFO
+*
+*  Description
+*    Information about a RAM device.
+*/
+typedef struct {
+  U32 NumBytes;               // Capacity of the storage device in bytes.
+} FS_RAMDISK_DEVICE_INFO;
+
+/*********************************************************************
+*
+*       FS_RAMDISK_PHY_TYPE_INIT_GET_DEVICE_INFO
+*
+*  Function description
+*    Initializes the physical layer.
+*
+*  Parameters
+*    Unit         Index of the RAMDISK physical layer instance (0-based)
+*    pDeviceInfo  [OUT] Information about the NAND flash device.
+*
+*  Return value
+*    ==0  OK, physical layer successfully initialized.
+*    !=0  An error occurred.
+*
+*  Additional information
+*    This function is a member of the RAMDISK physical layer API.
+*    It has to be implemented by all the RAMDISK physical layers.
+*    This is the first function of the physical layer API that is called
+*    by the Universal RAM Disk driver when the RAM device is mounted.
+*
+*    This function has to perform the initialization of the hardware layer, 
+*    and the identification of the RAM device. If the RAM device can be handled, 
+*    then the function has to fill pDevInfo with information about the organization
+*    of the RAM device.
+*/
+typedef int FS_RAMDISK_PHY_TYPE_INIT_GET_DEVICE_INFO(U8 Unit, FS_RAMDISK_DEVICE_INFO * pDeviceInfo);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_PHY_TYPE_READ_OFF
+*
+*  Function description
+*    Reads data from a RAM device.
+*
+*  Parameters
+*    Unit         Index of the RAMDISK physical layer instance (0-based)
+*    Off          Byte offset to read from.
+*    pData        [OUT] Data read from RAM device.
+*    NumBytes     Number of bytes to be read.
+*
+*  Return value
+*    ==0  OK, data read successfully.
+*    !=0  An error occurred.
+*
+*  Additional information
+*    This function is a member of the RAMDISK physical layer API.
+*    It has to be implemented by all the RAMDISK physical layers.
+*/
+typedef int FS_RAMDISK_PHY_TYPE_READ_OFF(U8 Unit, U32 Off, void * pData, U32 NumBytes);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_PHY_TYPE_WRITE_OFF
+*
+*  Function description
+*    Writes data to a RAM device.
+*
+*  Parameters
+*    Unit         Index of the RAMDISK physical layer instance (0-based)
+*    Off          Byte offset to write to.
+*    pData        [IN] Data to be written to the RAM device.
+*    NumBytes     Number of bytes to be written.
+*
+*  Return value
+*    ==0  OK, data written.
+*    !=0  An error occurred.
+*
+*  Additional information
+*    This function is a member of the RAMDISK physical layer API.
+*    It has to be implemented by all the RAMDISK physical layers.
+*/
+typedef int FS_RAMDISK_PHY_TYPE_WRITE_OFF(U8 Unit, U32 Off, const void * pData, U32 NumBytes);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_PHY_TYPE_DEINIT
+*
+*  Function description
+*    Releases the allocated resources.
+*
+*  Parameters
+*    Unit         Index of the RAMDISK physical layer instance (0-based)
+*
+*  Additional information
+*    This function is a member of the RAMDISK physical layer API.
+*    It has to be implemented by the all the RAMDISK physical layers that allocate
+*    resources dynamically during the initialization such as memory
+*    for the physical layer instance.
+*
+*    The RAMDISK driver calls this function when the file system is unmounted.
+*/
+typedef void FS_RAMDISK_PHY_TYPE_DEINIT(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_PHY_TYPE
+*
+*  Description
+*    RAMDISK physical layer API.
+*/
+typedef struct {
+  FS_RAMDISK_PHY_TYPE_INIT_GET_DEVICE_INFO * pfInitGetDeviceInfo;     // Initializes the instance of the RAM physical layer and returns the information about the RAM device.
+  FS_RAMDISK_PHY_TYPE_READ_OFF             * pfReadOff;               // Reads data from the RAM device.
+  FS_RAMDISK_PHY_TYPE_WRITE_OFF            * pfWriteOff;              // Writes data to the RAM device.
+  FS_RAMDISK_PHY_TYPE_DEINIT               * pfDeInit;                // Frees the resources allocated by the RAM physical layer instance.
+} FS_RAMDISK_PHY_TYPE;
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_I2C_INIT
+*
+*  Function description
+*    Initializes the HW layer.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*
+*  Return value
+*    ==0      OK, HW layer successfully initialized.
+*    !=0      An error occurred.
+*/
+typedef int FS_RAMDISK_HW_TYPE_I2C_INIT(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_I2C_START
+*
+*  Function description
+*    Start an I2C transaction.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    Addr           Address of the device to be accessed.
+*    IsRead         Type of operation to be executed.
+*                   * 0 - Write operation.
+*                   * 1 - Read operation.
+*
+*  Return value
+*    ==0      OK, transaction successfully started.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the I2C RAMDISK hardware layer API.
+*    It has to be implemented by all the hardware layers.
+*/
+typedef int FS_RAMDISK_HW_TYPE_I2C_START(U8 Unit, unsigned Addr, int IsRead);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_I2C_STOP
+*
+*  Function description
+*    Ends an I2C transaction.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*
+*  Return value
+*    ==0      OK, transaction successfully ended.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the I2C RAMDISK hardware layer API.
+*    It has to be implemented by all the hardware layers.
+*/
+typedef int FS_RAMDISK_HW_TYPE_I2C_STOP(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_I2C_READ
+*
+*  Function description
+*    Transfers data from I2C device to MCU.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pData          [OUT] Data read from I2C device.
+*    NumBytes       Number of bytes to transfer.
+*
+*  Return value
+*    ==0      OK, data successfully transferred.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the I2C RAMDISK hardware layer API.
+*    It has to be implemented by all the hardware layers.
+*
+*    The function has to send a NAK after the last byte transferred.
+*/
+typedef int FS_RAMDISK_HW_TYPE_I2C_READ(U8 Unit, U8 * pData, U32 NumBytes);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_I2C_WRITE
+*
+*  Function description
+*    Transfers data from MCU to I2C device.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pData          [IN] Data written to I2C device.
+*    NumBytes       Number of bytes to transfer.
+*
+*  Return value
+*    ==0      OK, data successfully transferred.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the I2C RAMDISK hardware layer API.
+*    It has to be implemented by all the hardware layers.
+*/
+typedef int FS_RAMDISK_HW_TYPE_I2C_WRITE(U8 Unit, const U8 * pData, U32 NumBytes);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_I2C
+*
+*  Description
+*    HW layer for RAM devices connected via I2C.
+*/
+typedef struct {
+  FS_RAMDISK_HW_TYPE_I2C_INIT  * pfInit;                // Initializes the I2C hardware.
+  FS_RAMDISK_HW_TYPE_I2C_START * pfStart;               // Generates a START condition on the I2C bus.
+  FS_RAMDISK_HW_TYPE_I2C_STOP  * pfStop;                // Generates a STOP condition on the I2C bus.
+  FS_RAMDISK_HW_TYPE_I2C_READ  * pfRead;                // Transfers data from I2C device to MCU.
+  FS_RAMDISK_HW_TYPE_I2C_WRITE * pfWrite;               // Transfers data from MCU to I2C device.
+} FS_RAMDISK_HW_TYPE_I2C;
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_INIT
+*
+*  Function description
+*    Initializes the SPI hardware.
+*
+*  Parameters
+*    Unit       Index of the hardware layer (0-based).
+*
+*  Return value
+*    > 0      OK, frequency of the SPI clock in Hz.
+*    ==0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI RAMDISK hardware layer API.
+*    It has to be implemented by all the hardware layers.
+*
+*    This function is called by the SPI RAMDISK physical layer before
+*    any other function of the hardware layer each time the file system
+*    mounts the serial RAM deice. FS_RAMDISK_HW_TYPE_SPI_INIT
+*    has to perform the initialization of clock signals, GPIO ports,
+*    SPI controller, etc.
+*/
+typedef int FS_RAMDISK_HW_TYPE_SPI_INIT(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_UNMAP
+*
+*  Function description
+*    Configures the hardware for direct access to serial RAM device.
+*
+*  Parameters
+*    Unit       Index of the hardware layer (0-based).
+*
+*  Return value
+*    ==0      OK, direct mode configured successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI RAMDISK hardware layer API.
+*    It has to be implemented by all the hardware layers.
+*
+*    The physical layer calls this function before it starts sending commands
+*    directly to the serial RAM device. Typically, the SPI hardware can operate
+*    in two modes: command and memory. In command mode the physical layer can
+*    access the serial RAM device directly by sending commands to it.
+*    In the memory mode the SPI hardware translates read accesses to an assigned
+*    memory region to serial RAM device read commands. In this way, the contents
+*    of the contents of the serial RAM device is mapped into this memory region.
+*
+*    If the command and memory mode are mutually exclusive,
+*    FS_NOR_HW_TYPE_SPIFI_UNMAP has to disable the memory mode.
+*/
+typedef int FS_RAMDISK_HW_TYPE_SPI_UNMAP(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_MAP
+*
+*  Function description
+*    Configures the hardware for access to serial RAM device via system memory.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be used for reading the data. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, memory mode configured successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI RAMDISK hardware layer API.
+*    The implementation of this function is mandatory if the SPI
+*    hardware supports the access to RAM device via system memory.
+*    If FS_RAMDISK_HW_TYPE_SPI_MAP is not provided then the SPI
+*    RAMDISK physical layer accesses the RAM device in command mode.
+*
+*    Flags is a bitwise-or combination of \ref{RAMDISK HW layer flags}.
+*/
+typedef int FS_RAMDISK_HW_TYPE_SPI_MAP(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U16 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_CONTROL
+*
+*  Function description
+*    Sends a command to serial RAM device that does not transfer any data.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    BusWidth       Number of data lines to be used for sending the command.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, command transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI RAMDISK hardware layer API. The implementation
+*    of this function is mandatory.
+*
+*    Flags is a bitwise-or combination of \ref{RAMDISK HW layer flags}.
+*
+*    The value of BusWidth is not encoded as is the case with the other functions of this
+*    physical layer. The value specified via BusWith is the actual number of data lines
+*    that have to be used for the data transfer of the command code.
+*    Permitted values are 1, 2, 4 and 8.
+*/
+typedef int FS_RAMDISK_HW_TYPE_SPI_CONTROL(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, U8 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_READ
+*
+*  Function description
+*    Transfers data from serial RAM device to MCU.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    pData          [OUT] Data read from the serial RAM device. Can be NULL.
+*    NumBytesData   Number of bytes to read from the serial RAM device. Can be 0.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, data transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI RAMDISK hardware layer API. The implementation
+*    of this function is mandatory.
+*
+*    The first address byte is stored at *pPara. NumBytesAddr is always smaller
+*    than or equal to NumBytesPara. If NumBytesAddr is equal to NumBytesPara then
+*    neither mode nor dummy bytes have to be sent.
+*    The number of dummy bytes to be generated can be calculated as NumBytesPara - NumBytesAddr.
+*    If the hardware generates dummy cycles instead of bytes then the number
+*    of dummy bytes has to converted to clock cycles by taking into account the number
+*    of data lines used for the data transfer of the address.
+*
+*    Flags is a bitwise-or combination of \ref{RAMDISK HW layer flags}.
+*/
+typedef int FS_RAMDISK_HW_TYPE_SPI_READ(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, U8 * pData, unsigned NumBytesData, U16 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPIFI_WRITE
+*
+*  Function description
+*    Transfers data from MCU to serial RAM device.
+*
+*  Parameters
+*    Unit           Index of the hardware layer (0-based).
+*    pCmd           [IN] Code of the command to be sent. Cannot be NULL.
+*    NumBytesCmd    Number of bytes in the command code. Cannot be 0.
+*    pPara          [IN] Command parameters (address and dummy bytes). Can be NULL.
+*    NumBytesPara   Total number of address and dummy bytes to be sent. Can be 0.
+*    NumBytesAddr   Number of address bytes to be send. Can be 0.
+*    pData          [IN] Data to be sent to the serial RAM device. Can be NULL.
+*    NumBytesData   Number of bytes to be written the serial RAM device. Can be 0.
+*    BusWidth       Number of data lines to be used for the data transfer.
+*    Flags          Options for the data exchange.
+*
+*  Return value
+*    ==0      OK, data transferred successfully.
+*    !=0      An error occurred.
+*
+*  Additional information
+*    This function is a member of the SPI RAMDISK hardware layer API. The implementation
+*    of this function is mandatory.
+*
+*    The first address byte is stored at *pPara. NumBytesAddr is always smaller
+*    than or equal to NumBytesPara.
+*
+*    Flags is a bitwise-or combination of \ref{RAMDISK HW layer flags}.
+*/
+typedef int FS_RAMDISK_HW_TYPE_SPI_WRITE(U8 Unit, const U8 * pCmd, unsigned NumBytesCmd, const U8 * pPara, unsigned NumBytesPara, unsigned NumBytesAddr, const U8 * pData, unsigned NumBytesData, U16 BusWidth, unsigned Flags);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_LOCK
+*
+*  Function description
+*    Requests exclusive access to SPI bus.
+*
+*  Parameters
+*    Unit       Index of the hardware layer (0-based).
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    The implementation of this function is optional.
+*
+*    The NOR physical layer calls this function to indicate that it
+*    needs exclusive to access the NOR flash device via the SPI bus.
+*    It is guaranteed that the NOR physical layer does not attempt to
+*    exchange any data with the serial NOR flash device via the SPI bus
+*    before calling this function first. It is also guaranteed that
+*    FS_RAMDISK_HW_TYPE_SPI_LOCK and FS_RAMDISK_HW_TYPE_SPI_UNLOCK are called in pairs.
+*    Typically, this function is used for synchronizing the access to SPI bus
+*    when the SPI bus is shared between the serial NOR flash and other SPI devices.
+*
+*    A possible implementation would make use of an OS semaphore that is
+*    acquired in FS_RAMDISK_HW_TYPE_SPI_LOCK and released in FS_RAMDISK_HW_TYPE_SPI_UNLOCK.
+*/
+typedef void FS_RAMDISK_HW_TYPE_SPI_LOCK(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI_UNLOCK
+*
+*  Function description
+*    Requests exclusive access to SPI bus.
+*
+*  Parameters
+*    Unit       Index of the hardware layer (0-based).
+*
+*  Additional information
+*    This function is a member of the SPIFI NOR hardware layer API.
+*    The implementation of this function is optional.
+*
+*    The NOR physical layer calls this function when it no longer needs
+*    to access the serial NOR flash device via the SPI bus. It is guaranteed
+*    that the NOR physical layer does not attempt to exchange any data with
+*    the serial NOR flash device via the SPI bus before calling FS_RAMDISK_HW_TYPE_SPI_LOCK.
+*    It is also guaranteed that FS_RAMDISK_HW_TYPE_SPI_UNLOCK and
+*    FS_RAMDISK_HW_TYPE_SPI_LOCK are called in pairs.
+*
+*    FS_RAMDISK_HW_TYPE_SPI_UNLOCK and FS_RAMDISK_HW_TYPE_SPI_LOCK can be used to
+*    synchronize the access to the SPI bus when other devices than the
+*    serial NOR flash are connected to it. A possible implementation would
+*    make use of an OS semaphore that is acquired FS_RAMDISK_HW_TYPE_SPI_LOCK
+*    and released in FS_RAMDISK_HW_TYPE_SPI_UNLOCK.
+*/
+typedef void FS_RAMDISK_HW_TYPE_SPI_UNLOCK(U8 Unit);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_HW_TYPE_SPI
+*
+*  Description
+*    HW layer for RAM devices connected via SPI (single, dual, quad or octal).
+*/
+typedef struct {
+  FS_RAMDISK_HW_TYPE_SPI_INIT    * pfInit;              // Initializes the hardware.
+  FS_RAMDISK_HW_TYPE_SPI_UNMAP   * pfUnmap;             // Configures the hardware for direct access to serial RAM device.
+  FS_RAMDISK_HW_TYPE_SPI_MAP     * pfMap;               // Configures the hardware for access to serial RAM device via system memory.
+  FS_RAMDISK_HW_TYPE_SPI_CONTROL * pfControl;           // Sends a command to serial RAM device that does not transfer any data.
+  FS_RAMDISK_HW_TYPE_SPI_READ    * pfRead;              // Transfers data from serial RAM device to MCU.
+  FS_RAMDISK_HW_TYPE_SPI_WRITE   * pfWrite;             // Transfers data from MCU to serial RAM device.
+  FS_RAMDISK_HW_TYPE_SPI_LOCK    * pfLock;              // Requests exclusive access to SPI bus.
+  FS_RAMDISK_HW_TYPE_SPI_UNLOCK  * pfUnlock;            // Releases the exclusive access to SPI bus.
+} FS_RAMDISK_HW_TYPE_SPI;
+
+/*********************************************************************
+*
+*       Physical layers for the RAMDISK driver
+*/
+extern const FS_RAMDISK_PHY_TYPE FS_RAMDISK_PHY_I2C;    // RAM device connected via I2C.
+extern const FS_RAMDISK_PHY_TYPE FS_RAMDISK_PHY_SPI;    // RAM device connected via SPI.
+extern const FS_RAMDISK_PHY_TYPE FS_RAMDISK_PHY_System; // RAM mapped into system memory.
+
+/*********************************************************************
+*
+*       Lists of supported serial RAM devices
+*/
+extern const FS_RAMDISK_SPI_DEVICE_LIST FS_RAMDISK_SPI_DeviceListAll;
+extern const FS_RAMDISK_SPI_DEVICE_LIST FS_RAMDISK_SPI_DeviceListDefault;
+extern const FS_RAMDISK_SPI_DEVICE_LIST FS_RAMDISK_SPI_DeviceListInfineon;
+extern const FS_RAMDISK_SPI_DEVICE_LIST FS_RAMDISK_SPI_DeviceListFujitsu;
+
+/*********************************************************************
+*
+*       FS_RAMDISK_Driver driver API functions
+*/
+void FS_RAMDISK_Configure               (U8 Unit, void * pData, U16 BytesPerSector, U32 NumSectors);
+
+/*********************************************************************
+*
+*       FS_RAMDISK_UNI_Driver driver API functions
+*/
+int  FS_RAMDISK_UNI_GetDiskInfo         (U8 Unit, FS_RAMDISK_UNI_DISK_INFO * pDiskInfo);
+int  FS_RAMDISK_UNI_ReadOff             (U8 Unit, U32 Off, void * pData, U32 NumBytes);
+int  FS_RAMDISK_UNI_SetPhyType          (U8 Unit, const FS_RAMDISK_PHY_TYPE * pPhyType);
+int  FS_RAMDISK_UNI_SetByteRange        (U8 Unit, U32 StartOff, U32 NumBytes);
+int  FS_RAMDISK_UNI_SetSectorSize       (U8 Unit, unsigned BytesPerSector);
+#if FS_RAMDISK_VERIFY_WRITE
+int  FS_RAMDISK_UNI_SetWriteVerification(U8 Unit, U8 OnOff);
+#endif // FS_RAMDISK_VERIFY_WRITE
+int  FS_RAMDISK_UNI_WriteOff            (U8 Unit, U32 Off, const void * pData, U32 NumBytes);
+
+/*********************************************************************
+*
+*       I2C physical layer API functions
+*/
+int  FS_RAMDISK_I2C_SetDeviceAddress    (U8 Unit, unsigned Addr);
+int  FS_RAMDISK_I2C_SetDeviceSize       (U8 Unit, U32 NumBytes);
+int  FS_RAMDISK_I2C_SetHWType           (U8 Unit, const FS_RAMDISK_HW_TYPE_I2C * pHWType);
+
+/*********************************************************************
+*
+*       SPI physical layer API functions
+*/
+int  FS_RAMDISK_SPI_Allow2bitMode       (U8 Unit, U8 OnOff);
+int  FS_RAMDISK_SPI_Allow4bitMode       (U8 Unit, U8 OnOff);
+int  FS_RAMDISK_SPI_AllowDTRMode        (U8 Unit, U8 OnOff);
+int  FS_RAMDISK_SPI_SetDeviceList       (U8 Unit, const FS_RAMDISK_SPI_DEVICE_LIST * pDeviceList);
+int  FS_RAMDISK_SPI_SetHWType           (U8 Unit, const FS_RAMDISK_HW_TYPE_SPI * pHWType);
+int  FS_RAMDISK_SPI_SetMemAddr          (U8 Unit, U32 Addr);
+
+/*********************************************************************
+*
+*       System physical layer API functions
+*/
+int FS_RAMDISK_SYS_SetMemBlock          (U8 Unit, void * pData, U32 NumBytes);
 
 /*********************************************************************
 *
@@ -3504,8 +4887,8 @@ typedef struct {
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Additional information
-*    This function is a member of the SPI MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The Chip Select (CS) signal is used to address a specific MMC or SD
 *    card connected via SPI. Enabling the card is equal to setting the CS
@@ -3524,8 +4907,8 @@ typedef void FS_MMC_HW_TYPE_SPI_ENABLE_CS(U8 Unit);
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Additional information
-*    This function is a member of the SPI MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The Chip Select (CS) signal is used to address a specific MMC or SD
 *    card connected via SPI. Disabling the card is equal to setting the CS
@@ -3549,8 +4932,8 @@ typedef void FS_MMC_HW_TYPE_SPI_DISABLE_CS(U8 Unit);
 *    ==FS_MEDIA_IS_PRESENT      The card is not present.
 *
 *  Additional information
-*    This function is a member of the SPI MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    Typically, the card presence detection is implemented via a dedicated
 *    Card Detect (CD) signal. This signal is connected to a switch inside
@@ -3575,8 +4958,8 @@ typedef int FS_MMC_HW_TYPE_SPI_IS_PRESENT(U8 Unit);
 *    !=0     The card data cannot be modified.
 *
 *  Additional information
-*    This function is a member of the SPI MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    Typically, the card protection status is implemented via a dedicated
 *    Write Protected (WP) signal. This signal is connected to a switch inside
@@ -3608,8 +4991,8 @@ typedef int FS_MMC_HW_TYPE_SPI_IS_WRITE_PROTECTED(U8 Unit);
 *    ==0     An error occurred.
 *
 *  Additional information
-*    This function is a member of the SPI MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The hardware layer is allowed to set a clock frequency smaller
 *    than the value specified via MaxFreq but never greater than that.
@@ -3645,8 +5028,8 @@ typedef U16 FS_MMC_HW_TYPE_SPI_SET_MAX_SPEED(U8 Unit, U16 MaxFreq);
 *    ==0    Card slot does not support the voltage range.
 *
 *  Additional information
-*    This function is a member of the SPI MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the SPI MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    By default, all cards work with the initial voltage of 3.3V.
 *    If hardware layer has to save power, then the supply voltage can
@@ -3663,8 +5046,8 @@ typedef int FS_MMC_HW_TYPE_SPI_SET_VOLTAGE(U8 Unit, U16 VMin, U16 VMax);
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
-*    pData        [OUT] Data transfered from card.
-*    NumBytes     Number of bytes to be transfered.
+*    pData        [OUT] Data transferred from card.
+*    NumBytes     Number of bytes to be transferred.
 *
 *  Additional information
 *    This function is a member of the SPI MMC/SD hardware layer.
@@ -3690,8 +5073,8 @@ typedef void FS_MMC_HW_TYPE_SPI_READ(U8 Unit, U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
-*    pData        [IN] Data to be transfered to card.
-*    NumBytes     Number of bytes to be transfered to card.
+*    pData        [IN] Data to be transferred to card.
+*    NumBytes     Number of bytes to be transferred to card.
 *
 *  Additional information
 *    This function is a member of the SPI MMC/SD hardware layer.
@@ -3716,8 +5099,8 @@ typedef void FS_MMC_HW_TYPE_SPI_WRITE(U8 Unit, const U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
-*    pData        [OUT] Data transfered from card.
-*    NumBytes     Number of bytes to be transfered.
+*    pData        [OUT] Data transferred from card.
+*    NumBytes     Number of bytes to be transferred.
 *
 *  Return value
 *    ==0    OK, data transferred.
@@ -3745,8 +5128,8 @@ typedef int FS_MMC_HW_TYPE_SPI_READ_EX(U8 Unit, U8 * pData, int NumBytes);
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
-*    pData        [IN] Data to be transfered to card.
-*    NumBytes     Number of bytes to be transfered to card.
+*    pData        [IN] Data to be transferred to card.
+*    NumBytes     Number of bytes to be transferred to card.
 *
 *  Return value
 *    ==0    OK, data transferred.
@@ -3825,7 +5208,7 @@ typedef void FS_MMC_HW_TYPE_SPI_LOCK(U8 Unit);
 *    and released in FS_MMC_HW_TYPE_SPI_UNLOCK.
 *
 *    FS_MMC_HW_TYPE_SPI_LOCK is called only when the SPI MMC/SD driver
-*    is compiled with FS_MMC_SUPPORT_LOCKINGset to 1.
+*    is compiled with FS_MMC_SUPPORT_LOCKING set to 1.
 */
 typedef void FS_MMC_HW_TYPE_SPI_UNLOCK(U8 Unit);
 
@@ -3862,8 +5245,8 @@ typedef struct {
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The Card Mode MMC/SD driver calls FS_MMC_HW_TYPE_CM_INIT before
 *    any other function of the hardware layer. FS_MMC_HW_TYPE_CM_INIT
@@ -3881,12 +5264,11 @@ typedef void FS_MMC_HW_TYPE_CM_INIT(U8 Unit);
 *    Blocks the execution for the specified time.
 *
 *  Parameters
-*    Unit         Index of the hardware layer instance (0-based)
 *    ms           Number of milliseconds to block the execution.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The specified time is a minimum delay. The actual delay is permitted
 *    to be longer. This can be helpful when using an RTOS. Every RTOS has
@@ -3913,8 +5295,8 @@ typedef void FS_MMC_HW_TYPE_CM_DELAY(int ms);
 *    ==FS_MEDIA_IS_PRESENT      The card is not present.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    Typically, the card presence detection is implemented via a dedicated
 *    Card Detect (CD) signal. This signal is connected to a switch inside
@@ -3939,8 +5321,8 @@ typedef int FS_MMC_HW_TYPE_CM_IS_PRESENT(U8 Unit);
 *    !=0     The card data cannot be modified.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    Typically, the card protection status is implemented via a dedicated
 *    Write Protected (WP) signal. This signal is connected to a switch inside
@@ -3972,8 +5354,8 @@ typedef int FS_MMC_HW_TYPE_CM_IS_WRITE_PROTECTED(U8 Unit);
 *    ==0     An error occurred.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The hardware layer is allowed to set a clock frequency smaller
 *    than the value specified via MaxFreq but never greater than that.
@@ -4010,8 +5392,8 @@ typedef U16 FS_MMC_HW_TYPE_CM_SET_MAX_SPEED(U8 Unit, U16 MaxFreq);
 *    Value        Number of clock cycles to wait.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The specified value is the maximum number of clock cycles the
 *    hardware layer has to wait for a response from the card.
@@ -4033,8 +5415,8 @@ typedef void FS_MMC_HW_TYPE_CM_SET_RESPONSE_TIMEOUT(U8 Unit, U32 Value);
 *    Value        Number of clock cycles to wait.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The specified value is the maximum number of clock cycles the
 *    hardware layer has to wait for data to be received from the card.
@@ -4062,15 +5444,15 @@ typedef void FS_MMC_HW_TYPE_CM_SET_READ_DATA_TIMEOUT(U8 Unit, U32 Value);
 *    Arg          Command arguments.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    Cmd is a command code defined in the SD or MMC specification.
 *
 *    CmdFlags specifies additional information about the command execution
 *    such as the direction of the data transfer if any, the number of data
-*    lines to be used for the data exchange, etc. CmdFlags is a bitwise
-*    OR-combination of \ref{Card mode command flags}
+*    lines to be used for the data exchange, etc. CmdFlags is a bitwise-or
+*    combination of \ref{Card mode command flags}
 *
 *    ResponseType specifies the format of the response expected for the sent command.
 *    It can be one of \ref{Card mode response formats}. If the command requests
@@ -4101,8 +5483,8 @@ typedef void FS_MMC_HW_TYPE_CM_SEND_CMD(U8 Unit, unsigned Cmd, unsigned CmdFlags
 *    !=0      Error code indicating the failure reason.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The response is sent by the card via the CMD signal. A response codeword
 *    can be either 48- or 136-bit large.
@@ -4196,8 +5578,8 @@ typedef int FS_MMC_HW_TYPE_CM_GET_RESPONSE(U8 Unit, void * pData, U32 NumBytes);
 *    !=0      Error code indicating the failure reason.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The Card Mode MMC/SD driver initiates a data transfer by sending
 *    a read command via FS_MMC_HW_TYPE_CM_SEND_CMD. After it checks
@@ -4243,8 +5625,8 @@ typedef int FS_MMC_HW_TYPE_CM_READ_DATA(U8 Unit, void * pData, unsigned BlockSiz
 *    !=0      Error code indicating the failure reason.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    The Card Mode MMC/SD driver initiates a data transfer by sending
 *    a write command via FS_MMC_HW_TYPE_CM_SEND_CMD. After it checks
@@ -4349,18 +5731,18 @@ typedef void FS_MMC_HW_TYPE_CM_SET_NUM_BLOCKS(U8 Unit, U16 NumBlocks);
 *       FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST
 *
 *  Function description
-*    Returns the maximum number of data blocks that can be transfered
+*    Returns the maximum number of data blocks that can be transferred
 *    at once from card to MCU.
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Return value
-*    Number of blocks that can be transfered at once. It cannot be 0.
+*    Number of blocks that can be transferred at once. It cannot be 0.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
 *    FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST is called by the Card Mode MMC/SD driver
 *    during initialization. It has to return the maximum number of 512 byte blocks
@@ -4372,23 +5754,23 @@ typedef U16 FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST(U8 Unit);
 
 /*********************************************************************
 *
-*       FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST
+*       FS_MMC_HW_TYPE_CM_GET_MAX_WRITE_BURST
 *
 *  Function description
-*    Returns the maximum number of data blocks that can be transfered
+*    Returns the maximum number of data blocks that can be transferred
 *    at once from MCU to card.
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Return value
-*    Number of blocks that can be transfered at once. It cannot be 0.
+*    Number of blocks that can be transferred at once. It cannot be 0.
 *
 *  Additional information
-*    This function is a member of the Card Mode MMC/SD hardware layer
-*    and it has to be implemented by any hardware layer.
+*    This function is a member of the Card Mode MMC/SD hardware layer.
+*    It has to be implemented by all the hardware layers.
 *
-*    FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST is called by the Card Mode MMC/SD driver
+*    FS_MMC_HW_TYPE_CM_GET_MAX_WRITE_BURST is called by the Card Mode MMC/SD driver
 *    during initialization. It has to return the maximum number of 512 byte blocks
 *    the hardware layer is able to transfer to the card via a single write command.
 *    The larger the number of blocks the hardware layer can exchange at once the
@@ -4402,13 +5784,13 @@ typedef U16 FS_MMC_HW_TYPE_CM_GET_MAX_WRITE_BURST(U8 Unit);
 *
 *  Function description
 *    Returns the maximum number of blocks of identical data that can be
-*    transfered from MCU to card.
+*    transferred from MCU to card.
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Return value
-*    Number of blocks that can be transfered at once.
+*    Number of blocks that can be transferred at once.
 *
 *  Additional information
 *    This function is a member of the Card Mode MMC/SD hardware layer.
@@ -4436,13 +5818,13 @@ typedef U16 FS_MMC_HW_TYPE_CM_GET_MAX_REPEAT_WRITE_BURST(U8 Unit);
 *
 *  Function description
 *    Returns the maximum number of blocks of identical data that can be
-*    transfered from MCU to card.
+*    transferred from MCU to card.
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Return value
-*    Number of blocks that can be transfered at once.
+*    Number of blocks that can be transferred at once.
 *
 *  Additional information
 *    This function is a member of the Card Mode MMC/SD hardware layer.
@@ -4569,7 +5951,7 @@ typedef U16 FS_MMC_HW_TYPE_CM_GET_VOLTAGE(U8 Unit);
 *    to configure if the data received from the card has to be sampled
 *    on one clock edge or on both clock edges.
 *
-*    ClkFlags is a bitwise OR-combination of \ref{Card mode clock flags}
+*    ClkFlags is a bitwise-or combination of \ref{Card mode clock flags}
 *    that specifies for example how the data has to be sampled.
 */
 typedef U32 FS_MMC_HW_TYPE_CM_SET_MAX_CLOCK(U8 Unit, U32 MaxFreq, unsigned Flags);
@@ -4723,10 +6105,10 @@ typedef struct {
   FS_MMC_HW_TYPE_CM_SET_DATA_POINTER           * pfSetDataPointer;          // Configures the pointer to the data to be exchanged.
   FS_MMC_HW_TYPE_CM_SET_BLOCK_LEN              * pfSetHWBlockLen;           // Configures the size of the data block to be exchanged.
   FS_MMC_HW_TYPE_CM_SET_NUM_BLOCKS             * pfSetHWNumBlocks;          // Configures the number of data blocks to be exchanged.
-  FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST         * pfGetMaxReadBurst;         // Returns the maximum number of data blocks that can be transfered at once from card to MCU.
-  FS_MMC_HW_TYPE_CM_GET_MAX_WRITE_BURST        * pfGetMaxWriteBurst;        // Returns the maximum number of data blocks that can be transfered at once from MCU to card.
-  FS_MMC_HW_TYPE_CM_GET_MAX_REPEAT_WRITE_BURST * pfGetMaxWriteBurstRepeat;  // Returns the maximum number of blocks with identical data that can be transfered at once from MCU to card.
-  FS_MMC_HW_TYPE_CM_GET_MAX_FILL_WRITE_BURST   * pfGetMaxWriteBurstFill;    // Returns the maximum number of blocks with identical data that can be transfered at once from MCU to card.
+  FS_MMC_HW_TYPE_CM_GET_MAX_READ_BURST         * pfGetMaxReadBurst;         // Returns the maximum number of data blocks that can be transferred at once from card to MCU.
+  FS_MMC_HW_TYPE_CM_GET_MAX_WRITE_BURST        * pfGetMaxWriteBurst;        // Returns the maximum number of data blocks that can be transferred at once from MCU to card.
+  FS_MMC_HW_TYPE_CM_GET_MAX_REPEAT_WRITE_BURST * pfGetMaxWriteBurstRepeat;  // Returns the maximum number of blocks with identical data that can be transferred at once from MCU to card.
+  FS_MMC_HW_TYPE_CM_GET_MAX_FILL_WRITE_BURST   * pfGetMaxWriteBurstFill;    // Returns the maximum number of blocks with identical data that can be transferred at once from MCU to card.
   FS_MMC_HW_TYPE_CM_SET_VOLTAGE                * pfSetVoltage;              // Sets the voltage level of I/O lines.
   FS_MMC_HW_TYPE_CM_GET_VOLTAGE                * pfGetVoltage;              // Returns the voltage level of I/O lines.
   FS_MMC_HW_TYPE_CM_SET_MAX_CLOCK              * pfSetMaxClock;             // Configures the clock frequency supplied to the card.
@@ -4750,6 +6132,7 @@ extern const FS_MMC_HW_TYPE_CM      FS_MMC_HW_CM_Default;
 void FS_MMC_ActivateCRC             (void);
 void FS_MMC_DeactivateCRC           (void);
 int  FS_MMC_GetCardId               (U8 Unit, FS_MMC_CARD_ID * pCardId);
+int  FS_MMC_GetCardInfo             (U8 Unit, FS_MMC_CARD_INFO * pCardInfo);
 #if FS_MMC_ENABLE_STATS
 void FS_MMC_GetStatCounters         (U8 Unit, FS_MMC_STAT_COUNTERS * pStat);
 void FS_MMC_ResetStatCounters       (U8 Unit);
@@ -4763,6 +6146,9 @@ void FS_MMC_SetHWType               (U8 Unit, const FS_MMC_HW_TYPE_SPI * pHWType
 void FS_MMC_CM_Allow4bitMode        (U8 Unit, U8 OnOff);
 void FS_MMC_CM_Allow8bitMode        (U8 Unit, U8 OnOff);
 void FS_MMC_CM_AllowBufferedWrite   (U8 Unit, U8 OnOff);
+#if FS_MMC_SUPPORT_MMC
+void FS_MMC_CM_AllowCacheActivation (U8 Unit, U8 OnOff);
+#endif // FS_MMC_SUPPORT_MMC
 void FS_MMC_CM_AllowHighSpeedMode   (U8 Unit, U8 OnOff);
 void FS_MMC_CM_AllowReliableWrite   (U8 Unit, U8 OnOff);
 #if (FS_MMC_SUPPORT_UHS != 0) && (FS_MMC_SUPPORT_SD != 0)
@@ -4791,6 +6177,7 @@ int  FS_MMC_CM_GetCardInfo          (U8 Unit, FS_MMC_CARD_INFO * pCardInfo);
 void FS_MMC_CM_GetStatCounters      (U8 Unit, FS_MMC_STAT_COUNTERS * pStat);
 #endif // FS_MMC_ENABLE_STATS
 int  FS_MMC_CM_ReadExtCSD           (U8 Unit, U32 * pBuffer);
+int  FS_MMC_CM_ReadGeneral          (U8 Unit, U32 Arg, U32 * pData);
 #if FS_MMC_ENABLE_STATS
 void FS_MMC_CM_ResetStatCounters    (U8 Unit);
 #endif // FS_MMC_ENABLE_STATS
@@ -4808,6 +6195,7 @@ void FS_MMC_CM_SetSDR104Tuning      (U8 Unit, U8 OnOff);
 void FS_MMC_CM_SetSectorRange       (U8 Unit, U32 StartSector, U32 MaxNumSectors);
 int  FS_MMC_CM_UnlockCardForced     (U8 Unit);
 int  FS_MMC_CM_WriteExtCSD          (U8 Unit, unsigned Off, const U8 * pData, unsigned NumBytes);
+int  FS_MMC_CM_WriteGeneral         (U8 Unit, U32 Arg, const U32 * pData);
 
 /*********************************************************************
 *
@@ -4828,7 +6216,7 @@ int  FS_MMC_CM_WriteExtCSD          (U8 Unit, unsigned Off, const U8 * pData, un
 *    This function is a member of the CF/IDE hardware layer.
 *    All hardware layers are required to implement this function.
 *
-*    This function is called when the driver detects a new media.
+*    This function is called when the driver detects a new storage device.
 *    For ATA HD drives, there is no action required and this function
 *    can be left empty.
 */
@@ -4839,14 +6227,14 @@ typedef void FS_IDE_HW_TYPE_RESET(U8 Unit);
 *       FS_IDE_HW_TYPE_IS_PRESENT
 *
 *  Function description
-*    Checks if the device is connected.
+*    Checks presence status of the storage device.
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
 *
 *  Return value
-*    !=0      Device is connected.
-*    ==0      Device is not connected.
+*    !=0      Device is present.
+*    ==0      Device is not present.
 *
 *  Additional information
 *    This function is a member of the CF/IDE hardware layer.
@@ -4887,7 +6275,7 @@ typedef void FS_IDE_HW_TYPE_DELAY_400NS(U8 Unit);
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
-*    AddrOff      Offset of the register that has to be read.
+*    RegOff       Offset of the register that has to be read.
 *
 *  Return value
 *    Value read from the register.
@@ -4896,9 +6284,24 @@ typedef void FS_IDE_HW_TYPE_DELAY_400NS(U8 Unit);
 *    This function is a member of the CF/IDE hardware layer.
 *    All hardware layers are required to implement this function.
 *
-*    A register is 16-bit large.
+*    RegOff is always a multiple of two value because the IDE
+*    driver always reads two 8-bit registers at a time.
+*    The value of the register at the offset RegOff must be stored
+*    in the low-order byte of the return value while the value
+*    of the register at RegOff + 1 in the high-order byte.
+*
+*    Possible values for RegOff:
+*    +--------------+---------------------------------+
+*    | Value        | Register name (data high / low) |
+*    +--------------+---------------------------------+
+*    | 0x06         | Status / not used               |
+*    +--------------+---------------------------------+
+*    | 0x0C         | Dup. Error / not used           |
+*    +--------------+---------------------------------+
+*    | 0x0E         | not used / Alt Status           |
+*    +--------------+---------------------------------+
 */
-typedef U16 FS_IDE_HW_TYPE_READ_REG(U8 Unit, unsigned AddrOff);
+typedef U16 FS_IDE_HW_TYPE_READ_REG(U8 Unit, unsigned RegOff);
 
 /*********************************************************************
 *
@@ -4909,16 +6312,35 @@ typedef U16 FS_IDE_HW_TYPE_READ_REG(U8 Unit, unsigned AddrOff);
 *
 *  Parameters
 *    Unit         Index of the hardware layer instance (0-based)
-*    AddrOff      Offset of the register that has to be written.
+*    RegOff       Offset of the register that has to be written.
 *    Data         Value to be written to the specified register.
 *
 *  Additional information
 *    This function is a member of the CF/IDE hardware layer.
 *    All hardware layers are required to implement this function.
 *
-*    A register is 16-bit large.
+*    RegOff is always a multiple of two value because the IDE
+*    driver always writes two 8-bit registers at a time.
+*    The value of the register at the offset RegOff is stored
+*    in the low-order  byte of Data while the value of the register
+*    at the offset RegOff + 1 in the high-order byte of Data.
+*
+*    Possible values for RegOff:
+*    +--------------+---------------------------------+
+*    | Value        | Register name (data high / low) |
+*    +--------------+---------------------------------+
+*    | 0x02         | Sector No. / Sector Count       |
+*    +--------------+---------------------------------+
+*    | 0x04         | Cylinder High / Cylinder Low    |
+*    +--------------+---------------------------------+
+*    | 0x06         | Command / Select Card and Head  |
+*    +--------------+---------------------------------+
+*    | 0x0C         | Dup. Features / not used        |
+*    +--------------+---------------------------------+
+*    | 0x0E         | not used / Device Ctl           |
+*    +--------------+---------------------------------+
 */
-typedef void FS_IDE_HW_TYPE_WRITE_REG(U8 Unit, unsigned AddrOff, U16 Data);
+typedef void FS_IDE_HW_TYPE_WRITE_REG(U8 Unit, unsigned RegOff, U16 Data);
 
 /*********************************************************************
 *
@@ -4935,6 +6357,10 @@ typedef void FS_IDE_HW_TYPE_WRITE_REG(U8 Unit, unsigned AddrOff, U16 Data);
 *  Additional information
 *    This function is a member of the CF/IDE hardware layer.
 *    All hardware layers are required to implement this function.
+*
+*    pData is always 16-bit aligned in order to enable the reading
+*    of two bytes at a time. For the same reason, NumBytes is always
+*    a multiple of two value.
 */
 typedef void FS_IDE_HW_TYPE_READ_DATA(U8 Unit, U8 * pData, unsigned NumBytes);
 
@@ -4953,6 +6379,10 @@ typedef void FS_IDE_HW_TYPE_READ_DATA(U8 Unit, U8 * pData, unsigned NumBytes);
 *  Additional information
 *    This function is a member of the CF/IDE hardware layer.
 *    All hardware layers are required to implement this function.
+*
+*    pData is always 16-bit aligned in order to enable the writing of
+*    two bytes at a time. For the same reason, NumBytes is always
+*    a multiple of two value.
 */
 typedef void FS_IDE_HW_TYPE_WRITE_DATA(U8 Unit, const U8 * pData, unsigned NumBytes);
 
@@ -4998,11 +6428,11 @@ void FS_IDE_SetHWType(U8 Unit, const FS_IDE_HW_TYPE * pHWType);
 *  Description
 *    Type of data stored to a NAND block.
 */
-#define FS_NAND_BLOCK_TYPE_UNKNOWN              0     // The type of the block cannot be determined.
-#define FS_NAND_BLOCK_TYPE_BAD                  1     // The block marked as defective.
-#define FS_NAND_BLOCK_TYPE_EMPTY                2     // The block does not store any data.
-#define FS_NAND_BLOCK_TYPE_WORK                 3     // The block that stores data temporarily.
-#define FS_NAND_BLOCK_TYPE_DATA                 4     // The block that stores data permanently.
+#define FS_NAND_BLOCK_TYPE_UNKNOWN                  0u    // The type of the block cannot be determined.
+#define FS_NAND_BLOCK_TYPE_BAD                      1u    // The block marked as defective.
+#define FS_NAND_BLOCK_TYPE_EMPTY                    2u    // The block does not store any data.
+#define FS_NAND_BLOCK_TYPE_WORK                     3u    // The block that stores data temporarily.
+#define FS_NAND_BLOCK_TYPE_DATA                     4u    // The block that stores data permanently.
 
 /*********************************************************************
 *
@@ -5011,14 +6441,14 @@ void FS_IDE_SetHWType(U8 Unit, const FS_IDE_HW_TYPE * pHWType);
 *  Description
 *    Return values of the NAND block test functions.
 */
-#define FS_NAND_TEST_RETVAL_OK                  0     // The test was successful.
-#define FS_NAND_TEST_RETVAL_CORRECTABLE_ERROR   1     // Bit errors occurred that were corrected via ECC.
-#define FS_NAND_TEST_RETVAL_FATAL_ERROR         2     // Bit errors occurred that the ECC was not able to correct.
-#define FS_NAND_TEST_RETVAL_BAD_BLOCK           3     // The tested block was marked as defective.
-#define FS_NAND_TEST_RETVAL_ERASE_FAILURE       4     // An error occurred during the block erase operation.
-#define FS_NAND_TEST_RETVAL_WRITE_FAILURE       5     // An error occurred while writing the data to the NAND block.
-#define FS_NAND_TEST_RETVAL_READ_FAILURE        6     // An error occurred while reading the data from the NAND block.
-#define FS_NAND_TEST_RETVAL_INTERNAL_ERROR      (-1)  // An internal processing error occurred.
+#define FS_NAND_TEST_RETVAL_OK                      0     // The test was successful.
+#define FS_NAND_TEST_RETVAL_CORRECTABLE_ERROR       1     // Bit errors occurred that were corrected via ECC.
+#define FS_NAND_TEST_RETVAL_FATAL_ERROR             2     // Bit errors occurred that the ECC was not able to correct.
+#define FS_NAND_TEST_RETVAL_BAD_BLOCK               3     // The tested block was marked as defective.
+#define FS_NAND_TEST_RETVAL_ERASE_FAILURE           4     // An error occurred during the block erase operation.
+#define FS_NAND_TEST_RETVAL_WRITE_FAILURE           5     // An error occurred while writing the data to the NAND block.
+#define FS_NAND_TEST_RETVAL_READ_FAILURE            6     // An error occurred while reading the data from the NAND block.
+#define FS_NAND_TEST_RETVAL_INTERNAL_ERROR          (-1)  // An internal processing error occurred.
 
 /*********************************************************************
 *
@@ -5027,9 +6457,9 @@ void FS_IDE_SetHWType(U8 Unit, const FS_IDE_HW_TYPE * pHWType);
 *  Description
 *    Result of the bit error correction.
 */
-#define FS_NAND_CORR_NOT_APPLIED                0u    // No bit errors detected.
-#define FS_NAND_CORR_APPLIED                    1u    // Bit errors were detected and corrected.
-#define FS_NAND_CORR_FAILURE                    2u    // Bit errors were detected but not corrected.
+#define FS_NAND_CORR_NOT_APPLIED                    0u    // No bit errors detected.
+#define FS_NAND_CORR_APPLIED                        1u    // Bit errors were detected and corrected.
+#define FS_NAND_CORR_FAILURE                        2u    // Bit errors were detected but not corrected.
 
 /*********************************************************************
 *
@@ -5038,9 +6468,25 @@ void FS_IDE_SetHWType(U8 Unit, const FS_IDE_HW_TYPE * pHWType);
 *  Description
 *    Methods to mark a block as defective.
 */
-#define FS_NAND_BAD_BLOCK_MARKING_TYPE_UNKNOWN  0     // Not known.
-#define FS_NAND_BAD_BLOCK_MARKING_TYPE_ONFI     1     // The block is marked as bad in the first page of the block.
-#define FS_NAND_BAD_BLOCK_MARKING_TYPE_LEGACY   2     // The block is marked as bad in the first and second page of the block.
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_FSPS         0   // The block is marked as defective in the spare area of the first and second page of the block.
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_FPS          1   // The block is marked as defective in the spare area of the first page of the block.
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_FLPS         2   // The block is marked as defective in the spare area of first and last page of the block.
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_FSLPS        3   // The block is marked as defective in the spare area of first, second and last page of the block.
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_FLPMS        4   // The block is marked as defective in the main and spare area of first and last page of the block.
+
+/*********************************************************************
+*
+*       Block info flags
+*
+*  Description
+*    Flags that control the information returned by FS_NAND_UNI_GetBlockInfoEx().
+*
+*  Additional information
+*    These flags can be passed as Flags parameter to FS_NAND_UNI_GetBlockInfoEx()
+*    in order to specify the type of information that has to be returned.
+*/
+#define FS_NAND_BLOCK_INFO_FLAG_BAD_STATUS          0x01u // Return information about the status of the NAND block (defective or not)
+#define FS_NAND_BLOCK_INFO_FLAG_SECTOR_STATUS       0x02u // Return information about the status of all logical sectors in the NAND block.
 
 /*********************************************************************
 *
@@ -5110,11 +6556,26 @@ typedef struct {
 *
 *  Description
 *    Information about the ECC used to protect data stored on the NAND flash.
+*
+*  Additional information
+*    The value of IsHW_ECCEnabledPerm is valid only if the value of
+*    HasHW_ECC is different than 0.
+*
+*    ldBytesPerBlock is a power of 2 value. If HasHW_ECC is different than 0
+*    ldBytesPerBlock represents the number of bytes in the main and spare area
+*    of a NAND page the internal HW ECC is able to protect against bit errors.
+*    More than one ECC is used to protect the data in a NAND page if the
+*    size of the NAND page is larger than ldBytesPerBlock. ldBytesPerBlock
+*    can never be larger than the size of a NAND page.
+*
+*    If HasHW_ECC is different than 0 than NumBitsCorrectable represents
+*    the maximum number of bit errors the internal HW ECC is able to correct.
 */
 typedef struct {
-  U8 NumBitsCorrectable;                // Number of bits the ECC should be able to correct.
-  U8 ldBytesPerBlock;                   // Number of bytes the ECC should protect.
-  U8 HasHW_ECC;                         // Set to 1 if the NAND flash has HW internal ECC.
+  U8 NumBitsCorrectable;                // Maximum number of bit errors the ECC should be able to correct.
+  U8 ldBytesPerBlock;                   // Number of bytes the ECC should protect as power of 2 exponent.
+  U8 HasHW_ECC;                         // Set to 1 if the NAND flash device has internal HW ECC.
+  U8 IsHW_ECCEnabledPerm;               // Set to 1 if the internal HW ECC of the NAND flash device cannot be disabled.
 } FS_NAND_ECC_INFO;
 
 /*********************************************************************
@@ -5286,7 +6747,7 @@ typedef struct {
 *  Additional information
 *    If the callback function returns a 0 the NAND driver marks the NAND flash
 *    device as read-only and it remains in this state until the NAND flash device
-*    is low-level formated. In this state all further write operations are rejected
+*    is low-level formatted. In this state all further write operations are rejected
 *    with an error by the NAND driver.
 *
 *    The application is responsible to handle the fatal error by for example
@@ -5294,6 +6755,9 @@ typedef struct {
 *    function is not allowed to invoke any other FS API functions therefore the
 *    handling of the error has to be done after the FS API function that triggered
 *    the error returns.
+*
+*    Depending on the type of NAND driver used, the fatal error handler can be registered
+*    either via FS_NAND_SetOnFatalErrorCallback() or FS_NAND_UNI_SetOnFatalErrorCallback().
 */
 typedef int FS_NAND_ON_FATAL_ERROR_CALLBACK(FS_NAND_FATAL_ERROR_INFO * pFatalErrorInfo);
 
@@ -5312,9 +6776,9 @@ typedef struct {
   //
   // Input (required only for FS_NAND_UNI_TestBlock)
   //
-  U8  NumBitsCorrectable;     // Number of bits the ECC can correct in the data and spare area (typ. 4)
-  U8  OffSpareECCProt;        // Offset in the spare area of the first byte protected by ECC (typ. 4).
-  U8  NumBytesSpareECCProt;   // Number of bytes in the spare area protected by ECC (typ. 4 bytes)
+  U8  NumBitsCorrectable;     // Number of bits the ECC can correct in the data and spare area (typically 4)
+  U8  OffSpareECCProt;        // Offset in the spare area of the first byte protected by ECC (typically 4).
+  U8  NumBytesSpareECCProt;   // Number of bytes in the spare area protected by ECC (typically 4 bytes)
   U16 BytesPerSpare;          // Total number of bytes in the spare area. When set to 0 the default value of 1/32 of page size is used.
   //
   // Output
@@ -5423,6 +6887,11 @@ typedef void FS_NAND_ECC_HOOK_CALC(const U32 * pData, U8 * pSpare);
 *    +-------+---------------------------------------------+
 *    | 3     | Uncorrectable bit error. Data is corrupted. |
 *    +-------+---------------------------------------------+
+*
+*    The Universal NAND driver can possibly call this function with
+*    pData set to NULL when it needs to check only the data stored
+*    in the spare area of a NAND page if NumBitsCorrectableSpare in
+*    FS_NAND_ECC_HOOK is set to a value different than 0.
 */
 typedef int FS_NAND_ECC_HOOK_APPLY(U32 * pData, U8 * pSpare);
 
@@ -5445,12 +6914,24 @@ typedef int FS_NAND_ECC_HOOK_APPLY(U32 * pData, U8 * pSpare);
 *    NumBitsCorrectable is used by the Universal NAND driver to check
 *    if the ECC algorithm is capable of correcting the number of bit
 *    errors required by the used NAND flash device.
+*
+*    NumBitsCorrectableSpare is used by the Universal NAND driver
+*    to activate an optimization related to reading the data from
+*    the spare area. If NumBitsCorrectableSpare is set to a value
+*    different than 0 than the Universal NAND driver assumes that
+*    the 4 bytes of management data stored in the spare area
+*    of the NAND page are protected by a dedicated ECC. This enables
+*    the Universal NAND driver to read only the spare area
+*    instead of the entire NAND page when only the management data
+*    has to be evaluated which can help increase the performance
+*    of specific operations such as the mounting of NAND flash device.
 */
 typedef struct {
-  FS_NAND_ECC_HOOK_CALC  * pfCalc;              // Calculates the ECC of specified data.
-  FS_NAND_ECC_HOOK_APPLY * pfApply;             // Verifies and corrects bit errors using ECC.
-  U8                       NumBitsCorrectable;  // Number of bits the ECC algorithm is able to correct in the data block and 4 bytes of spare area.
-  U8                       ldBytesPerBlock;     // Number of bytes in the data block given as power of 2 value.
+  FS_NAND_ECC_HOOK_CALC  * pfCalc;                  // Calculates the ECC of specified data.
+  FS_NAND_ECC_HOOK_APPLY * pfApply;                 // Verifies and corrects bit errors using ECC.
+  U8                       NumBitsCorrectable;      // Number of bits the ECC algorithm is able to correct in the data block and 4 bytes of spare area.
+  U8                       ldBytesPerBlock;         // Number of bytes in the data block given as power of 2 exponent.
+  U8                       NumBitsCorrectableSpare; // Number of bits the ECC algorithm is able to correct in the 4 bytes of the spare area.
 } FS_NAND_ECC_HOOK;
 
 /*********************************************************************
@@ -5469,8 +6950,8 @@ typedef struct {
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API
-*    and is mandatory to be implemented by each NAND physical layer.
+*    This function is a member of the NAND physical layer API.
+*    It is mandatory to be implemented by all the NAND physical layers.
 *    It is called by the NAND driver to set to 1 all the bits of a NAND block.
 *    A NAND block is the smallest erasable unit of a NAND flash device.
 *
@@ -5501,8 +6982,8 @@ typedef int FS_NAND_PHY_TYPE_ERASE_BLOCK(U8 Unit, U32 PageIndex);
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API and it
-*    is mandatory to be implemented by each NAND physical layer.
+*    This function is a member of the NAND physical layer API.
+*    It is mandatory to be implemented by all the NAND physical layers.
 *    It is the first function of the physical layer API that is called
 *    by the NAND driver when the NAND flash device is mounted.
 *
@@ -5528,8 +7009,8 @@ typedef int FS_NAND_PHY_TYPE_INIT_GET_DEVICE_INFO(U8 Unit, FS_NAND_DEVICE_INFO *
 *    !=0  Data stored on the NAND flash device cannot be modified.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API and it
-*    is mandatory to be implemented by each NAND physical layer.
+*    This function is a member of the NAND physical layer API.
+*    It is mandatory to be implemented by all the NAND physical layers.
 *
 *    The write protection status is checked by evaluating the bit 7 of
 *    the NAND status register. Typical reason for write protection is
@@ -5557,8 +7038,8 @@ typedef int FS_NAND_PHY_TYPE_IS_WP(U8 Unit);
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API and it
-*    is mandatory to be implemented by each NAND physical layer.
+*    This function is a member of the NAND physical layer API.
+*    It has to be implemented by all the NAND physical layers.
 *    The NAND driver uses FS_NAND_PHY_TYPE_READ to read data from
 *    the main as well as from the spare area of a page.
 */
@@ -5569,7 +7050,7 @@ typedef int FS_NAND_PHY_TYPE_READ(U8 Unit, U32 PageIndex, void * pData, unsigned
 *       FS_NAND_PHY_TYPE_READ_EX
 *
 *  Function description
-*    Reads data from a NAND page.
+*    Reads data from two different locations of a NAND page.
 *
 *  Parameters
 *    Unit         Index of the NAND physical layer instance (0-based)
@@ -5586,10 +7067,14 @@ typedef int FS_NAND_PHY_TYPE_READ(U8 Unit, U32 PageIndex, void * pData, unsigned
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API and it
-*    is mandatory to be implemented by each NAND physical layer.
+*    This function is a member of the NAND physical layer API.
+*    It has to be implemented by all the NAND physical layers.
 *    FS_NAND_PHY_TYPE_READ_EX is typically used by the NAND driver
 *    to read the data from main and spare area of a page at the same time.
+*
+*    It is guaranteed that Off0 is always smaller than Off1 and that
+*    the region defined by Off0 and NumBytes0 does not overlap the
+*    region defined by Off1 and NumBytes1
 */
 typedef int FS_NAND_PHY_TYPE_READ_EX(U8 Unit, U32 PageIndex, void * pData0, unsigned Off0, unsigned NumBytes0, void * pData1, unsigned Off1, unsigned NumBytes1);
 
@@ -5612,9 +7097,9 @@ typedef int FS_NAND_PHY_TYPE_READ_EX(U8 Unit, U32 PageIndex, void * pData0, unsi
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API and it
-*    is mandatory to be implemented only by NAND physical layer that
-*    are working with the SLC1 NAND driver. The Universal NAND driver
+*    This function is a member of the NAND physical layer API.
+*    It has to be implemented only by a NAND physical layer that
+*    works with the SLC1 NAND driver. The Universal NAND driver
 *    does not call this function. FS_NAND_PHY_TYPE_WRITE is used by
 *    the SLC1 NAND driver to write data to the main as well as to the
 *    spare area of a page.
@@ -5626,7 +7111,7 @@ typedef int FS_NAND_PHY_TYPE_WRITE(U8 Unit, U32 PageIndex, const void * pData, u
 *       FS_NAND_PHY_TYPE_WRITE_EX
 *
 *  Function description
-*    Writes data to a NAND page.
+*    Writes data to two different locations of a NAND page.
 *
 *  Parameters
 *    Unit         Index of the NAND physical layer instance (0-based)
@@ -5643,12 +7128,16 @@ typedef int FS_NAND_PHY_TYPE_WRITE(U8 Unit, U32 PageIndex, const void * pData, u
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API and it
-*    is mandatory to be implemented by each NAND physical layer.
+*    This function is a member of the NAND physical layer API.
+*    It has to be implemented by all the NAND physical layers.
 *    The NAND driver uses FS_NAND_PHY_TYPE_WRITE_EX to write data to
 *    the main and spare area of a page at the same time.
+*
+*    It is guaranteed that Off0 is always smaller than Off1 and that
+*    the region defined by Off0 and NumBytes0 does not overlap the
+*    region defined by Off1 and NumBytes1
 */
-typedef int FS_NAND_PHY_TYPE_WRITE_EX(U8 Unit, U32 PageIndex, const void * pData, unsigned Off, unsigned NumBytes, const void * pSpare, unsigned OffSpare, unsigned NumBytesSpare);
+typedef int FS_NAND_PHY_TYPE_WRITE_EX(U8 Unit, U32 PageIndex, const void * pData0, unsigned Off0, unsigned NumBytes0, const void * pData1, unsigned Off1, unsigned NumBytes1);
 
 /*********************************************************************
 *
@@ -5665,8 +7154,8 @@ typedef int FS_NAND_PHY_TYPE_WRITE_EX(U8 Unit, U32 PageIndex, const void * pData
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API. It has
-*    to be implemented by the NAND physical layers that provide
+*    This function is a member of the NAND physical layer API.
+*    It has to be implemented by the NAND physical layers that provide
 *    hardware support for bit error correction either on MCU via
 *    a dedicated NAND flash controller or via on-die ECC of the NAND flash device.
 *    FS_NAND_PHY_TYPE_ENABLE_ECC is called only by the Universal NAND driver.
@@ -5724,8 +7213,8 @@ typedef int FS_NAND_PHY_TYPE_DISABLE_ECC(U8 Unit);
 *    !=0  An error occurred.
 *
 *  Additional information
-*    This function is a member of the NAND physical layer API. It has
-*    to be implemented by the NAND physical layers that provide
+*    This function is a member of the NAND physical layer API.
+*    It has to be implemented by the NAND physical layers that provide
 *    hardware support for bit error correction with configurable ECC
 *    strength. FS_NAND_PHY_TYPE_CONFIGURE_ECC is called only by the
 *    Universal NAND driver.
@@ -5871,7 +7360,7 @@ typedef struct {
 *
 *  Additional information
 *    This function is a member of the FS_NAND_PHY_TYPE NAND hardware
-*    layer API and it has to be implemented by any NAND hardware layer
+*    layer API. It has to be implemented by a NAND hardware layer
 *    that accesses a NAND flash device via an 8-bit data bus.
 *    FS_NAND_HW_TYPE_INIT_X8 is the first function of the hardware
 *    layer API that is called by a NAND physical layer during the
@@ -5937,8 +7426,8 @@ typedef void FS_NAND_HW_TYPE_DISABLE_CE(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_PHY_TYPE NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer. The implementation of this function can be left empty if the
+*    layer API. It is mandatory to be implemented by all NAND hardware
+*    layers. The implementation of this function can be left empty if the
 *    hardware is driving the Chip Enable (CE) signal. Typically,
 *    the NAND flash device is enabled by driving the CE signal to
 *    a logic-high level.
@@ -5957,7 +7446,7 @@ typedef void FS_NAND_HW_TYPE_ENABLE_CE(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_PHY_TYPE NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware layer.
+*    layer API. It is mandatory to be implemented by all NAND hardware layers.
 *
 *    After the call to this function the NAND hardware layer has to
 *    make sure that any data sent to NAND flash device is interpreted
@@ -5979,7 +7468,7 @@ typedef void FS_NAND_HW_TYPE_SET_ADDR_MODE(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_PHY_TYPE NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware layer.
+*    layer API. It is mandatory to be implemented by all the NAND hardware layers.
 *
 *    After the call to this function the NAND hardware layer has to
 *    make sure that any data sent to NAND flash device is interpreted
@@ -6001,7 +7490,7 @@ typedef void FS_NAND_HW_TYPE_SET_CMD_MODE(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_PHY_TYPE NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware layer.
+*    layer API. It is mandatory to be implemented by all the NAND hardware layers.
 *
 *    After the call to this function the NAND hardware layer has to
 *    make sure that any data sent to NAND flash device is interpreted
@@ -6027,7 +7516,7 @@ typedef void FS_NAND_HW_TYPE_SET_DATA_MODE(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_PHY_TYPE NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware layer.
+*    layer API. It is mandatory to be implemented by all the NAND hardware layers.
 *
 *    A NAND hardware layer calls this function every time it checks
 *    the status of the NAND flash device. A typical implementation uses
@@ -6205,8 +7694,8 @@ typedef struct {
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_SPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type. FS_NAND_HW_TYPE_SPI_INIT is the first function
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type. FS_NAND_HW_TYPE_SPI_INIT is the first function
 *    of the hardware layer API that is called by a NAND physical layer
 *    during the mounting of the file system.
 *
@@ -6240,8 +7729,8 @@ typedef int FS_NAND_HW_TYPE_SPI_INIT(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_SPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The NAND flash device is disabled by driving the Chip Select (CS)
 *    signal to logic-high. The NAND flash device ignores any command
@@ -6261,8 +7750,8 @@ typedef void FS_NAND_HW_TYPE_SPI_DISABLE_CS(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_SPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The NAND flash device is enabled by driving the Chip Select (CS)
 *    signal to logic low state. Typically, the NAND flash device is enabled
@@ -6284,8 +7773,8 @@ typedef void FS_NAND_HW_TYPE_SPI_ENABLE_CS(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_SPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The time FS_NAND_HW_TYPE_SPI_DELAY blocks does not have to be
 *    accurate. That is the function can block the execution longer
@@ -6305,10 +7794,14 @@ typedef void FS_NAND_HW_TYPE_SPI_DELAY(U8 Unit, int ms);
 *    pData        Data read from NAND flash device.
 *    NumBytes     Number of bytes to be read.
 *
+*  Return value
+*    ==0      OK, data read successfully.
+*    !=0      An error occurred.
+*
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_SPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The function has to sample the data on the falling edge of the SPI clock.
 */
@@ -6326,10 +7819,14 @@ typedef int FS_NAND_HW_TYPE_SPI_READ(U8 Unit, void * pData, unsigned NumBytes);
 *    pData        [IN] Data to be written to NAND flash device.
 *    NumBytes     Number of bytes to be written.
 *
+*  Return value
+*    ==0      OK, data written successfully.
+*    !=0      An error occurred.
+*
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_SPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The NAND flash device samples the data on the rising edge of the SPI clock.
 */
@@ -6427,8 +7924,8 @@ typedef struct {
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_DF NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type. FS_NAND_HW_TYPE_DF_INIT is the first function
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type. FS_NAND_HW_TYPE_DF_INIT is the first function
 *    of the hardware layer API that is called by a NAND physical layer
 *    during the mounting of the file system.
 *
@@ -6458,8 +7955,8 @@ typedef int FS_NAND_HW_TYPE_DF_INIT(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_DF NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The DataFlash device is enabled by driving the Chip Select (CS)
 *    signal to logic low state.
@@ -6478,8 +7975,8 @@ typedef void FS_NAND_HW_TYPE_DF_ENABLE_CS(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_DF NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The DataFlash device is disabled by driving the Chip Select (CS)
 *    signal to logic-high.
@@ -6500,8 +7997,8 @@ typedef void FS_NAND_HW_TYPE_DF_DISABLE_CS(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_DF NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 */
 typedef void FS_NAND_HW_TYPE_DF_READ(U8 Unit, U8 * pData, int NumBytes);
 
@@ -6519,8 +8016,8 @@ typedef void FS_NAND_HW_TYPE_DF_READ(U8 Unit, U8 * pData, int NumBytes);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_DF NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 */
 typedef void FS_NAND_HW_TYPE_DF_WRITE(U8 Unit, const U8 * pData, int NumBytes);
 
@@ -6554,8 +8051,8 @@ typedef struct {
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_QSPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    This function has to configure anything necessary for the data transfer
 *    via QSPI such as clocks, port pins, QSPI peripheral, DMA, etc.
@@ -6590,8 +8087,8 @@ typedef int FS_NAND_HW_TYPE_QSPI_INIT(U8 Unit);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_QSPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    FS_NAND_HW_TYPE_QSPI_EXEC_CMD must to send a 8 bits to NAND flash
 *    device containing the value specified via Cmd.
@@ -6633,8 +8130,8 @@ typedef int FS_NAND_HW_TYPE_QSPI_EXEC_CMD(U8 Unit, U8 Cmd, U8 BusWidth);
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_QSPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The data has to be sent in this order: Cmd (1 byte) and pPara (NumBytesPara bytes).
 *    The first NumBytesAddr bytes in pPara represent the address bytes while the
@@ -6676,8 +8173,8 @@ typedef int FS_NAND_HW_TYPE_QSPI_READ_DATA(U8 Unit, U8 Cmd, const U8 * pPara, un
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_QSPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The data has to be sent in this order: Cmd (1 byte), pPara (NumBytesPara bytes),
 *    pData (NumBytesData bytes). The first NumBytesAddr bytes in pPara represent
@@ -6729,7 +8226,7 @@ typedef int FS_NAND_HW_TYPE_QSPI_WRITE_DATA(U8 Unit, U8 Cmd, const U8 * pPara, u
 *    when it has to wait for the NAND flash device to reach a certain status.
 *
 *    FS_NAND_HW_TYPE_QSPI_POLL has to read periodically a byte of data from
-*    the NAND flash device until the the value of the bit at BitPos in the
+*    the NAND flash device until the value of the bit at BitPos in the
 *    in the returned data byte is set to a value specified by BitValue.
 *    The data is read by sending a command with a code specified
 *    by Cmd followed by an optional number of additional bytes
@@ -6765,8 +8262,8 @@ typedef int FS_NAND_HW_TYPE_QSPI_POLL(U8 Unit, U8 Cmd, const U8 * pPara, unsigne
 *
 *  Additional information
 *    This function is a member of the FS_NAND_HW_TYPE_QSPI NAND hardware
-*    layer API and it is mandatory to be implemented by any NAND hardware
-*    layer of this type.
+*    layer API. It is mandatory to be implemented by all the NAND hardware
+*    layers of this type.
 *
 *    The time FS_NAND_HW_TYPE_QSPI_DELAY blocks does not have to be
 *    accurate. That is the function can block the execution longer
@@ -6857,7 +8354,7 @@ typedef struct {
 *  Description
 *    Operations on serial NAND devices
 */
-typedef struct FS_NAND_SPI_DEVICE_TYPE FS_NAND_SPI_DEVICE_TYPE;       //lint -esym(9058, FS_NAND_SPI_DEVICE_TYPE) tag unused outside of typedefs. Rationale: this is an opaque data type.
+typedef struct FS_NAND_SPI_DEVICE_TYPE FS_NAND_SPI_DEVICE_TYPE;       //lint -esym(9058, FS_NAND_SPI_DEVICE_TYPE) tag unused outside of typedefs N:999. Rationale: this is an opaque data type.
 
 /*********************************************************************
 *
@@ -6870,6 +8367,48 @@ typedef struct {
   U8                               NumDevices;
   const FS_NAND_SPI_DEVICE_TYPE ** ppDevice;
 } FS_NAND_SPI_DEVICE_LIST;
+
+/*********************************************************************
+*
+*       FS_NAND_ONFI_DEVICE_TYPE
+*
+*  Description
+*    Operations on ONFI NAND devices
+*/
+typedef struct FS_NAND_ONFI_DEVICE_TYPE FS_NAND_ONFI_DEVICE_TYPE;       //lint -esym(9058, FS_NAND_ONFI_DEVICE_TYPE) tag unused outside of typedefs N:999. Rationale: this is an opaque data type.
+
+/*********************************************************************
+*
+*       FS_NAND_ONFI_DEVICE_LIST
+*
+*  Description
+*    Defines a list of ONFI NAND supported devices.
+*/
+typedef struct {
+  U8                                NumDevices;
+  const FS_NAND_ONFI_DEVICE_TYPE ** ppDevice;
+} FS_NAND_ONFI_DEVICE_LIST;
+
+/*********************************************************************
+*
+*       FS_NAND_2048X8_DEVICE_TYPE
+*
+*  Description
+*    Operations on NAND devices with 2 KB pages and 8-bit data bus.
+*/
+typedef struct FS_NAND_2048X8_DEVICE_TYPE FS_NAND_2048X8_DEVICE_TYPE;   //lint -esym(9058, FS_NAND_2048X8_DEVICE_TYPE) tag unused outside of typedefs N:999. Rationale: this is an opaque data type.
+
+/*********************************************************************
+*
+*       FS_NAND_2048X8_DEVICE_LIST
+*
+*  Description
+*    Defines a list of supported NAND devices with 2 KB pages and 8-bit data bus.
+*/
+typedef struct {
+  U8                                  NumDevices;
+  const FS_NAND_2048X8_DEVICE_TYPE ** ppDevice;
+} FS_NAND_2048X8_DEVICE_LIST;
 
 /*********************************************************************
 *
@@ -6911,13 +8450,38 @@ extern const FS_NAND_ECC_HOOK FS_NAND_ECC_SW_1BIT;    // 1-bit SW ECC over 512 b
 *
 *       Lists of supported serial NAND devices
 */
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_All;
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_Default;
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_ISSI;
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_Macronix;
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_Micron;
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_Toshiba;
-extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceList_Winbond;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListAll;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListAllianceMemory;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListDefault;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListGigaDevice;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListISSI;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListMacronix;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListMicron;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListToshiba;
+extern const FS_NAND_SPI_DEVICE_LIST FS_NAND_SPI_DeviceListWinbond;
+
+/*********************************************************************
+*
+*       Lists of supported ONFI NAND devices
+*/
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListAll;
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListDefault;
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListGigaDevice;
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListMacronix;
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListMicron;
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListSkyHigh;
+extern const FS_NAND_ONFI_DEVICE_LIST FS_NAND_ONFI_DeviceListWinbond;
+
+/*********************************************************************
+*
+*       Lists of supported NAND flash devices with 2 KB pages and 8-bit data bus
+*/
+extern const FS_NAND_2048X8_DEVICE_LIST FS_NAND_2048X8_DeviceListAll;
+extern const FS_NAND_2048X8_DEVICE_LIST FS_NAND_2048X8_DeviceListDefault;
+extern const FS_NAND_2048X8_DEVICE_LIST FS_NAND_2048X8_DeviceListISSI;
+extern const FS_NAND_2048X8_DEVICE_LIST FS_NAND_2048X8_DeviceListSamsung;
+extern const FS_NAND_2048X8_DEVICE_LIST FS_NAND_2048X8_DeviceListStandard;
+extern const FS_NAND_2048X8_DEVICE_LIST FS_NAND_2048X8_DeviceListToshiba;
 
 /*********************************************************************
 *
@@ -6969,6 +8533,7 @@ int  FS_NAND_UNI_Clean                         (U8 Unit, unsigned NumBlocksFree,
 int  FS_NAND_UNI_EraseBlock                    (U8 Unit, unsigned BlockIndex);
 int  FS_NAND_UNI_EraseFlash                    (U8 Unit);
 int  FS_NAND_UNI_GetBlockInfo                  (U8 Unit, U32 BlockIndex, FS_NAND_BLOCK_INFO * pBlockInfo);
+int  FS_NAND_UNI_GetBlockInfoEx                (U8 Unit, U32 BlockIndex, FS_NAND_BLOCK_INFO * pBlockInfo, unsigned Flags);
 int  FS_NAND_UNI_GetDiskInfo                   (U8 Unit, FS_NAND_DISK_INFO * pDiskInfo);
 #if FS_NAND_ENABLE_STATS
   void FS_NAND_UNI_GetStatCounters             (U8 Unit, FS_NAND_STAT_COUNTERS * pStat);
@@ -6994,7 +8559,13 @@ void FS_NAND_UNI_SetECCHook                    (U8 Unit, const FS_NAND_ECC_HOOK 
 #if FS_NAND_MAX_BIT_ERROR_CNT
   void FS_NAND_UNI_SetMaxBitErrorCnt           (U8 Unit, unsigned BitErrorCnt);
 #endif // FS_NAND_MAX_BIT_ERROR_CNT
-  void FS_NAND_UNI_SetMaxEraseCntDiff          (U8 Unit, U32 EraseCntDiff);
+void FS_NAND_UNI_SetMaxEraseCntDiff            (U8 Unit, U32 EraseCntDiff);
+#if (FS_NAND_MAX_PAGE_SIZE != 0)
+  void FS_NAND_UNI_SetMaxPageSize              (unsigned NumBytes);
+#endif // FS_NAND_MAX_PAGE_SIZE != 0
+#if (FS_NAND_MAX_SPARE_AREA_SIZE != 0)
+  void FS_NAND_UNI_SetMaxSpareAreaSize         (unsigned NumBytes);
+#endif // FS_NAND_MAX_SPARE_AREA_SIZE != 0
 #if FS_NAND_SUPPORT_BLOCK_GROUPING
   int  FS_NAND_UNI_SetNumBlocksPerGroup        (U8 Unit, unsigned BlocksPerGroup);
 #endif // FS_NAND_SUPPORT_BLOCK_GROUPING
@@ -7034,6 +8605,7 @@ void FS_NAND_2048x16_SetHWType          (U8 Unit, const FS_NAND_HW_TYPE * pHWTyp
   void FS_NAND_2048x8_DisableReadCache  (U8 Unit);
 #endif // FS_NAND_SUPPORT_READ_CACHE
 void   FS_NAND_2048x8_SetHWType         (U8 Unit, const FS_NAND_HW_TYPE * pHWType);
+void   FS_NAND_2048X8_SetDeviceList     (U8 Unit, const FS_NAND_2048X8_DEVICE_LIST * pDeviceList);
 
 /*********************************************************************
 *
@@ -7070,6 +8642,7 @@ void FS_NAND_x_SetHWType                (U8 Unit, const FS_NAND_HW_TYPE * pHWTyp
 *       ONFI physical layer
 */
 void FS_NAND_ONFI_SetHWType             (U8 Unit, const FS_NAND_HW_TYPE * pHWType);
+void FS_NAND_ONFI_SetDeviceList         (U8 Unit, const FS_NAND_ONFI_DEVICE_LIST * pDeviceList);
 
 /*********************************************************************
 *
@@ -7101,6 +8674,7 @@ void FS_NAND_DF_SetHWType               (U8 Unit, const FS_NAND_HW_TYPE_DF * pHW
 void FS_NAND_QSPI_SetHWType             (U8 Unit, const FS_NAND_HW_TYPE_QSPI * pHWType);
 void FS_NAND_QSPI_Allow2bitMode         (U8 Unit, U8 OnOff);
 void FS_NAND_QSPI_Allow4bitMode         (U8 Unit, U8 OnOff);
+void FS_NAND_QSPI_SetDeviceList         (U8 Unit, const FS_NAND_SPI_DEVICE_LIST * pDeviceList);
 
 /*********************************************************************
 *
@@ -7141,16 +8715,99 @@ void FS_DISKPART_Configure(U8 Unit, const FS_DEVICE_TYPE * pDeviceType, U8 Devic
 
 /*********************************************************************
 *
+*       FS_CRYPT_ALGO_TYPE_PREPARE
+*
+*  Function description
+*    Initializes the operation of the algorithm.
+*
+*  Parameters
+*    pContext       Algorithm-specific data.
+*    pKey           Encryption key.
+*
+*  Additional information
+*    This function is a member of the FS_CRYPT_ALGO_TYPE cryptographic
+*    algorithm. It initializes the operation of the cryptographic algorithm
+*    such as key expansion. FS_CRYPT_ALGO_TYPE_PREPARE is called
+*    from FS_CRYPT_Prepare().
+*/
+typedef void FS_CRYPT_ALGO_TYPE_PREPARE(void * pContext, const U8 * pKey);
+
+/*********************************************************************
+*
+*       FS_CRYPT_ALGO_TYPE_ENCRYPT
+*
+*  Function description
+*    Encrypts a data block.
+*
+*  Parameters
+*    pContext       Algorithm-specific data.
+*    pDest          [OUT] Encrypted data (ciphertext).
+*    pSrc           [IN] Data to be encrypted (plaintext).
+*    NumBytes       Number of bytes to be encrypted.
+*    BlockIndex     Index of the data block to be encrypted.
+*
+*  Additional information
+*    This function is a member of the FS_CRYPT_ALGO_TYPE cryptographic
+*    algorithm. It encrypts the specified data block using the key
+*    specified in the call to FS_CRYPT_Prepare().
+*
+*    NumBytes is always a multiple of the encryption block size specified
+*    via BitsPerBlock of FS_CRYPT_ALGO_TYPE.
+*
+*    BlockIndex is set to the index of the logical sector
+*    that stores the data being encrypted. It can be used
+*    for example as initialization vector for AES and DES
+*    cryptographic algorithms.
+*/
+typedef void FS_CRYPT_ALGO_TYPE_ENCRYPT(void * pContext, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 BlockIndex);
+
+/*********************************************************************
+*
+*       FS_CRYPT_ALGO_TYPE_DECRYPT
+*
+*  Function description
+*    Decrypts a data block.
+*
+*  Parameters
+*    pContext       Algorithm-specific data.
+*    pDest          [OUT] Decrypted data (plaintext).
+*    pSrc           [IN] Data to be decrypted (ciphertext).
+*    NumBytes       Number of bytes to be decrypted.
+*    BlockIndex     Index of the data block to be decrypted.
+*
+*  Additional information
+*    This function is a member of the FS_CRYPT_ALGO_TYPE cryptographic
+*    algorithm. It decrypts the specified data block using the key
+*    specified in the call to FS_CRYPT_Prepare().
+*
+*    NumBytes is always a multiple of the encryption block size specified
+*    via BitsPerBlock of FS_CRYPT_ALGO_TYPE.
+*
+*    BlockIndex is set to the index of the logical sector
+*    that stores the data being encrypted. It can be used
+*    for example as initialization vector for AES and DES
+*    cryptographic algorithms. BlockIndex is set to the
+*    same value passed to FS_CRYPT_ALGO_TYPE_ENCRYPT when
+*    encrypting the same data block.
+*/
+typedef void FS_CRYPT_ALGO_TYPE_DECRYPT(void * pContext, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 BlockIndex);
+
+/*********************************************************************
+*
 *       FS_CRYPT_ALGO_TYPE
 *
 *  Description
 *    Encryption algorithm API.
+*
+*  Additional information
+*    BitsPerBlock is set for example to 128 for the AES algorithm
+*    and to 64 for the DES algorithm.
 */
 typedef struct {
-  void (*pfPrepare)(void * pContext, const U8 * pKey);
-  void (*pfEncrypt)(void * pContext, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 BlockIndex);
-  void (*pfDecrypt)(void * pContext, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 BlockIndex);
-  U16    BitsPerBlock;     // Number of bits encrypted at once by the algorithm: AES -> 128, DES -> 64.
+  FS_CRYPT_ALGO_TYPE_PREPARE * pfPrepare;     // Initializes the operation of the algorithm.
+  FS_CRYPT_ALGO_TYPE_ENCRYPT * pfEncrypt;     // Encrypts a block of data.
+  FS_CRYPT_ALGO_TYPE_DECRYPT * pfDecrypt;     // Decrypts a block of data.
+  U16                          BitsPerBlock;  // Number of bits processed at once by the algorithm.
 } FS_CRYPT_ALGO_TYPE;
 
 /*********************************************************************
@@ -7194,9 +8851,9 @@ extern const FS_CRYPT_ALGO_TYPE FS_CRYPT_ALGO_AES128;   // AES encryption algori
 extern const FS_CRYPT_ALGO_TYPE FS_CRYPT_ALGO_AES256;   // AES encryption algorithm (256-bit key)
 
 void FS_CRYPT_Configure(U8 Unit, const FS_DEVICE_TYPE * pDeviceType, U8 DeviceUnit, const FS_CRYPT_ALGO_TYPE * pAlgoType, void * pContext, const U8 * pKey);
-void FS_CRYPT_Prepare  (FS_CRYPT_OBJ * pCryptObj, const FS_CRYPT_ALGO_TYPE * pAlgoType, void * pContext, U32 BytesPerBlock, const U8 * pKey);
-void FS_CRYPT_Encrypt  (const FS_CRYPT_OBJ * pCryptObj, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 * pBlockIndex);
-void FS_CRYPT_Decrypt  (const FS_CRYPT_OBJ * pCryptObj, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 * pBlockIndex);
+int  FS_CRYPT_Prepare  (FS_CRYPT_OBJ * pCryptObj, const FS_CRYPT_ALGO_TYPE * pAlgoType, void * pContext, U32 BytesPerBlock, const U8 * pKey);
+int  FS_CRYPT_Encrypt  (const FS_CRYPT_OBJ * pCryptObj, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 * pBlockIndex);
+int  FS_CRYPT_Decrypt  (const FS_CRYPT_OBJ * pCryptObj, U8 * pDest, const U8 * pSrc, U32 NumBytes, U32 * pBlockIndex);
 
 #if FS_SUPPORT_ENCRYPTION
   int FS_SetEncryptionObject(FS_FILE * pFile, FS_CRYPT_OBJ * pCryptObj);
@@ -7287,7 +8944,7 @@ void FS_SECSIZE_Configure(U8 Unit, const FS_DEVICE_TYPE * pDeviceType, U8 Device
 *    of logical sectors while \tt{BytesPerSector} the size of a logical
 *    sector in bytes.
 */
-#define FS_SIZEOF_WRBUF(NumSectors, BytesPerSector)     ((FS_SIZEOF_WRBUF_SECTOR_INFO + (BytesPerSector)) * NumSectors)    // Calculates the write buffer size.
+#define FS_SIZEOF_WRBUF(NumSectors, BytesPerSector)     ((FS_SIZEOF_WRBUF_SECTOR_INFO + (BytesPerSector)) * (NumSectors))     // Calculates the write buffer size.
 
 /*********************************************************************
 *
@@ -7389,27 +9046,61 @@ void FS_WRBUF_Configure(U8 Unit, const FS_DEVICE_TYPE * pDeviceType, U8 DeviceUn
 
 /*********************************************************************
 *
-*       Cache specific types
+*       FS_CACHE_INIT
+*
+*  Function description
+*    Sector cache initialization function.
+*
+*  Parameters
+*    pDevice      Instance of the storage device.
+*    pData        [IN] Sector cache memory block.
+*    NumBytes     Number of bytes in the memory block.
+*
+*  Return value
+*    !=0          OK, capacity of the cache in logical sectors
+*    ==0          An error occurred.
+*
+*  Additional information
+*    pData and NumBytes are the parameters passed to FS_AssignCache()
+*    when the application configures a sector cache. In addition the
+*    value returned by FS_CACHE_INIT is forwarded to the application
+*    via the return value of FS_AssignCache().
+*
+*    Each sector cache module defines its own initialization function
+*    of type FS_CACHE_INIT. The address of this function is passed
+*    as pfInit parameter to FS_AssignCache() and at the same time
+*    it identifies the sector cache type in the application.
+*    Refer to \ref{Sector cache types} for a list of supported
+*    sector cache types. The sector cache type can be queried via
+*    FS_CACHE_GetType().
 */
-typedef U32    FS_INIT_CACHE (FS_DEVICE * pDevice, void * pData, I32 NumBytes);
-typedef U32 (* FS_CACHE_TYPE)(FS_DEVICE * pDevice, void * pData, I32 NumBytes);
+typedef U32 FS_CACHE_INIT(FS_DEVICE * pDevice, void * pData, I32 NumBytes);
 
 /*********************************************************************
 *
-*       Cache specific prototypes
+*       FS_CACHE_TYPE
+*
+*  Description
+*    Sector cache type.
 */
-U32    FS_AssignCache        (const char * sVolumeName, void * pData, I32 NumBytes, FS_INIT_CACHE * pfInit);
-void   FS_CACHE_Clean        (const char * sVolumeName);
-int    FS_CACHE_Command      (const char * sVolumeName, int   Cmd,      void * pData);
-int    FS_CACHE_SetMode      (const char * sVolumeName, int   TypeMask, int    ModeMask);
-int    FS_CACHE_SetQuota     (const char * sVolumeName, int   TypeMask, U32    NumSectors);
-int    FS_CACHE_SetAssocLevel(const char * sVolumeName, int   AssocLevel);
-int    FS_CACHE_GetNumSectors(const char * sVolumeName, U32 * pNumSectors);
-int    FS_CACHE_Invalidate   (const char * sVolumeName);
+typedef FS_CACHE_INIT * FS_CACHE_TYPE;
 
 /*********************************************************************
 *
-*       Cache initialization prototypes
+*       Sector cache API
+*/
+U32 FS_AssignCache        (const char * sVolumeName, void * pData, I32 NumBytes, FS_CACHE_TYPE Type);
+int FS_CACHE_Clean        (const char * sVolumeName);
+int FS_CACHE_GetType      (const char * sVolumeName, FS_CACHE_TYPE * pType);
+int FS_CACHE_SetMode      (const char * sVolumeName, int   TypeMask, int    ModeMask);
+int FS_CACHE_SetQuota     (const char * sVolumeName, int   TypeMask, U32    NumSectors);
+int FS_CACHE_SetAssocLevel(const char * sVolumeName, int   AssocLevel);
+int FS_CACHE_GetNumSectors(const char * sVolumeName, U32 * pNumSectors);
+int FS_CACHE_Invalidate   (const char * sVolumeName);
+
+/*********************************************************************
+*
+*       Sector cache initialization functions
 */
 U32 FS_CacheAll_Init     (FS_DEVICE * pDevice, void * pData, I32 NumBytes);
 U32 FS_CacheMan_Init     (FS_DEVICE * pDevice, void * pData, I32 NumBytes);
@@ -7586,6 +9277,7 @@ U32  FS_X_GetTimeDate(void);
 #define FS_CACHEALL_API             FS_CacheAll_Init
 #define FS_CACHEMAN_API             FS_CacheMan_Init
 #define FS_CACHE_MODE_FULL          (FS_CACHE_MODE_R | FS_CACHE_MODE_W | FS_CACHE_MODE_D)
+#define FS_INIT_CACHE               FS_CACHE_INIT
 
 /*********************************************************************
 *
@@ -7622,6 +9314,22 @@ U32  FS_X_GetTimeDate(void);
 #define NAND_BLOCK_TYPE_WORK                            FS_NAND_BLOCK_TYPE_WORK
 #define NAND_BLOCK_TYPE_DATA                            FS_NAND_BLOCK_TYPE_DATA
 #define FS_DF_ChipErase(Unit)                           FS_NAND_DF_EraseChip(Unit)
+#define FS_NAND_SPI_DeviceList_All                      FS_NAND_SPI_DeviceListAll
+#define FS_NAND_SPI_DeviceList_Default                  FS_NAND_SPI_DeviceListDefault
+#define FS_NAND_SPI_DeviceList_ISSI                     FS_NAND_SPI_DeviceListISSI
+#define FS_NAND_SPI_DeviceList_Macronix                 FS_NAND_SPI_DeviceListMacronix
+#define FS_NAND_SPI_DeviceList_Micron                   FS_NAND_SPI_DeviceListMicron
+#define FS_NAND_SPI_DeviceList_Toshiba                  FS_NAND_SPI_DeviceListToshiba
+#define FS_NAND_SPI_DeviceList_Winbond                  FS_NAND_SPI_DeviceListWinbond
+#define FS_NAND_ONFI_DeviceList_All                     FS_NAND_ONFI_DeviceListAll
+#define FS_NAND_ONFI_DeviceList_Default                 FS_NAND_ONFI_DeviceListDefault
+#define FS_NAND_ONFI_DeviceList_Macronix                FS_NAND_ONFI_DeviceListMacronix
+#define FS_NAND_ONFI_DeviceList_Micron                  FS_NAND_ONFI_DeviceListMicron
+#define FS_NAND_ONFI_DeviceList_SkyHigh                 FS_NAND_ONFI_DeviceListSkyHigh
+#define FS_NAND_ONFI_DeviceList_GigaDevice              FS_NAND_ONFI_DeviceListGigaDevice
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_UNKNOWN          FS_NAND_BAD_BLOCK_MARKING_TYPE_FSPS
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_ONFI             FS_NAND_BAD_BLOCK_MARKING_TYPE_FPS
+#define FS_NAND_BAD_BLOCK_MARKING_TYPE_LEGACY           FS_NAND_BAD_BLOCK_MARKING_TYPE_FSPS
 
 int  FS_DF_HW_X_Init     (U8 Unit);
 void FS_DF_HW_X_EnableCS (U8 Unit);
@@ -7656,6 +9364,26 @@ void FS_NAND_HW_X_Write_x16       (U8 Unit, const void * pBuffer, unsigned NumBy
 #define FS_NOR_READ_CFI_FUNC                            FS_NOR_READ_CFI_CALLBACK
 #define FS_NOR_CFI_SetReadCFIFunc(Unit, pfReadCFI)      FS_NOR_CFI_SetReadCFICallback(Unit, pfReadCFI)
 #define FS_NOR_BM_SetUsedSectorsErasure(Unit, OnOff)    FS_NOR_BM_SetUsedSectorsErase(Unit, OnOff)
+#define FS_NOR_SPI_DeviceList_All                       FS_NOR_SPI_DeviceListAll
+#define FS_NOR_SPI_DeviceList_Default                   FS_NOR_SPI_DeviceListDefault
+#define FS_NOR_SPI_DeviceList_Micron                    FS_NOR_SPI_DeviceListMicron
+#define FS_NOR_SPI_DeviceList_Micron_x                  FS_NOR_SPI_DeviceListMicron_x
+#define FS_NOR_SPI_DeviceList_Micron_x2                 FS_NOR_SPI_DeviceListMicron_x2
+#define FS_NOR_SPI_DeviceList_Spansion                  FS_NOR_SPI_DeviceListSpansion
+#define FS_NOR_SPI_DeviceList_Microchip                 FS_NOR_SPI_DeviceListMicrochip
+#define FS_NOR_SPI_DeviceList_Winbond                   FS_NOR_SPI_DeviceListWinbond
+#define FS_NOR_SPI_DeviceList_ISSI                      FS_NOR_SPI_DeviceListISSI
+#define FS_NOR_SPI_DeviceList_Macronix                  FS_NOR_SPI_DeviceListMacronix
+#define FS_NOR_SPI_DeviceList_GigaDevice                FS_NOR_SPI_DeviceListGigaDevice
+#define FS_NOR_SPI_DeviceList_Cypress                   FS_NOR_SPI_DeviceListCypress
+#define FS_NOR_SPI_DeviceList_Adesto                    FS_NOR_SPI_DeviceListAdesto
+#define FS_NOR_SPI_DeviceList_Eon                       FS_NOR_SPI_DeviceListEon
+#define FS_NOR_HW_TYPE_SPIFI_SET_CMD_MODE               FS_NOR_HW_TYPE_SPIFI_UNMAP
+#define FS_NOR_HW_TYPE_SPIFI_SET_MEM_MODE               FS_NOR_HW_TYPE_SPIFI_MAP
+#define FS_NOR_HW_TYPE_SPIFI_EXEC_CMD                   FS_NOR_HW_TYPE_SPIFI_CONTROL
+#define FS_NOR_HW_TYPE_SPIFI_READ_DATA                  FS_NOR_HW_TYPE_SPIFI_READ
+#define FS_NOR_HW_TYPE_SPIFI_WRITE_DATA                 FS_NOR_HW_TYPE_SPIFI_WRITE
+
 
 int  FS_NOR_SPI_HW_X_Init      (U8 Unit);
 void FS_NOR_SPI_HW_X_EnableCS  (U8 Unit);
@@ -7801,8 +9529,13 @@ void FS_IDE_HW_WriteData (U8 Unit, const U8 * pData, unsigned NumBytes);
 *
 *       Misc. functionality
 */
-#define FS_MEMORY_IS_ACCESSIBLE_CALLBACK(pMem, NumBytes)      FS_MEMORY_CHECK_CALLBACK(pMem, NumBytes)
-#define FS_SetMemAccessCallback(sVolumeName, pfMemoryCheck)   FS_SetMemCheckCallback(sVolumeName, pfMemoryCheck);
+#define FS_MEMORY_IS_ACCESSIBLE_CALLBACK(pMem, NumBytes)          FS_MEMORY_CHECK_CALLBACK(pMem, NumBytes)
+#define FS_SetMemAccessCallback(sVolumeName, pfMemoryCheck)       FS_SetMemCheckCallback(sVolumeName, pfMemoryCheck);
+#define FS_CMD_UNMOUNT_VOLUME                                     FS_CMD_UNMOUNT
+#define FS_NUM_PARTITIONS                                         FS_MAX_NUM_PARTITIONS_MBR
+#define FS_GetPartitionInfo(sVolumeName, pPartInfo, PartIndex)    FS_GetPartitionInfoMBR(sVolumeName, pPartInfo, PartIndex)
+#define FS_PARTITION_INFO                                         FS_PARTITION_INFO_MBR
+#define FS_BIGFAT_OBJ                                             FS_BIGFAT_FILE
 
 #if defined(__cplusplus)
 }              // Make sure we have C-declarations in C++ programs

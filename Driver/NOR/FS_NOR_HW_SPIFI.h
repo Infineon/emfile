@@ -1,9 +1,29 @@
 /*********************************************************************
-*                   (c) SEGGER Microcontroller GmbH                  *
+*                     SEGGER Microcontroller GmbH                    *
 *                        The Embedded Experts                        *
-*                           www.segger.com                           *
 **********************************************************************
-
+*                                                                    *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
+*                                                                    *
+*       www.segger.com     Support: support_emfile@segger.com        *
+*                                                                    *
+**********************************************************************
+*                                                                    *
+*       emFile * File system for embedded applications               *
+*                                                                    *
+*                                                                    *
+*       Please note:                                                 *
+*                                                                    *
+*       Knowledge of this file may under no circumstances            *
+*       be used to write a similar product for in-house use.         *
+*                                                                    *
+*       Thank you for your fairness !                                *
+*                                                                    *
+**********************************************************************
+*                                                                    *
+*       emFile version: V5.22.0                                      *
+*                                                                    *
+**********************************************************************
 ----------------------------------------------------------------------
 Licensing information
 Licensor:                 SEGGER Microcontroller Systems LLC
@@ -12,22 +32,23 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
--------------------------- END-OF-HEADER -----------------------------
-
+----------------------------------------------------------------------
 File        : FS_NOR_HW_SPIFI.h
 Purpose     : low-level flash driver for quad SPI.
+-------------------------- END-OF-HEADER -----------------------------
 */
 
 #ifndef FS_NOR_HW_SPIFI_H     // Avoid recursive and multiple inclusion
 #define FS_NOR_HW_SPIFI_H
 
 #include "FS.h"
-#include "cyhal_qspi.h"
+#include "mtb_hal_memoryspi.h"
 
 /*********************************************************************
 *
@@ -44,6 +65,9 @@ Purpose     : low-level flash driver for quad SPI.
 *
 **********************************************************************
 */
+#if defined(ENABLE_XIP_EMFILE_ON_SAME_NOR_FLASH)
+typedef void (* FS_NOR_HW_SPIFI_XIP_SUPPORT)(mtb_hal_memoryspi_t * halObj);
+#endif /* #if defined(ENABLE_XIP_EMFILE_ON_SAME_NOR_FLASH) */
 
 /* The QSPI HAL supports up to four memories using four slave select pins but
  * all the memories need to be connected to the same data lines. i.e. The QSPI
@@ -62,24 +86,23 @@ Purpose     : low-level flash driver for quad SPI.
 
 typedef struct
 {
-    cyhal_qspi_slave_pin_config_t PinSet [FS_NOR_HW_SPIFI_MAX_MEM_SUPPORTED]; /* Data/IO pins connected to the memory, Pass NC when unused. */
-    cyhal_gpio_t Sclk;                                                        /* Clock pin connected to the memory. */
+    mtb_hal_memoryspi_data_select_t PinSet [FS_NOR_HW_SPIFI_MAX_MEM_SUPPORTED]; /* Data/IO pins connected to the memory */
     uint8_t NumMem;                                                           /* Number of memory devices used. */
 
-    cyhal_qspi_datarate_t DataRate;                                           /* Field added for future updates */ 
+    mtb_hal_memoryspi_datarate_t    DataRate;                                           /* Field added for future updates */ 
+    mtb_hal_memoryspi_chip_select_t ChipSelect [FS_NOR_HW_SPIFI_MAX_MEM_SUPPORTED];
 
-    uint32_t HFClockFreqHz;                                                   /* HF clock frequency (in hertz) input to the QSPI block. Refer to the
-                                                                               * device datasheet for the limitations.
+    mtb_hal_memoryspi_t *Obj;                                                  /* This HW layer passes this object to the HAL APIs.
+                                                                               * The user must not access the object contents.
+                                                                               * Here so the user can call the HAL APIs directly.
                                                                                */
-#if defined(COMPONENT_RTOS_AWARE)
-    uint8_t QspiIntrPriority;                                                 /* Interrupt priority for the QSPI block. */
-#endif
-    cyhal_clock_t *Clk;
-    cyhal_qspi_t Obj;                                                         /* This HW layer passes this object to the HAL APIs.
-                                                                               * User should not access the contents of it.
-                                                                               * Provided here so that user can call the HAL APIs directly
-                                                                               * if required.
+#if defined(ENABLE_XIP_EMFILE_ON_SAME_NOR_FLASH)
+    FS_NOR_HW_SPIFI_XIP_SUPPORT WipCallback;                                  /* Pointer to function which blocks code execution until the all
+                                                                               * the memory operation completes.
                                                                                */
+    uint8_t *pDataBuffer;                                                     /* The pointer to the buffer to store data from one logic sector. */
+    uint8_t *pParamBuffer;                                                    /* The pointer to the buffer to store parameters - always 8-bytes size */
+#endif /* #if defined(ENABLE_XIP_EMFILE_ON_SAME_NOR_FLASH) */
 } FS_NOR_HW_SPIFI_Config_t;
 
 typedef enum

@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 -------------------------- END-OF-HEADER -----------------------------
 
@@ -57,7 +58,7 @@ Additional information:
     in which alternatively deletes and then creates a specified number
     of files. The user is expected to remove and insert the card in order
     to simulate a power failure. Any file system corruption will be reported
-    during the disk checking operation that is perform after the insertion
+    during the disk checking operation that is performed after the insertion
     of the SD card.
 
   Sample output:
@@ -190,7 +191,10 @@ static int _OnError(int ErrCode, ...) {
     FS_X_Log("\n");
   }
   ++_NumErrors;
-  return FS_CHECKDISK_ACTION_DO_NOT_REPAIR;
+  //
+  // Stop the checking after the first error to make the sample application more responsive.
+  //
+  return FS_CHECKDISK_ACTION_ABORT;
 }
 
 /*********************************************************************
@@ -259,7 +263,7 @@ void MainTask(void) {
   //
   // Error and warning messages are generated when the SD card
   // is removed while the file system is trying to access it.
-  // Disable all this debug messages to avoid confusion.
+  // Disable all the debug messages to avoid confusion.
   //
 #if (FS_DEBUG_LEVEL >= FS_DEBUG_LEVEL_LOG_ERRORS)
   FS_SetErrorFilter(0);
@@ -319,6 +323,7 @@ void MainTask(void) {
     if (_NumErrors == 0) {
       FS_X_Log("OK\n");
     } else {
+      FS_UnmountForced(VOLUME_NAME);
       SEGGER_snprintf(_ac, (int)sizeof(_ac), "ERROR (%d detected)\n", _NumErrors);
       FS_X_Log(_ac);
     }

@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 ----------------------------------------------------------------------
 File    : FS_Debug.h
@@ -46,7 +47,13 @@ Purpose : Debug macros for logging
 #ifndef FS_DEBUG_H                // Avoid recursive and multiple inclusion
 #define FS_DEBUG_H
 
-#include <stdarg.h>               //lint !e829 +headerwarn option was previously issued for header 'stdarg.h'. Reason: we need access to the va_start() and va_end() macros.
+/*********************************************************************
+*
+*       #include section
+*
+**********************************************************************
+*/
+#include <stdarg.h>               //lint !e829 +headerwarn option was previously issued for header 'stdarg.h' N:102. Reason: we need access to the va_start() and va_end() macros.
 #include "SEGGER.h"
 #include "FS_ConfDefaults.h"
 
@@ -56,42 +63,10 @@ extern "C" {     /* Make sure we have C-declarations in C++ programs */
 
 /*********************************************************************
 *
-*       Defines, configurable
-*
-**********************************************************************
-*/
-#ifndef FS_DEBUG_LEVEL
-  #ifdef _WIN32
-    #define FS_DEBUG_LEVEL                  FS_DEBUG_LEVEL_LOG_WARNINGS    // Simulation should log all warnings
-  #else
-    #define FS_DEBUG_LEVEL                  FS_DEBUG_LEVEL_CHECK_PARA      // For most targets, min. size is important
-  #endif
-#endif
-
-/*********************************************************************
-*
 *       Defines, fixed
 *
 **********************************************************************
 */
-
-/*********************************************************************
-*
-*       Debug levels
-*
-*  Description
-*    Permitted values for FS_DEBUG_LEVEL.
-*
-*  Additional information
-*    The debug levels are hierarchical so that so that higher debug levels
-*    also enable the features assigned to lower debug levels.
-*/
-#define FS_DEBUG_LEVEL_NOCHECK              0  // No run time checks are performed.
-#define FS_DEBUG_LEVEL_CHECK_PARA           1  // Parameter checks are performed.
-#define FS_DEBUG_LEVEL_CHECK_ALL            2  // Parameter checks and consistency checks are performed.
-#define FS_DEBUG_LEVEL_LOG_ERRORS           3  // Error conditions are reported.
-#define FS_DEBUG_LEVEL_LOG_WARNINGS         4  // Error and warning conditions are reported.
-#define FS_DEBUG_LEVEL_LOG_ALL              5  // Error and warning conditions as well as trace messages are reported.
 
 /*********************************************************************
 *
@@ -123,7 +98,7 @@ extern "C" {     /* Make sure we have C-declarations in C++ programs */
   #define FS_DEBUG_LOG(s)
 #endif
 
-#define EXPR2STRING(Expr)         #Expr   //lint !e9024 '#/##' operator used in macro 'FS_DEBUG_ASSERT' [MISRA 2012 Rule 20.10, advisory]. Rationale: This macro is used only in debug builds.
+#define EXPR2STRING(Expr)         #Expr   //lint !e9024 '#/##' operator used in macro 'FS_DEBUG_ASSERT' [MISRA 2012 Rule 20.10, advisory] N:102. Rationale: This macro is used only in debug builds.
 
 /*********************************************************************
 *

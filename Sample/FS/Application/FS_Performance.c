@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 -------------------------- END-OF-HEADER -----------------------------
 
@@ -74,10 +75,10 @@ Additional information:
 
     By default, in all test cases the file is written or read
     in chunks as follows:
-      16 chunks (512 KB per chunk)
+      16 chunks (512 KiB per chunk)
       1 chunk = 64 blocks = 64 calls of FS_FWrite/FS_FRead
-      1 block = 8 KB = 8 KB per write/read transaction.
-    with a total file size of 8 MB.
+      1 block = 8 KiB = 8 KiB per write/read transaction.
+    with a total file size of 8 MiB.
 
     The application always formats the storage device to make
     sure that the measurements are not influenced by the data
@@ -92,12 +93,12 @@ Additional information:
     T3: Write 16 chunks of 524288 bytes................OK
     T4: Read  16 chunks of 524288 bytes................OK
     Test 0: Write, pre-allocated clusters
-      Chunk (512 Kbytes)
+      Chunk (512 KiB)
         Time (Min/Max/Av):   164/175/169 ms
-        Speed:               3029.59 Kbytes/s
-      Block (8 Kbytes)
+        Speed:               3029.59 KiB/s
+      Block (8 KiB)
         Time (Min/Max/Av):   0/13/2 ms
-        Speed:               4000.00 Kbytes/s
+        Speed:               4000.00 KiB/s
       Counters
         ReadOperationCnt:    2
         ReadSectorCnt:       2
@@ -105,12 +106,12 @@ Additional information:
         WriteSectorCnt:      16384
 
     Test 1: Write, clusters dynamically allocated, fast write mode
-      Chunk (512 Kbytes)
+      Chunk (512 KiB)
         Time (Min/Max/Av):   163/199/171 ms
-        Speed:               2994.15 Kbytes/s
-      Block (8 Kbytes)
+        Speed:               2994.15 KiB/s
+      Block (8 KiB)
         Time (Min/Max/Av):   0/16/2 ms
-        Speed:               4000.00 Kbytes/s
+        Speed:               4000.00 KiB/s
       Counters
         ReadOperationCnt:    7
         ReadSectorCnt:       7
@@ -118,12 +119,12 @@ Additional information:
         WriteSectorCnt:      16388
 
     Test 2: Write, clusters dynamically allocated, medium write mode
-      Chunk (512 Kbytes)
+      Chunk (512 KiB)
         Time (Min/Max/Av):   258/271/264 ms
-        Speed:               1939.39 Kbytes/s
-      Block (8 Kbytes)
+        Speed:               1939.39 KiB/s
+      Block (8 KiB)
         Time (Min/Max/Av):   1/12/4 ms
-        Speed:               2000.00 Kbytes/s
+        Speed:               2000.00 KiB/s
       Counters
         ReadOperationCnt:    263
         ReadSectorCnt:       263
@@ -131,12 +132,12 @@ Additional information:
         WriteSectorCnt:      16643
 
     Test 3: Write, clusters dynamically allocated, safe write mode
-      Chunk (512 Kbytes)
+      Chunk (512 KiB)
         Time (Min/Max/Av):   425/685/504 ms
-        Speed:               1015.87 Kbytes/s
-      Block (8 Kbytes)
+        Speed:               1015.87 KiB/s
+      Block (8 KiB)
         Time (Min/Max/Av):   3/115/7 ms
-        Speed:               1142.86 Kbytes/s
+        Speed:               1142.86 KiB/s
       Counters
         ReadOperationCnt:    1286
         ReadSectorCnt:       1286
@@ -144,25 +145,33 @@ Additional information:
         WriteSectorCnt:      17666
 
     Test 4: Read
-      Chunk (512 Kbytes)
+      Chunk (512 KiB)
         Time (Min/Max/Av):   45/49/46 ms
-        Speed:               11130 Kbytes/s
-      Block (8 Kbytes)
+        Speed:               11130 KiB/s
+      Block (8 KiB)
         Time (Min/Max/Av):   0/2/0 ms
-        Speed:               0 Kbytes/s
+        Speed:               0 KiB/s
       Counters
         ReadOperationCnt:    1027
         ReadSectorCnt:       16387
         WriteOperationCnt:   0
         WriteSectorCnt:      0
 
-    Test 0 Speed (chunk/block): 3029/4000 Kbytes/s
-    Test 1 Speed (chunk/block): 2994/4000 Kbytes/s
-    Test 2 Speed (chunk/block): 1939/2000 Kbytes/s
-    Test 3 Speed (chunk/block): 1015/1142 Kbytes/s
-    Test 4 Speed (chunk/block): 11130/0 Kbytes/s
+    Test 0 Speed (chunk/block): 3029/4000 KiB/s
+    Test 1 Speed (chunk/block): 2994/4000 KiB/s
+    Test 2 Speed (chunk/block): 1939/2000 KiB/s
+    Test 3 Speed (chunk/block): 1015/1142 KiB/s
+    Test 4 Speed (chunk/block): 11130/0 KiB/s
 
     Finished
+
+  Notes:
+    The sample application may report a write or read speed of 0
+    if a very fast storage device is used for the test such as a RAM disk.
+    This is normal behavior and the reason for this is that the accuracy
+    of the time base used for the measurements is limited to 1 ms.
+    This limitation can be removed by increasing the size of the work buffer
+    via the BLOCK_SIZE configuration define.
 */
 
 /*********************************************************************
@@ -199,17 +208,17 @@ Additional information:
 #endif
 
 #ifndef   FILE_NAME
-  #define FILE_NAME             VOLUME_NAME"\\default.txt"  // Defines the name of the file to write to
+  #define FILE_NAME             "SEGGER.txt"                // Defines the name of the file to write to
 #endif
 
 #ifndef   JOURNAL_SIZE
-  #define JOURNAL_SIZE          0
+  #define JOURNAL_SIZE          0                           // Configures the size of the journal file. 0 means that the Journaling is disabled.
 #endif
 
 #if (FS_SUPPORT_FAT == 0)
 
 #ifndef   SECTORS_PER_CLUSTER
-  #define SECTORS_PER_CLUSTER   0
+  #define SECTORS_PER_CLUSTER   0                           // Configures the cluster size. 0 means that the file system chooses the size automatically.
 #endif
 
 #endif // FS_SUPPORT_EFS
@@ -411,12 +420,12 @@ static I32 _ReadFile(void * pData, U32 NumBytes) {
 static void _TestWriteWithPreAllocation(const char * sName) {
   unsigned i;
   I32      t;
+  char     acFileName[128];
 
   _StartTest(sName, _NumBytes, _NumBytesAtOnce);
-  //
-  // Create file of full size
-  //
-  _pFile = FS_FOpen(FILE_NAME, "w");
+  memset(acFileName, 0, sizeof(acFileName));
+  SEGGER_snprintf(acFileName, (int)sizeof(acFileName), "%s%c%s", VOLUME_NAME, FS_DIRECTORY_DELIMITER, FILE_NAME);
+  _pFile = FS_FOpen(acFileName, "w");
   (void)FS_FSeek(_pFile, (I32)_Space, FS_SEEK_SET);
   (void)FS_SetEndOfFile(_pFile);
   (void)FS_FSeek(_pFile, 0, FS_SEEK_SET);
@@ -444,9 +453,12 @@ static void _TestWriteWithPreAllocation(const char * sName) {
 static void _TestWriteWithDynamicAllocation(const char * sName) {
   unsigned i;
   I32      t;
+  char     acFileName[128];
 
   _StartTest(sName, _NumBytes, _NumBytesAtOnce);
-  _pFile = FS_FOpen(FILE_NAME, "w");
+  memset(acFileName, 0, sizeof(acFileName));
+  SEGGER_snprintf(acFileName, (int)sizeof(acFileName), "%s%c%s", VOLUME_NAME, FS_DIRECTORY_DELIMITER, FILE_NAME);
+  _pFile = FS_FOpen(acFileName, "w");
   SEGGER_snprintf(_ac, (int)sizeof(_ac), "T%d: Write %lu chunks of %lu bytes", _TestNo, _NumLoops, _NumBytes);
   FS_X_Log(_ac);
 #if FS_STORAGE_ENABLE_STAT_COUNTERS
@@ -471,11 +483,14 @@ static void _TestWriteWithDynamicAllocation(const char * sName) {
 static void _TestRead(const char * sName) {
   unsigned i;
   I32      t;
+  char     acFileName[128];
 
   _StartTest(sName, _NumBytes, _NumBytesAtOnce);
+  memset(acFileName, 0, sizeof(acFileName));
+  SEGGER_snprintf(acFileName, (int)sizeof(acFileName), "%s%c%s", VOLUME_NAME, FS_DIRECTORY_DELIMITER, FILE_NAME);
+  _pFile = FS_FOpen(acFileName, "r");
   SEGGER_snprintf(_ac, (int)sizeof(_ac), "T%d: Read  %lu chunks of %lu bytes", _TestNo, _NumLoops, _NumBytes);
   FS_X_Log(_ac);
-  _pFile = FS_FOpen(FILE_NAME, "r");
 #if FS_STORAGE_ENABLE_STAT_COUNTERS
   FS_STORAGE_ResetCounters();
 #endif // FS_STORAGE_ENABLE_STAT_COUNTERS
@@ -504,12 +519,12 @@ static void _ShowResults(void) {
   for (i = 0; i <= _TestNo; i++) {
     SEGGER_snprintf(_ac, (int)sizeof(_ac),
                     "Test %d: %s\n"
-                    "  Chunk (%lu Kbytes)\n"
+                    "  Chunk (%lu KiB)\n"
                     "    Time (Min/Max/Av):   %ld/%ld/%ld ms\n"
-                    "    Speed:               %d Kbytes/s\n"
-                    "  Block (%lu Kbytes)\n"
+                    "    Speed:               %d KiB/s\n"
+                    "  Block (%lu KiB)\n"
                     "    Time (Min/Max/Av):   %ld/%ld/%ld ms\n"
-                    "    Speed:               %d Kbytes/s\n"
+                    "    Speed:               %d KiB/s\n"
                     "  Counters\n"
                     "    ReadOperationCnt:    %lu\n"
                     "    ReadSectorCnt:       %lu\n"
@@ -536,7 +551,7 @@ static void _ShowResults(void) {
   // Show summary.
   //
   for (i = 0; i <= _TestNo; i++) {
-    SEGGER_snprintf(_ac, (int)sizeof(_ac), "Test %d Speed (chunk/block): %d/%d Kbytes/s\n",
+    SEGGER_snprintf(_ac, (int)sizeof(_ac), "Test %d Speed (chunk/block): %d/%d KiB/s\n",
                     i,
                     (int)_GetAverageChunk(i),
                     (int)_GetAverageBlock(i));
@@ -564,7 +579,8 @@ void MainTask(void);
 }
 #endif
 void MainTask(void) {
-  int r;
+  int  r;
+  char acFileName[128];
 
   FS_X_Log("Start\n");
   FS_Init();
@@ -642,7 +658,9 @@ void MainTask(void) {
       //
       // Perform cleanup.
       //
-      (void)FS_Remove(FILE_NAME);
+      memset(acFileName, 0, sizeof(acFileName));
+      SEGGER_snprintf(acFileName, (int)sizeof(acFileName), "%s%c%s", VOLUME_NAME, FS_DIRECTORY_DELIMITER, FILE_NAME);
+      (void)FS_Remove(acFileName);
       //
       // Display the results on console.
       //

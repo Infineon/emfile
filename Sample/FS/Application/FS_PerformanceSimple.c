@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 -------------------------- END-OF-HEADER -----------------------------
 
@@ -59,12 +60,20 @@ Additional information:
   Sample output:
     Start
     High-level format
-    Writing 16 chunks of 524288 bytes...................OK
-    Reading 16 chunks of 524288 bytes...................OK
+    Writing 4 chunks of 2048 KiB.......OK
+    Reading 4 chunks of 2048 KiB.......OK
 
-    W Speed: 2115 Kbyte/s
-    R Speed: 11130 Kbyte/s
+    W Speed: 9183 KiB/s
+    R Speed: 18123 KiB/s
     Finished
+
+  Notes:
+    The sample application may report a write or read speed of 0
+    if a very fast storage device is used for the test such as a RAM disk.
+    This is normal behavior and the reason for this is that the accuracy
+    of the time base used for the measurements is limited to 1 ms.
+    This limitation can be removed by increasing the size of the work buffer
+    via the BLOCK_SIZE configuration define.
 */
 
 /*********************************************************************
@@ -329,7 +338,7 @@ void MainTask(void) {
       //
       // Check write performance with clusters/file size preallocated.
       //
-      SEGGER_snprintf(_ac, (int)sizeof(_ac), "Writing %d chunks of %lu Kbytes...", NumLoops, NumBytes >> 10);
+      SEGGER_snprintf(_ac, (int)sizeof(_ac), "Writing %d chunks of %lu KiB...", NumLoops, NumBytes >> 10);
       FS_X_Log(_ac);
       for (i = 0; i < (int)NumLoops ; i++) {
         t = _WriteFile(pFile, _aBuffer, NumBytesAtOnce, NumBlocksMeasure);
@@ -342,7 +351,7 @@ void MainTask(void) {
       // Check read performance.
       //
       _StartTest("R", NumBytes);
-      SEGGER_snprintf(_ac, (int)sizeof(_ac), "Reading %d chunks of %lu Kbytes..." , NumLoops, NumBytes >> 10);
+      SEGGER_snprintf(_ac, (int)sizeof(_ac), "Reading %d chunks of %lu KiB..." , NumLoops, NumBytes >> 10);
       FS_X_Log(_ac);
       pFile = FS_FOpen(acFileName, "r");
       for (i = 0; i < (int)NumLoops; i++) {
@@ -357,7 +366,7 @@ void MainTask(void) {
       // Show results for performance list.
       //
       for (i = 0; i <= _TestNo; i++) {
-        SEGGER_snprintf(_ac, (int)sizeof(_ac), "%s Speed: %d Kbyte/s\n", _aResult[i].sName, (int)_GetAverage(i));
+        SEGGER_snprintf(_ac, (int)sizeof(_ac), "%s Speed: %d KiB/s\n", _aResult[i].sName, (int)_GetAverage(i));
         FS_X_Log(_ac);
       }
     } else {

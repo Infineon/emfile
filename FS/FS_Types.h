@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 ----------------------------------------------------------------------
 File        : FS_Types.h
@@ -104,11 +105,16 @@ extern "C" {     /* Make sure we have C-declarations in C++ programs */
 *
 *       Directory entry get/set macros
 */
-#define FS_DIRENTRY_GET_ATTRIBUTES             0x01
-#define FS_DIRENTRY_GET_TIMESTAMP_CREATE       0x02
-#define FS_DIRENTRY_GET_TIMESTAMP_MODIFY       0x04
-#define FS_DIRENTRY_GET_TIMESTAMP_ACCESS       0x08
-#define FS_DIRENTRY_GET_SIZE                   0x10
+#define FS_DIRENTRY_GET_ATTRIBUTES             0x01uL
+#define FS_DIRENTRY_GET_TIMESTAMP_CREATE       0x02uL
+#define FS_DIRENTRY_GET_TIMESTAMP_MODIFY       0x04uL
+#define FS_DIRENTRY_GET_TIMESTAMP_ACCESS       0x08uL
+#define FS_DIRENTRY_GET_SIZE                   0x10uL
+#define FS_DIRENTRY_GET_ALL                    (FS_DIRENTRY_GET_ATTRIBUTES       | \
+                                                FS_DIRENTRY_GET_TIMESTAMP_CREATE | \
+                                                FS_DIRENTRY_GET_TIMESTAMP_MODIFY | \
+                                                FS_DIRENTRY_GET_TIMESTAMP_ACCESS | \
+                                                FS_DIRENTRY_GET_SIZE)
 #define FS_DIRENTRY_SET_ATTRIBUTES             FS_DIRENTRY_GET_ATTRIBUTES
 #define FS_DIRENTRY_SET_TIMESTAMP_CREATE       FS_DIRENTRY_GET_TIMESTAMP_CREATE
 #define FS_DIRENTRY_SET_TIMESTAMP_MODIFY       FS_DIRENTRY_GET_TIMESTAMP_MODIFY
@@ -134,6 +140,14 @@ extern "C" {     /* Make sure we have C-declarations in C++ programs */
                                                  FS_SECTOR_TYPE_MASK_DIR  | \
                                                  FS_SECTOR_TYPE_MASK_MAN)       // All sector types.
 #define FS_SECTOR_TYPE_COUNT                    3u                              // Number of sector types (for internal use only)
+
+/*********************************************************************
+*
+*       Partitioning
+*/
+#define FS_MAX_NUM_PARTITIONS_MBR               4           // Maximum number of MBR partitions.
+#define FS_MAX_NUM_PARTITIONS_GPT               128         // Maximum number of GPT partitions.
+#define FS_NUM_BYTES_GUID                       16          // Number of bytes in a GUID.
 
 /*********************************************************************
 *
@@ -311,7 +325,6 @@ typedef struct FS_FILE                          FS_FILE;
 typedef struct FS_FILE_OBJ                      FS_FILE_OBJ;
 typedef struct FS_PARTITION                     FS_PARTITION;
 typedef struct FS_VOLUME                        FS_VOLUME;
-typedef struct FS_FORMAT_INFO_EX                FS_FORMAT_INFO_EX;
 typedef struct FS_DIRENTRY_INFO                 FS_DIRENTRY_INFO;
 typedef struct FS_AT_INFO                       FS_AT_INFO;
 typedef struct FS_FILE_API                      FS_FILE_API;

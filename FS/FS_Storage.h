@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 ----------------------------------------------------------------------
 File        : FS_Storage.h
@@ -190,7 +191,7 @@ typedef struct {
 *    This is the type of function that can be registered
 *    via FS_STORAGE_SetOnDeviceActivityCallback()
 */
-typedef void (FS_ON_DEVICE_ACTIVITY_CALLBACK)(FS_DEVICE * pDevice, unsigned Operation, U32 StartSector, U32 NumSectors, int Sectortype);
+typedef void (FS_ON_DEVICE_ACTIVITY_CALLBACK)(FS_DEVICE * pDevice, unsigned Operation, U32 StartSector, U32 NumSectors, int SectorType);
 
 /*********************************************************************
 *
@@ -198,34 +199,47 @@ typedef void (FS_ON_DEVICE_ACTIVITY_CALLBACK)(FS_DEVICE * pDevice, unsigned Oper
 *
 **********************************************************************
 */
-int      FS_STORAGE_Clean                      (const char * sVolumeName);
-int      FS_STORAGE_CleanOne                   (const char * sVolumeName, int * pMoreToClean);
+int         FS_STORAGE_Clean                      (const char * sVolumeName);
+int         FS_STORAGE_CleanOne                   (const char * sVolumeName, int * pMoreToClean);
 #if FS_SUPPORT_DEINIT
-void     FS_STORAGE_DeInit                     (void);
+void        FS_STORAGE_DeInit                     (void);
 #endif // FS_SUPPORT_DEINIT
-int      FS_STORAGE_FreeSectors                (const char * sVolumeName, U32 FirstSector, U32 NumSectors);
-int      FS_STORAGE_GetCleanCnt                (const char * sVolumeName, U32 * pCleanCnt);
+int         FS_STORAGE_FormatLowEx                (FS_VOLUME  * pVolume);
+int         FS_STORAGE_FreeSectors                (const char * sVolumeName, U32 SectorIndex, U32 NumSectors);
+int         FS_STORAGE_GetCleanCnt                (const char * sVolumeName, U32 * pCleanCnt);
 #if FS_STORAGE_ENABLE_STAT_COUNTERS
-void     FS_STORAGE_GetCounters                (FS_STORAGE_COUNTERS * pStat);
+void        FS_STORAGE_GetCounters                (FS_STORAGE_COUNTERS * pStat);
 #endif // FS_STORAGE_ENABLE_STAT_COUNTERS
-int      FS_STORAGE_GetDeviceInfo              (const char * sVolumeName, FS_DEV_INFO * pDeviceInfo);
-int      FS_STORAGE_GetSectorUsage             (const char * sVolumeName, U32 SectorIndex);
-unsigned FS_STORAGE_Init                       (void);
-int      FS_STORAGE_ReadSector                 (const char * sVolumeName,       void * pData, U32 SectorIndex);
-int      FS_STORAGE_ReadSectors                (const char * sVolumeName,       void * pData, U32 FirstSector, U32 NumSectors);
-int      FS_STORAGE_RefreshSectors             (const char * sVolumeName, U32 FirstSector, U32 NumSectors, void * pBuffer, U32 NumBytes);
+int         FS_STORAGE_GetDeviceInfo              (const char * sVolumeName, FS_DEV_INFO * pDeviceInfo);
+int         FS_STORAGE_GetDeviceInfoEx            (FS_VOLUME  * pVolume,     FS_DEV_INFO * pDeviceInfo);
+int         FS_STORAGE_GetSectorUsage             (const char * sVolumeName, U32 SectorIndex);
+int         FS_STORAGE_GetVolumeStatusEx          (FS_VOLUME  * pVolume);
+int         FS_STORAGE_FillSectors                (const char * sVolumeName, const void * pData, U32 SectorIndex, U32 NumSectors);
+int         FS_STORAGE_FillSectorsEx              (FS_VOLUME  * pVolume,     const void * pData, U32 SectorIndex, U32 NumSectors);
+FS_VOLUME * FS_STORAGE_FindVolume                 (const char * sVolumeName);
+unsigned    FS_STORAGE_Init                       (void);
+int         FS_STORAGE_IsLLFormattedEx            (FS_VOLUME  * pVolume);
+int         FS_STORAGE_ReadSector                 (const char * sVolumeName, void * pData, U32 SectorIndex);
+int         FS_STORAGE_ReadSectorEx               (FS_VOLUME  * pVolume,     void * pData, U32 SectorIndex);
+int         FS_STORAGE_ReadSectors                (const char * sVolumeName, void * pData, U32 SectorIndex, U32 NumSectors);
+int         FS_STORAGE_ReadSectorsEx              (FS_VOLUME  * pVolume,     void * pData, U32 SectorIndex, U32 NumSectors);
+int         FS_STORAGE_RefreshSectors             (const char * sVolumeName, U32 SectorIndex, U32 NumSectors, void * pBuffer, U32 NumBytes);
 #if FS_STORAGE_ENABLE_STAT_COUNTERS
-void     FS_STORAGE_ResetCounters              (void);
+void        FS_STORAGE_ResetCounters              (void);
 #endif // FS_STORAGE_ENABLE_STAT_COUNTERS
 #if FS_STORAGE_SUPPORT_DEVICE_ACTIVITY
-void     FS_STORAGE_SetOnDeviceActivityCallback(const char * sVolumeName, FS_ON_DEVICE_ACTIVITY_CALLBACK * pfOnDeviceActivity);
+void        FS_STORAGE_SetOnDeviceActivityCallback(const char * sVolumeName, FS_ON_DEVICE_ACTIVITY_CALLBACK * pfOnDeviceActivity);
 #endif // FS_STORAGE_SUPPORT_DEVICE_ACTIVITY
-void     FS_STORAGE_Sync                       (const char * sVolumeName);
-int      FS_STORAGE_SyncSectors                (const char * sVolumeName, U32 FirstSector, U32 NumSectors);
-void     FS_STORAGE_Unmount                    (const char * sVolumeName);
-void     FS_STORAGE_UnmountForced              (const char * sVolumeName);
-int      FS_STORAGE_WriteSector                (const char * sVolumeName, const void * pData, U32 SectorIndex);
-int      FS_STORAGE_WriteSectors               (const char * sVolumeName, const void * pData, U32 FirstSector, U32 NumSectors);
+void        FS_STORAGE_Sync                       (const char * sVolumeName);
+int         FS_STORAGE_SyncSectors                (const char * sVolumeName, U32 SectorIndex, U32 NumSectors);
+void        FS_STORAGE_Unmount                    (const char * sVolumeName);
+void        FS_STORAGE_UnmountEx                  (FS_VOLUME  * pVolume);
+void        FS_STORAGE_UnmountForced              (const char * sVolumeName);
+void        FS_STORAGE_UnmountForcedEx            (FS_VOLUME  * pVolume);
+int         FS_STORAGE_WriteSector                (const char * sVolumeName, const void * pData, U32 SectorIndex);
+int         FS_STORAGE_WriteSectorEx              (FS_VOLUME  * pVolume,     const void * pData, U32 SectorIndex);
+int         FS_STORAGE_WriteSectors               (const char * sVolumeName, const void * pData, U32 SectorIndex, U32 NumSectors);
+int         FS_STORAGE_WriteSectorsEx             (FS_VOLUME  * pVolume,     const void * pData, U32 SectorIndex, U32 NumSectors);
 
 /*********************************************************************
 *

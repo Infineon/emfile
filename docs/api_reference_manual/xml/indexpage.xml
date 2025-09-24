@@ -1,0 +1,645 @@
+<?xml version='1.0' encoding='UTF-8' standalone='no'?>
+<doxygen xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="compound.xsd" version="1.9.2" xml:lang="en-US">
+  <compounddef id="indexpage" kind="page">
+    <compoundname>index</compoundname>
+    <title>SEGGER emFile for ModusToolbox User Guide</title>
+    <briefdescription>
+    </briefdescription>
+    <detaileddescription>
+<sect1 id="index_1section_general">
+<title>General Description</title>
+<para><ulink url="https://www.segger.com/products/file-system/emfile">emFile</ulink> is a fail-safe filesystem designed for embedded systems by SEGGER Microcontroller GmbH that can be used with different types of storage devices. It is a high-performance library optimized for high speed, versatility, and a minimal memory footprint of both RAM and ROM. Infineon has licensed emFile from SEGGER and offers it for free to its customers. This middleware library provides emFile in the form of pre-built libraries and supports FAT 12/16/32 file systems.</para>
+</sect1>
+<sect1 id="index_1section_quick_start">
+<title>Quick Start</title>
+<para>The Quick Start Guide section has simple examples for the NOR flash and Memory Card Device drivers. Examples are used to initialize the file system on the target memory, demonstrate the creation/opening file, and update its content.</para>
+<sect2 id="index_1section_qsg_project_creation">
+<title>Project creation</title>
+<para><orderedlist>
+<listitem><para>Create an empty application using the Project Creator tool in the ModusToolbox<trademark/> software.</para>
+</listitem><listitem><para>Add the <ulink url="https://github.com/Infineon/emfile">emfile</ulink> and <ulink url="https://github.com/Infineon/retarget-io">retarget-io</ulink> libraries using the Library Manager.</para>
+</listitem><listitem><para>To run an example in the RTOS-environment, add the <ulink url="https://github.com/Infineon/freertos">FreeRTOS</ulink> library using the Library Manager. Then, add <emphasis>RTOS_AWARE</emphasis> and <emphasis>FREERTOS</emphasis> to the Makefile COMPONENTS variable. <programlisting><codeline><highlight class="normal">COMPONENTS<sp/>+=<sp/>RTOS_AWARE<sp/>FREERTOS<sp/></highlight></codeline>
+</programlisting> <simplesect kind="note"><para>In the RTOS environment, select Active mode for System Idle Power Mode in Power personality (System Tab).</para>
+</simplesect>
+<emphasis>The next steps are applicable only for the NOR flash driver</emphasis></para>
+</listitem><listitem><para>To use the same storage for code execution and File System, do additional steps. Refer to the <ref refid="index_1section_nor_driver_xip" kindref="member">XIP support</ref> section.</para>
+</listitem></orderedlist>
+</para>
+</sect2>
+<sect2 id="index_1section_qsg_project_dev_conf">
+<title>HW Configuration in Device Configurator</title>
+<para>All HW resources used in this QSG must be configured in the Device Configurator:<itemizedlist>
+<listitem><para>UART for logging</para>
+</listitem><listitem><para>One pin to check the button status</para>
+</listitem><listitem><para>Memory Card Device HW - SDHC</para>
+</listitem><listitem><para>NOR flash HW - SMIF</para>
+</listitem></itemizedlist>
+</para>
+<para>If a different alias name is selected instead of the expected resources name in the Device Configurator, the code snippets must be updated.</para>
+<para><table rows="5" cols="2"><row>
+<entry thead="yes"><para>Resource</para>
+</entry><entry thead="yes"><para>Name </para>
+</entry></row>
+<row>
+<entry thead="no"><para>Quad Serial Memory Interface </para>
+</entry><entry thead="no"><para>SMIF_EMFILE  </para>
+</entry></row>
+<row>
+<entry thead="no"><para>SD Host Controller </para>
+</entry><entry thead="no"><para>SDHC_EMFILE  </para>
+</entry></row>
+<row>
+<entry thead="no"><para>Serial Communication Block (for debug UART) </para>
+</entry><entry thead="no"><para>DEBUG_UART  </para>
+</entry></row>
+<row>
+<entry thead="no"><para>Pin </para>
+</entry><entry thead="no"><para>CYBSP_USER_BTN  </para>
+</entry></row>
+</table>
+</para>
+<para><emphasis>Recommended Memory Card Device configuration</emphasis> <image type="html" name="emfile_sd_card_cat1d.png"></image>
+</para>
+<para><emphasis>Recommended SMIF configuration</emphasis> <image type="html" name="emfile_smif_cat1d.png"></image>
+</para>
+<para><emphasis>Recommended Debug UART</emphasis> <image type="html" name="emfile_debug_uart_part1_cat1d.png"></image>
+ <image type="html" name="emfile_debug_uart_part2_cat1d.png"></image>
+</para>
+<para><emphasis>Recommended Button Pin configuration</emphasis> <image type="html" name="emfile_user_btn_cat1d.png"></image>
+</para>
+</sect2>
+<sect2 id="index_1section_qsg_main">
+<title>Add emFile logic to main.c</title>
+<para><bold>Specific steps for SPI flash driver configuration</bold><orderedlist>
+<listitem><para>Include the required headers. <programlisting filename="COMPONENT_EMFILE_NOR_FLASH/hw_nor_config.c"><codeline><highlight class="preprocessor">#include<sp/>&quot;mtb_hal_memoryspi.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;cy_sysint.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;cy_smif.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add global variables. <programlisting filename="COMPONENT_EMFILE_NOR_FLASH/hw_nor_config.c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/>mtb_hal_memoryspi_t<sp/>*<sp/>memspi_obj_ptr;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>cy_stc_smif_context_t<sp/>memspi_context;</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>AAdd the interrupt handler for NOR flash HW. <programlisting filename="COMPONENT_EMFILE_NOR_FLASH/hw_nor_config.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>nor_isr(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>mtb_hal_memoryspi_process_interrupt(memspi_obj_ptr);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the function for initialization NOR flash HW. <programlisting filename="COMPONENT_EMFILE_NOR_FLASH/hw_nor_config.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>FS_NOR_HW_SPIFI_ConfigureHw(mtb_hal_memoryspi_t<sp/>*<sp/>memspi_obj)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_rslt_t<sp/>hal_status;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_en_smif_status_t<sp/>pdl_smif_status;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_en_sysint_status_t<sp/><sp/>pdl_sysint_status;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>memspi_obj_ptr<sp/>=<sp/>memspi_obj;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pdl_smif_status<sp/>=<sp/>Cy_SMIF_Init(SMIF_EMFILE_HW,<sp/>SMIF_EMFILE_hal_config.config,<sp/>10000UL,<sp/>&amp;memspi_context);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_RSLT_SUCCESS<sp/>!=<sp/>pdl_smif_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Cy_SMIF_Init<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>HAL<sp/>setup<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>hal_status<sp/>=<sp/>mtb_hal_memoryspi_setup(memspi_obj_ptr,<sp/>&amp;SMIF_EMFILE_hal_config,<sp/>&amp;memspi_context);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_RSLT_SUCCESS<sp/>!=<sp/>hal_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;mtb_hal_memoryspi_setup<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_stc_sysint_t<sp/>nor_isr_config<sp/>=</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>.intrSrc<sp/>=<sp/>SMIF_EMFILE_IRQ,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>.intrPriority<sp/>=<sp/>3U</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pdl_sysint_status<sp/>=<sp/>Cy_SysInt_Init(&amp;nor_isr_config,<sp/>nor_isr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_SYSINT_SUCCESS<sp/>!=<sp/>pdl_sysint_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Cy_SysInt_Init<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>NVIC_EnableIRQ((IRQn_Type)<sp/>nor_isr_config.intrSrc);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>Cy_SMIF_SetDataSelect(SMIF_EMFILE_HW,<sp/>(memspi_obj_ptr-&gt;chip_select),<sp/>CY_SMIF_DATA_SEL0);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>Cy_SMIF_Enable(SMIF_EMFILE_HW,<sp/>memspi_obj_ptr-&gt;context);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add <emphasis>EMFILE_NOR_FLASH</emphasis> to COMPONENTS variable in the Makefile. <programlisting><codeline><highlight class="normal">COMPONENTS<sp/>+=<sp/>EMFILE_NOR_FLASH<sp/></highlight></codeline>
+</programlisting></para>
+</listitem></orderedlist>
+</para>
+<para><bold>Specific steps for the Memory Card Device driver configuration</bold><orderedlist>
+<listitem><para>Include the required headers. <programlisting filename="COMPONENT_EMFILE_SD_CARD/hw_sd_card_config.c"><codeline><highlight class="preprocessor">#include<sp/>&quot;mtb_hal_sdhc.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;cy_sd_host.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;cy_sysint.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add global variables. <programlisting filename="COMPONENT_EMFILE_SD_CARD/hw_sd_card_config.c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/>mtb_hal_sdhc_t<sp/>*<sp/>sdhc_obj_ptr;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>cy_stc_sd_host_context_t<sp/>sdhc_host_context;</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the interrupt handler for Memory Card Device HW. <programlisting filename="COMPONENT_EMFILE_SD_CARD/hw_sd_card_config.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>sd_card_isr(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>mtb_hal_sdhc_process_interrupt(sdhc_obj_ptr);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the Cy_SD_Host_IsCardConnected() function <programlisting filename="COMPONENT_EMFILE_SD_CARD/hw_sd_card_config.c"><codeline><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>Cy_SD_Host_IsCardConnected(SDHC_Type<sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/>*base)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>(void)<sp/>base;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">return</highlight><highlight class="normal"><sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the function for the Memory Card Device HW initialization. <programlisting filename="COMPONENT_EMFILE_SD_CARD/hw_sd_card_config.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>FS_MMC_HW_CM_ConfigureHw(mtb_hal_sdhc_t<sp/>*<sp/>sdhc_obj)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_rslt_t<sp/>hal_status;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_en_sd_host_status_t<sp/>pdl_sdhc_status;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_en_sysint_status_t<sp/><sp/>pdl_sysint_status;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>sdhc_obj_ptr<sp/>=<sp/>sdhc_obj;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>The<sp/>SD<sp/>Card<sp/>should<sp/>be<sp/>enabled<sp/>before<sp/>calling<sp/>any<sp/>other<sp/>SD<sp/>Card<sp/>APIs<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>Cy_SD_Host_Enable(SDHC_EMFILE_HW);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pdl_sdhc_status<sp/>=<sp/>Cy_SD_Host_Init(SDHC_EMFILE_HW,<sp/>&amp;SDHC_EMFILE_config,<sp/>&amp;sdhc_host_context);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_SD_HOST_SUCCESS<sp/>!=<sp/>pdl_sdhc_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Cy_SD_Host_Init<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pdl_sdhc_status<sp/>=<sp/>Cy_SD_Host_InitCard(SDHC_EMFILE_HW,<sp/>&amp;SDHC_EMFILE_card_cfg,<sp/>&amp;sdhc_host_context);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_SD_HOST_SUCCESS<sp/>!=<sp/>pdl_sdhc_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Cy_SD_Host_InitCard<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>hal_status<sp/>=<sp/>mtb_hal_sdhc_setup(sdhc_obj_ptr,<sp/>&amp;SDHC_EMFILE_sdhc_hal_config,<sp/>NULL,<sp/>&amp;sdhc_host_context);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_RSLT_SUCCESS<sp/>!=<sp/>hal_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;mtb_hal_sdhc_setup<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_stc_sysint_t<sp/>sdhc_isr_config<sp/>=</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>.intrSrc<sp/>=<sp/>SDHC_EMFILE_IRQ,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>.intrPriority<sp/>=<sp/>3U</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pdl_sysint_status<sp/>=<sp/>Cy_SysInt_Init(&amp;sdhc_isr_config,<sp/>sd_card_isr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_SYSINT_SUCCESS<sp/>!=<sp/>pdl_sysint_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Cy_SysInt_Init<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>NVIC_EnableIRQ((IRQn_Type)<sp/>sdhc_isr_config.intrSrc);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add <emphasis>EMFILE_SD_CARD</emphasis> to COMPONENTS variable in the Makefile. <programlisting><codeline><highlight class="normal">COMPONENTS<sp/>+=<sp/>EMFILE_SD_CARD<sp/></highlight></codeline>
+</programlisting></para>
+</listitem></orderedlist>
+</para>
+<para><bold>Common code</bold><orderedlist>
+<listitem><para>Include the required headers. <programlisting filename="main.c"><codeline><highlight class="preprocessor">#include<sp/>&quot;cybsp.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;cy_retarget_io.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;mtb_hal_gpio.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;mtb_hal_system.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;FS.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;string.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&lt;inttypes.h&gt;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined(COMPONENT_RTOS_AWARE)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="comment">/*<sp/>FreeRTOS<sp/>headers<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;FreeRTOS.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#include<sp/>&quot;task.h&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined(COMPONENT_RTOS_AWARE)<sp/>*/</highlight><highlight class="preprocessor"></highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the common define to the project. <programlisting filename="main.c"><codeline><highlight class="comment">/*<sp/>Last<sp/>byte<sp/>in<sp/>the<sp/>buffer<sp/>is<sp/>used<sp/>for<sp/>terminating<sp/>the<sp/>string<sp/>using<sp/>a<sp/>NULL</highlight></codeline>
+<codeline><highlight class="comment"><sp/>*<sp/>character.<sp/>Therefore,<sp/>the<sp/>number<sp/>of<sp/>bytes<sp/>read<sp/>from<sp/>the<sp/>file<sp/>is<sp/>one<sp/>less<sp/>than</highlight></codeline>
+<codeline><highlight class="comment"><sp/>*<sp/>the<sp/>value<sp/>of<sp/>the<sp/>macro.</highlight></codeline>
+<codeline><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>NUM_BYTES_TO_READ_FROM_FILE<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(256U)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>STRING_TO_WRITE<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;This<sp/>is<sp/>an<sp/>emFile<sp/>filesystem<sp/>example<sp/>for<sp/>ModusToolbox.&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>FILE_NAME<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>&quot;File.txt&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined(COMPONENT_RTOS_AWARE)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>EMFILE_TASK_STACK_SIZE<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(512U)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined(COMPONENT_RTOS_AWARE)<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Debounce<sp/>delay<sp/>for<sp/>the<sp/>user<sp/>button.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#define<sp/>DEBOUNCE_DELAY_MS<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(50U)</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add common global variables. <programlisting filename="main.c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>fileData[NUM_BYTES_TO_READ_FROM_FILE];</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>mtb_hal_gpio_t<sp/>button_obj;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined(COMPONENT_RTOS_AWARE)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>TaskHandle_t<sp/>emfile_task_handle;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">bool</highlight><highlight class="normal"><sp/>button_press<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined(COMPONENT_RTOS_AWARE)<sp/>*/</highlight><highlight class="preprocessor"></highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the function prototypes. <programlisting filename="main.c"><codeline><highlight class="comment">/*<sp/>Callback<sp/>function<sp/>prototype<sp/>for<sp/>user<sp/>button,<sp/>required<sp/>by</highlight></codeline>
+<codeline><highlight class="comment"><sp/>*<sp/>user_button_callback_data<sp/>structure</highlight></codeline>
+<codeline><highlight class="comment"><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>user_button_callback(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*handler_arg,<sp/>mtb_hal_gpio_event_t<sp/>event);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>check_error(</highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*message,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>btn_init(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="comment">/*<sp/>Implemented<sp/>in<sp/>separate<sp/>file<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>retarget_io_init(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">);</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the emFile task function. <programlisting filename="main.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>emfile_task(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">*<sp/>arg)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>U32<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>varU32;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>U32<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>numBytesToRead;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>FS_FILE<sp/><sp/><sp/><sp/>*filePtr;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">const</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*volumeName<sp/>=<sp/></highlight><highlight class="stringliteral">&quot;&quot;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>(void)<sp/>arg;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Initialize<sp/>button<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>btn_init();</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined<sp/>(COMPONENT_EMFILE_NOR_FLASH)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Using<sp/>NOR<sp/>flash<sp/>as<sp/>storage<sp/>device\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#else<sp/></highlight><highlight class="comment">/*<sp/>COMPONENT_EMFILE_SD_CARD<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Using<sp/>SD<sp/>card<sp/>as<sp/>storage<sp/>device\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined<sp/>(COMPONENT_EMFILE_NOR_FLASH)<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Initialize<sp/>the<sp/>file<sp/>system.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>FS_Init();</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined<sp/>(COMPONENT_EMFILE_NOR_FLASH)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Check<sp/>if<sp/>low-level<sp/>format<sp/>is<sp/>required.<sp/>Applicable<sp/>only<sp/>for<sp/>NOR<sp/>flash.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_FormatLLIfRequired(volumeName);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>low-level<sp/>formatting&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined<sp/>(COMPONENT_EMFILE_NOR_FLASH)<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Check<sp/>if<sp/>volume<sp/>needs<sp/>to<sp/>be<sp/>high-level<sp/>formatted.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_IsHLFormatted(volumeName);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>checking<sp/>if<sp/>volume<sp/>is<sp/>high-level<sp/>formatted&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Return<sp/>value<sp/>of<sp/>0<sp/>indicates<sp/>that<sp/>high-level<sp/>format<sp/>is<sp/>required.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(error<sp/>==<sp/>0)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Perform<sp/>high-level<sp/>format\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_Format(volumeName,<sp/>NULL);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>high-level<sp/>formatting&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>varU32<sp/>=<sp/>FS_GetVolumeSizeKB(volumeName);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Volume<sp/>size:<sp/>%&quot;</highlight><highlight class="normal">PRIu32</highlight><highlight class="stringliteral">&quot;<sp/>KB\n\n&quot;</highlight><highlight class="normal">,<sp/>varU32);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(0U<sp/>==<sp/>varU32)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>checking<sp/>the<sp/>volume<sp/>size\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0U);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Opening<sp/>the<sp/>file<sp/>for<sp/>reading...\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Open<sp/>the<sp/>file<sp/>for<sp/>reading.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>filePtr<sp/>=<sp/>FS_FOpen(FILE_NAME,<sp/></highlight><highlight class="stringliteral">&quot;r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(filePtr<sp/>!=<sp/>NULL)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Last<sp/>byte<sp/>is<sp/>for<sp/>storing<sp/>the<sp/>NULL<sp/>character.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>numBytesToRead<sp/>=<sp/></highlight><highlight class="keyword">sizeof</highlight><highlight class="normal">(fileData)<sp/>-<sp/>1U;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>varU32<sp/>=<sp/>FS_GetFileSize(filePtr);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(varU32<sp/>&lt;<sp/>numBytesToRead)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>numBytesToRead<sp/>=<sp/>varU32;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Reading<sp/>%&quot;</highlight><highlight class="normal">PRIu32</highlight><highlight class="stringliteral">&quot;<sp/>bytes<sp/>from<sp/>the<sp/>file.<sp/>&quot;</highlight><highlight class="normal">,<sp/>numBytesToRead);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>varU32<sp/>=<sp/>FS_Read(filePtr,<sp/>fileData,<sp/>numBytesToRead);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(varU32<sp/>!=<sp/>numBytesToRead)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_FError(filePtr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>reading<sp/>from<sp/>the<sp/>file&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Terminate<sp/>the<sp/>string<sp/>using<sp/>NULL.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>fileData[numBytesToRead]<sp/>=<sp/></highlight><highlight class="charliteral">&apos;\0&apos;</highlight><highlight class="normal">;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Display<sp/>the<sp/>file<sp/>content.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;File<sp/>Content:\n\&quot;%s\&quot;\n&quot;</highlight><highlight class="normal">,<sp/>fileData);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_FClose(filePtr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>closing<sp/>the<sp/>file&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nOpening<sp/>the<sp/>file<sp/>for<sp/>overwriting...\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Unable<sp/>to<sp/>read.<sp/>File<sp/>not<sp/>found.\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nOpening<sp/>the<sp/>file<sp/>for<sp/>writing...\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Mode<sp/>&apos;w&apos;<sp/>truncates<sp/>the<sp/>file<sp/>size<sp/>to<sp/>zero<sp/>if<sp/>the<sp/>file<sp/>exists<sp/>otherwise</highlight></codeline>
+<codeline><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>*<sp/>creates<sp/>a<sp/>new<sp/>file.</highlight></codeline>
+<codeline><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>filePtr<sp/>=<sp/>FS_FOpen(FILE_NAME,<sp/></highlight><highlight class="stringliteral">&quot;w&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(filePtr<sp/>!=<sp/>NULL)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>varU32<sp/>=<sp/>FS_Write(filePtr,<sp/>STRING_TO_WRITE,<sp/>strlen(STRING_TO_WRITE));</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(varU32<sp/>!=<sp/>strlen(STRING_TO_WRITE))</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_FError(filePtr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>writing<sp/>to<sp/>the<sp/>file&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;File<sp/>is<sp/>written<sp/>with<sp/>the<sp/>following<sp/>message:\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\&quot;%s\&quot;\n\n&quot;</highlight><highlight class="normal">,<sp/>STRING_TO_WRITE);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_FClose(filePtr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>closing<sp/>the<sp/>file&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Enable<sp/>the<sp/>user<sp/>button<sp/>interrupt<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>mtb_hal_gpio_enable_event(&amp;button_obj,<sp/>MTB_HAL_GPIO_IRQ_FALL,<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nPress<sp/>the<sp/>user<sp/>button<sp/>to<sp/>delete<sp/>the<sp/>file<sp/>or<sp/>press<sp/>reset<sp/>to<sp/>run<sp/>the<sp/>example<sp/>again.\n\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Wait<sp/>until<sp/>the<sp/>user<sp/>button<sp/>press<sp/>is<sp/>notified<sp/>through<sp/>the<sp/>interrupt<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal"><sp/>(</highlight><highlight class="keyword">true</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined<sp/>(COMPONENT_RTOS_AWARE)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(1UL<sp/>==<sp/>ulTaskNotifyTake(pdTRUE,<sp/>portMAX_DELAY))</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(button_press)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>button_press<sp/>=<sp/></highlight><highlight class="keyword">false</highlight><highlight class="normal">;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined<sp/>(COMPONENT_RTOS_AWARE)<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>cy_rslt_t<sp/>result;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Debounce<sp/>the<sp/>button<sp/>press.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>result<sp/>=<sp/>mtb_hal_system_delay_ms(DEBOUNCE_DELAY_MS);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(CY_RSLT_SUCCESS<sp/>!=<sp/>result);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>(void)<sp/>result;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal">(!mtb_hal_gpio_read(&amp;button_obj))<sp/>{<sp/></highlight><highlight class="keywordflow">break</highlight><highlight class="normal">;<sp/>}</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Deleting<sp/>the<sp/>file...<sp/>\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>User<sp/>button<sp/>is<sp/>pressed.<sp/>Delete<sp/>the<sp/>file.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>error<sp/>=<sp/>FS_Remove(FILE_NAME);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>check_error(</highlight><highlight class="stringliteral">&quot;Error<sp/>in<sp/>deleting<sp/>the<sp/>file&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>FS_Unmount(volumeName);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Filesystem<sp/>operations<sp/>completed<sp/>successfully!\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Press<sp/>reset<sp/>to<sp/>the<sp/>run<sp/>the<sp/>example<sp/>again.\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">else</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Unable<sp/>to<sp/>open<sp/>the<sp/>file<sp/>for<sp/>writing!<sp/>Exiting...\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">for</highlight><highlight class="normal">(;;)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the check error function. <programlisting filename="main.c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>check_error(</highlight><highlight class="keywordtype">char</highlight><highlight class="normal"><sp/>*message,<sp/></highlight><highlight class="keywordtype">int</highlight><highlight class="normal"><sp/>error)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(error<sp/>&lt;<sp/>0)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\n================================================================================\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\nFAIL:<sp/>%s\n&quot;</highlight><highlight class="normal">,<sp/>message);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Error<sp/>Value:<sp/>%d\n&quot;</highlight><highlight class="normal">,<sp/>error);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;emFile-defined<sp/>Error<sp/>Message:<sp/>%s&quot;</highlight><highlight class="normal">,<sp/>FS_ErrorNo2Text(error));</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\n================================================================================\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">while</highlight><highlight class="normal">(</highlight><highlight class="keyword">true</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the callback function for the user button. <programlisting filename="main.c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>user_button_callback(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>*handler_arg,<sp/>mtb_hal_gpio_event_t<sp/>event)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>(void)<sp/>handler_arg;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>(void)<sp/>event;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined(COMPONENT_RTOS_AWARE)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>BaseType_t<sp/>higher_priority_task_woken<sp/>=<sp/>pdFALSE;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>vTaskNotifyGiveFromISR(emfile_task_handle,<sp/>&amp;higher_priority_task_woken);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Yield<sp/>if<sp/>xHigherPriorityTaskWoken<sp/>was<sp/>set<sp/>to<sp/>true<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>portYIELD_FROM_ISR(higher_priority_task_woken);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>button_press<sp/>=<sp/></highlight><highlight class="keyword">true</highlight><highlight class="normal">;</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined(COMPONENT_RTOS_AWARE)<sp/>*/</highlight><highlight class="preprocessor"></highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the interrupt handler for the user button. <programlisting filename="main.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>btn_isr(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>mtb_hal_gpio_process_interrupt(&amp;button_obj);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Add the function for the initialization user button. <programlisting filename="main.c"><codeline><highlight class="keyword">static</highlight><highlight class="normal"><sp/></highlight><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>btn_init(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_en_sysint_status_t<sp/><sp/>pdl_sysint_status;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Initialize<sp/>the<sp/>user<sp/>button<sp/>used<sp/>for<sp/>erasing<sp/>the<sp/>block<sp/>device.<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>mtb_hal_gpio_setup(&amp;button_obj,<sp/>CYBSP_USER_BTN_PORT_NUM,<sp/>CYBSP_USER_BTN_PIN);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>mtb_hal_gpio_configure(&amp;button_obj,<sp/>MTB_HAL_GPIO_DIR_INPUT,<sp/>MTB_HAL_GPIO_DRIVE_PULLUP);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Configure<sp/>&amp;<sp/>the<sp/>user<sp/>button<sp/>interrupt<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>mtb_hal_gpio_register_callback(&amp;button_obj,<sp/>user_button_callback,<sp/>NULL);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Configure<sp/>interrupt<sp/>for<sp/>button<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_stc_sysint_t<sp/>btn_isr_config<sp/>=</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>.intrSrc<sp/>=<sp/>CYBSP_USER_BTN_IRQ,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>.intrPriority<sp/>=<sp/>3U</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>};</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>pdl_sysint_status<sp/>=<sp/>Cy_SysInt_Init(&amp;btn_isr_config,<sp/>btn_isr);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(CY_SYSINT_SUCCESS<sp/>!=<sp/>pdl_sysint_status)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Cy_SysInt_Init<sp/>returns<sp/>error<sp/>status\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>NVIC_EnableIRQ((IRQn_Type)<sp/>btn_isr_config.intrSrc);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem><listitem><para>Update main.c. <programlisting filename="main.c"><codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Initialize<sp/>retarget-io<sp/>to<sp/>use<sp/>the<sp/>debug<sp/>UART<sp/>port<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>retarget_io_init();</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;*************<sp/>&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&quot;emFile<sp/>FAT<sp/>Filesystem&quot;</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/></highlight><highlight class="stringliteral">&quot;*************<sp/>\n\n&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#if<sp/>defined<sp/>(COMPONENT_RTOS_AWARE)</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Create<sp/>the<sp/>user<sp/>tasks.<sp/>See<sp/>the<sp/>respective<sp/>task<sp/>definition<sp/>for<sp/>more</highlight></codeline>
+<codeline><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>*<sp/>details<sp/>of<sp/>these<sp/>tasks.</highlight></codeline>
+<codeline><highlight class="comment"><sp/><sp/><sp/><sp/><sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>xTaskCreate(emfile_task,<sp/></highlight><highlight class="stringliteral">&quot;emFile<sp/>Task&quot;</highlight><highlight class="normal">,<sp/>EMFILE_TASK_STACK_SIZE,</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>NULL,<sp/>(configMAX_PRIORITIES<sp/>-<sp/>1),<sp/>&amp;emfile_task_handle);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>Start<sp/>the<sp/>RTOS<sp/>scheduler.<sp/>This<sp/>function<sp/>should<sp/>never<sp/>return<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>vTaskStartScheduler();</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#else</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>emfile_task(NULL);</highlight></codeline>
+<codeline><highlight class="normal"></highlight><highlight class="preprocessor">#endif<sp/></highlight><highlight class="comment">/*<sp/>#if<sp/>defined<sp/>(COMPONENT_RTOS_AWARE)<sp/>*/</highlight><highlight class="preprocessor"></highlight></codeline>
+</programlisting></para>
+</listitem></orderedlist>
+</para>
+<para><bold>retarget-io configuration</bold><orderedlist>
+<listitem><para>Add the retarget-io configuration function. <programlisting filename="test_retarget_io.c"><codeline><highlight class="keywordtype">void</highlight><highlight class="normal"><sp/>retarget_io_init(</highlight><highlight class="keywordtype">void</highlight><highlight class="normal">)</highlight></codeline>
+<codeline><highlight class="normal">{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>cy_rslt_t<sp/>result;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>cy_stc_scb_uart_context_t<sp/><sp/>DEBUG_UART_context;</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keyword">static</highlight><highlight class="normal"><sp/>mtb_hal_uart_t<sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>DEBUG_UART_hal_obj;</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>result<sp/>=<sp/>(cy_rslt_t)Cy_SCB_UART_Init(DEBUG_UART_HW,<sp/>&amp;DEBUG_UART_config,<sp/>&amp;DEBUG_UART_context);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(result<sp/>!=<sp/>CY_RSLT_SUCCESS)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>Cy_SCB_UART_Enable(DEBUG_UART_HW);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>result<sp/>=<sp/>mtb_hal_uart_setup(&amp;DEBUG_UART_hal_obj,<sp/>&amp;DEBUG_UART_hal_config,<sp/>&amp;DEBUG_UART_context,<sp/>NULL);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(result<sp/>!=<sp/>CY_RSLT_SUCCESS)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>result<sp/>=<sp/>cy_retarget_io_init(&amp;DEBUG_UART_hal_obj);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="keywordflow">if</highlight><highlight class="normal"><sp/>(result<sp/>!=<sp/>CY_RSLT_SUCCESS)</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>{</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/><sp/><sp/><sp/><sp/>CY_ASSERT(0);</highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>}</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/></highlight><highlight class="comment">/*<sp/>\x1b[2J\x1b[;H<sp/>-<sp/>ANSI<sp/>ESC<sp/>sequence<sp/>for<sp/>clear<sp/>screen<sp/>*/</highlight><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;\x1b[2J\x1b[;H&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal"></highlight></codeline>
+<codeline><highlight class="normal"><sp/><sp/><sp/><sp/>printf(</highlight><highlight class="stringliteral">&quot;Retarget-io<sp/>is<sp/>configured\n\r&quot;</highlight><highlight class="normal">);</highlight></codeline>
+<codeline><highlight class="normal">}</highlight></codeline>
+</programlisting></para>
+</listitem></orderedlist>
+</para>
+</sect2>
+<sect2 id="index_1section_qsg_project_execution">
+<title>Project execution</title>
+<para><orderedlist>
+<listitem><para>Open a serial terminal. Set the serial port parameters to 8N1 and 115200 baud.</para>
+</listitem><listitem><para>Build and program the project.</para>
+</listitem><listitem><para>If the previous steps were correct, the logs will appear in the serial terminal.</para>
+</listitem><listitem><para>This example initializes the emfile file system on the target memory device. Create a file and write data to this file. Click the user button, to delete the file.</para>
+</listitem></orderedlist>
+</para>
+</sect2>
+</sect1>
+<sect1 id="index_1section_config_cons">
+<title>Configuration Considerations</title>
+<sect2 id="index_1section_pick_lib">
+<title>Picking an emFile Library Variant</title>
+<para>The Middleware provides emFile as pre-build libraries. The pre-build libraries are selected automatically based on configurations of Makefile configurations. The table below shows the availability of the configuration options.</para>
+<para><table rows="5" cols="3"><row>
+<entry thead="yes"><para>Configuration</para>
+</entry><entry thead="yes"><para>Options</para>
+</entry><entry thead="yes"><para>Make Variable </para>
+</entry></row>
+<row>
+<entry thead="no"><para>FAT32/FAT16/FAT12 support </para>
+</entry><entry thead="no"><para><computeroutput>EMFILE_FAT32</computeroutput>, <computeroutput>EMFILE_FAT16</computeroutput> </para>
+</entry><entry thead="no"><para><computeroutput>COMPONENTS</computeroutput>  </para>
+</entry></row>
+<row>
+<entry thead="no"><para>Core </para>
+</entry><entry thead="no"><para><computeroutput>CM4</computeroutput>, <computeroutput>CM33</computeroutput>, <computeroutput>CM55</computeroutput> </para>
+</entry><entry thead="no"><para><computeroutput>CORE</computeroutput>  </para>
+</entry></row>
+<row>
+<entry thead="no"><para>Floating point </para>
+</entry><entry thead="no"><para><computeroutput>HARDFP</computeroutput>, <computeroutput>SOFTFP</computeroutput> </para>
+</entry><entry thead="no"><para><computeroutput>VFP_SELECT</computeroutput>  </para>
+</entry></row>
+<row>
+<entry thead="no"><para>Toolchain </para>
+</entry><entry thead="no"><para><computeroutput>GCC_ARM</computeroutput>, <computeroutput>IAR</computeroutput>, <computeroutput>ARM</computeroutput>, <computeroutput>LLVM_ARM</computeroutput> </para>
+</entry><entry thead="no"><para><computeroutput>TOOLCHAIN</computeroutput>  </para>
+</entry></row>
+</table>
+</para>
+<para><simplesect kind="note"><para>FAT16 option support both FAT16 and FAT12</para>
+</simplesect>
+</para>
+</sect2>
+<sect2 id="index_1section_rtos">
+<title>Using emFile in an RTOS Environment</title>
+<para>The OS layer and the HW layer implementations use the <ulink url="https://github.com/Infineon/abstraction-rtos">abstraction-rtos</ulink> library for implementing RTOS functionalities. Therefore, emFile can be used with the RTOSes supported by the abstraction-rtos library. Do the following to configure your application for using emFile with FreeRTOS.</para>
+</sect2>
+<sect2 id="index_1section_nor_driver">
+<title>Configuring the HW Layer for the Block Map NOR Driver (NOR_BM)</title>
+<para>Configure the HW layer for the Block Map NOR driver in <computeroutput>FS_X_AddDevices()</computeroutput> before adding the driver using <computeroutput>FS_AddDevice()</computeroutput>. A configuration example is present in the import folder of your application or in export/config folder in the emFile middleware. To use this template file, add the <emphasis>EMFILE_NOR_FLASH</emphasis> value to the <emphasis>COMPONENTS</emphasis> variable in the Makefile.</para>
+<para>The template file has the weak FS_NOR_HW_SPIFI_ConfigureHw() function to be implemented in the user application. The HW configuration of the used peripheral must be done in this function. An HW configuration example can be found in in Quick Start Guide.</para>
+<para><simplesect kind="note"><para>The NOR HW layer supports up to four memories using four slave select pins but all the memories need to be connected to the same data lines.</para>
+</simplesect>
+</para>
+<sect3 id="index_1section_nor_driver_xip">
+<title>XIP support</title>
+<para>Enable the XIP support to use the same non-volatile memory for code execution and emFile.</para>
+<para>To enable the XIP support:<orderedlist>
+<listitem><para>Add ENABLE_XIP_EMFILE_ON_SAME_NOR_FLASH to the define variable in Makefile.</para>
+</listitem><listitem><para>Update the linker script: Put FS_NOR_HW_SPIFI.o and FS_ConfigNOR_BM_SPIFI.o to the memory space, which is not located on the target memory for emFile and the memory, which is not connected to the same SMIF instance. These files can be also located in SRAM. Ensure that SysLib, SMIF, and Memory SPI drivers source files are also in the same sections.</para>
+</listitem><listitem><para>Implement the functions, which block code execution until the non-volatile memory operation completes. This function example is in the FS_ConfigNOR_BM_SPIFI.c file.</para>
+</listitem><listitem><para>Provide the buffers to store data for logic sectors and parameters in SRAM.</para>
+</listitem></orderedlist>
+</para>
+<para>The XIP support limit some of the functionalities:<itemizedlist>
+<listitem><para>In RTOS-environment, asynchronous read/write operations with memory are not supported</para>
+</listitem><listitem><para>The emFile enters the critical section (Disable all interrupts) when any read/write/erase operations are started and exits after their completion. <simplesect kind="note"><para>If the XIP support is enabled on a multi-core system and other cores use the same memory for code execution, the other cores may not have access to the memory during the write/erase operations.</para>
+</simplesect>
+</para>
+</listitem></itemizedlist>
+</para>
+</sect3>
+</sect2>
+<sect2 id="index_1section_sd_card_driver">
+<title>Configuring the HW Layer for the SD/MMC driver</title>
+<para>Configure the HW layer for the SD/MMC driver in <computeroutput>FS_X_AddDevices()</computeroutput> before adding the driver using <computeroutput>FS_AddDevice()</computeroutput>. The example of configuration is present in import folder of your application or in export/config folder in the emFile middleware. To use this template file, add the <emphasis>EMFILE_SD_CARD</emphasis> value to <emphasis>COMPONENTS</emphasis> variable in the Makefile.</para>
+<para>The template file has the weak FS_MMC_HW_CM_ConfigureHw() function to be implemented in the user application. In this function, the HW configuration of the used peripheral must be done. A HW configuration example can be found in Quick Start Guide.</para>
+</sect2>
+</sect1>
+<sect1 id="index_1section_package_str">
+<title>emFile Package Structure</title>
+<para>The Middleware structure:<itemizedlist>
+<listitem><para><bold>export/Config:</bold> Contains sample configuration files for emFile drivers.</para>
+</listitem><listitem><para><bold>OS:</bold> Contains the OS layer implementation.</para>
+</listitem><listitem><para><bold>FS:</bold> Contains a set of pre-build emFile libraries for different configurations of user applications (Device family, Build configuration, Core, Floating point, Toolchain), and a set of header files.</para>
+</listitem><listitem><para><bold>Driver:</bold> Contains the Drivers implementation.</para>
+</listitem><listitem><para><bold>docs:</bold> Contains the API Reference Guide, SEGGER-provided emFile User Guide &amp; Reference Manual and other supporting documentation.</para>
+</listitem></itemizedlist>
+</para>
+</sect1>
+<sect1 id="index_1section_changelog">
+<title>Changelog</title>
+<para><table rows="2" cols="3"><row>
+<entry thead="yes"><para>Version</para>
+</entry><entry thead="yes"><para>Changes</para>
+</entry><entry thead="yes"><para>Reason for Change </para>
+</entry></row>
+<row>
+<entry thead="no"><para>3.0.0 </para>
+</entry><entry thead="no"><para>emFile is migrated to HAL-Next flow </para>
+</entry><entry thead="no"><para></para>
+</entry></row>
+</table>
+</para>
+</sect1>
+    </detaileddescription>
+    <location file="docs_src/emfile_overview.h"/>
+  </compounddef>
+</doxygen>

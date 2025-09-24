@@ -3,7 +3,7 @@
 *                        The Embedded Experts                        *
 **********************************************************************
 *                                                                    *
-*       (c) 2003 - 2021  SEGGER Microcontroller GmbH                 *
+*       (c) 2003 - 2023  SEGGER Microcontroller GmbH                 *
 *                                                                    *
 *       www.segger.com     Support: support_emfile@segger.com        *
 *                                                                    *
@@ -21,7 +21,7 @@
 *                                                                    *
 **********************************************************************
 *                                                                    *
-*       emFile version: V5.6.1                                       *
+*       emFile version: V5.22.0                                      *
 *                                                                    *
 **********************************************************************
 ----------------------------------------------------------------------
@@ -32,10 +32,11 @@ Licensed SEGGER software: emFile
 License number:           FS-00227
 License model:            Cypress Services and License Agreement, signed November 17th/18th, 2010
                           and Amendment Number One, signed December 28th, 2020 and February 10th, 2021
+                          and Amendment Number Three, signed May 2nd, 2022 and May 5th, 2022
 Licensed platform:        Any Cypress platform (Initial targets are: PSoC3, PSoC5, PSoC6)
 ----------------------------------------------------------------------
 Support and Update Agreement (SUA)
-SUA period:               2010-12-01 - 2022-07-27
+SUA period:               2010-12-01 - 2023-07-27
 Contact to extend SUA:    sales@segger.com
 ----------------------------------------------------------------------
 File    : FS_ConfDefaults.h
@@ -46,15 +47,117 @@ Purpose : File system configuration defaults
 #ifndef FS_CONFDEFAULTS_H                   // Avoid recursive and multiple inclusion
 #define FS_CONFDEFAULTS_H
 
+/*********************************************************************
+*
+*       #include section
+*
+**********************************************************************
+*/
 #include <string.h>           // for memcpy().
 #include "FS_Conf.h"
 #include "SEGGER.h"
-#include "FS_Debug.h"
+
+/*********************************************************************
+*
+*       Defines, fixed
+*
+**********************************************************************
+*/
+
+/*********************************************************************
+*
+*       Optimization types
+*
+*  Description
+*    Types of optimization goals.
+*
+*  Additional information
+*    These values can be assigned at compile-time to the FS_OPTIMIZATION_TYPE
+*    configuration define.
+*/
+#define FS_OPTIMIZATION_TYPE_BALANCED             0     // No special optimization.
+#define FS_OPTIMIZATION_TYPE_MIN_SIZE             1     // Optimized for reduced ROM and RAM usage.
+#define FS_OPTIMIZATION_TYPE_MAX_SPEED            2     // Optimized for maximum speed.
+
+/*********************************************************************
+*
+*       Debug levels
+*
+*  Description
+*    Amount of debug information.
+*
+*  Additional information
+*    These values can be assigned at compile-time to the FS_DEBUG_LEVEL
+*    configuration define.
+*
+*    The debug levels are hierarchical so that higher debug levels
+*    also enable the features assigned to lower debug levels.
+*/
+#define FS_DEBUG_LEVEL_NOCHECK                    0     // No run time checks are performed.
+#define FS_DEBUG_LEVEL_CHECK_PARA                 1     // Parameter checks are performed.
+#define FS_DEBUG_LEVEL_CHECK_ALL                  2     // Parameter checks and consistency checks are performed.
+#define FS_DEBUG_LEVEL_LOG_ERRORS                 3     // Error conditions are reported.
+#define FS_DEBUG_LEVEL_LOG_WARNINGS               4     // Error and warning conditions are reported.
+#define FS_DEBUG_LEVEL_LOG_ALL                    5     // Error and warning conditions as well as trace messages are reported.
+
+/*********************************************************************
+*
+*       OS locking
+*
+*  Description
+*    Types of locking for multitasking access.
+*
+*  Additional information
+*    These values can be assigned at compile-time to the FS_OS_LOCKING
+*    configuration define.
+*/
+#define FS_OS_LOCKING_NONE                        0     // No locking against concurrent access.
+#define FS_OS_LOCKING_API                         1     // Locking is performed at API function level (coarse locking).
+#define FS_OS_LOCKING_DRIVER                      2     // Locking is performed at device driver level (fine locking).
+
+/*********************************************************************
+*
+*       Defines, configurable
+*
+**********************************************************************
+*/
+
+/*********************************************************************
+*
+*       Optimization
+*/
+#ifndef   FS_OPTIMIZATION_TYPE
+  #define FS_OPTIMIZATION_TYPE                    FS_OPTIMIZATION_TYPE_BALANCED       // Optimization goal of the file system.
+#endif
+
+/*********************************************************************
+*
+*       Debugging
+*/
+#ifndef     FS_DEBUG_LEVEL
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_DEBUG_LEVEL                        FS_DEBUG_LEVEL_NOCHECK
+  #else
+    #define FS_DEBUG_LEVEL                        FS_DEBUG_LEVEL_CHECK_PARA
+  #endif
+#endif
+
+#ifndef   FS_LOG_MASK_DEFAULT
+  #define FS_LOG_MASK_DEFAULT                     FS_MTYPE_INIT     // Only the log initialization messages are enabled by default.
+#endif
+
+#ifndef   FS_DEBUG_MAX_LEN_MESSAGE
+  #define FS_DEBUG_MAX_LEN_MESSAGE                100   // Maximum number of bytes that can be output in a single error, warning or log debug message.
+                                                        // This is the size of the buffer that is used for the formatting of debug messages. This buffer is allocated on the stack.
+#endif
+
+#ifndef   FS_DEBUG_STATIC_MESSAGE_BUFFER
+  #define FS_DEBUG_STATIC_MESSAGE_BUFFER          0     // Specifies if the buffer for the formatting of the debug messages has to be allocated on the stack or not. 0 means allocate on stack.
+#endif
 
 /*********************************************************************
 *
 *       File system defaults
-*
 */
 #ifndef   FS_MAX_PATH
   #define FS_MAX_PATH                             260   // Maximum number of characters in a path to a file including the 0-terminator.
@@ -72,13 +175,21 @@ Purpose : File system configuration defaults
   #define FS_SUPPORT_MULTIPLE_FS                  ((FS_SUPPORT_EFS != 0) && (FS_SUPPORT_FAT != 0))
 #endif
 
-#ifndef   FS_SUPPORT_FREE_SECTOR
-  #define FS_SUPPORT_FREE_SECTOR                  1     // Informs lower layer of unused sectors. Makes sense only for drivers which use it.
+#ifndef     FS_SUPPORT_FREE_SECTOR
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_SUPPORT_FREE_SECTOR                0     // Informs lower layer of unused sectors. Makes sense only for drivers which use it.
+  #else
+    #define FS_SUPPORT_FREE_SECTOR                1
+  #endif
 #endif
 
-#ifndef   FS_SUPPORT_CACHE
-  #define FS_SUPPORT_CACHE                        1     // Set to 1 to enable the support for sector caching.
+#ifndef     FS_SUPPORT_CACHE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_SUPPORT_CACHE                      0     // Set to 1 to enable the support for sector caching.
                                                         // The cache has to be enabled at runtime by calling FS_AssignCache().
+  #else
+    #define FS_SUPPORT_CACHE                      1
+  #endif
 #endif
 
 #ifndef   FS_SUPPORT_ENCRYPTION
@@ -90,11 +201,15 @@ Purpose : File system configuration defaults
   #define FS_MULTI_HANDLE_SAFE                    0     // Set to 1 to enable read and write access to same file from different tasks.
 #endif
 
-#ifndef   FS_MAX_LEN_FULL_FILE_NAME
-  #define FS_MAX_LEN_FULL_FILE_NAME               256   // Maximum number of characters allowed in a full path to file. Used when FS_MULTI_HANDLE_SAFE is set to 1.
+#ifndef     FS_MAX_LEN_FULL_FILE_NAME
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_MAX_LEN_FULL_FILE_NAME             64    // Maximum number of characters allowed in a full path to file. Used when FS_MULTI_HANDLE_SAFE is set to 1.
+  #else
+    #define FS_MAX_LEN_FULL_FILE_NAME             256
+  #endif
 #endif
 
-#ifndef   FS_DRIVER_ALIGNMENT
+#ifndef     FS_DRIVER_ALIGNMENT
   //
   // Added for compatibility reasons.
   //
@@ -114,9 +229,13 @@ Purpose : File system configuration defaults
   #define FS_VERIFY_WRITE                         0     // Set to 1 to verify every write sector operation (tests the driver and hardware)
 #endif
 
-#ifndef   FS_SUPPORT_BUSY_LED
-  #define FS_SUPPORT_BUSY_LED                     1     // If set to 1 the file system calls the function registered via FS_SetBusyLEDCallback()
+#ifndef     FS_SUPPORT_BUSY_LED
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_SUPPORT_BUSY_LED                   0     // If set to 1 the file system calls the function registered via FS_SetBusyLEDCallback()
                                                         // at the beginning and at the end of an access to the storage medium.
+  #else
+    #define FS_SUPPORT_BUSY_LED                   1
+  #endif
 #endif
 
 #ifndef   FS_SUPPORT_CHECK_MEMORY
@@ -143,8 +262,12 @@ Purpose : File system configuration defaults
   #endif
 #endif
 
-#ifndef   FS_SUPPORT_FILE_BUFFER
-  #define FS_SUPPORT_FILE_BUFFER                  1     // Configures the type of file buffering at file handle level.
+#ifndef     FS_SUPPORT_FILE_BUFFER
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_SUPPORT_FILE_BUFFER                0     // Configures the type of file buffering at file handle level.
+  #else
+    #define FS_SUPPORT_FILE_BUFFER                1
+  #endif
 #endif
 
 #ifndef   FS_USE_FILE_BUFFER
@@ -190,8 +313,12 @@ Purpose : File system configuration defaults
   #define FS_SUPPORT_MBCS                         0     // Enables/disables the support for multi-byte character sets such as Shift JIS.
 #endif
 
-#ifndef   FS_SUPPORT_VOLUME_ALIAS
-  #define FS_SUPPORT_VOLUME_ALIAS                 1     // Enables/disables the support for setting a volume alias. If set to 0 the volume alias feature is not supported.
+#ifndef     FS_SUPPORT_VOLUME_ALIAS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_SUPPORT_VOLUME_ALIAS               0     // Enables/disables the support for setting a volume alias. If set to 0 the volume alias feature is not supported.
+  #else
+    #define FS_SUPPORT_VOLUME_ALIAS               1
+  #endif
 #endif
 
 #ifndef   FS_MAX_LEN_VOLUME_ALIAS
@@ -202,49 +329,101 @@ Purpose : File system configuration defaults
   #define FS_SUPPORT_EXT_ASCII                    0     // Set to 1 to enable support for extended ASCII characters in the file names.
 #endif
 
+#ifdef    FS_FAT_SUPPORT_UTF8                           // Compatibility define that enables UTF-8 encoding at compile time for the FAT file system.
+  #define FS_SUPPORT_FILE_NAME_ENCODING           FS_FAT_SUPPORT_UTF8
+#endif
+
 #ifndef   FS_SUPPORT_FILE_NAME_ENCODING
   #define FS_SUPPORT_FILE_NAME_ENCODING           0     // Set to 1 to enable the support for encoded file names such as UTF-8 and Shift JIS.
 #endif
 
-#ifndef   FS_NUM_VOLUMES
-  #define FS_NUM_VOLUMES                          4     // Maximum number of volumes the file system can handle.
+#ifndef     FS_NUM_VOLUMES
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NUM_VOLUMES                        1     // Maximum number of volumes the file system can handle.
+  #else
+    #define FS_NUM_VOLUMES                        4
+  #endif
 #endif
 
 #ifndef   FS_NUM_DIR_HANDLES
   #define FS_NUM_DIR_HANDLES                      1     // Maximum number of directory handles.
 #endif
 
-#ifndef   FS_VERIFY_BUFFER_SIZE
-  #define FS_VERIFY_BUFFER_SIZE                   128   // Size of the work buffer allocated on the stack by FS_Verify()
+#ifdef    FS_VERIFY_BUFFER_SIZE                         // This configuration define is deprecated. Use FS_BUFFER_SIZE_VERIFY instead.
+  #define FS_BUFFER_SIZE_VERIFY                   FS_VERIFY_BUFFER_SIZE
+#endif
+#ifndef     FS_BUFFER_SIZE_VERIFY
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_BUFFER_SIZE_VERIFY                 32    // Size of the work buffer allocated on the stack by FS_Verify()
+  #else
+    #define FS_BUFFER_SIZE_VERIFY                 128
+  #endif
 #endif
 
-#ifndef   FS_SUPPORT_SECTOR_BUFFER_CACHE
-  #define FS_SUPPORT_SECTOR_BUFFER_CACHE          0     // Set to 1 to enable the reuse of sector data between the API function calls. It increases the ROM and RAM usage.
+#ifndef     FS_SUPPORT_SECTOR_BUFFER_CACHE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MAX_SPEED)
+    #define FS_SUPPORT_SECTOR_BUFFER_CACHE        1     // Set to 1 to enable the reuse of sector data between the API function calls. It increases the ROM and RAM usage.
+  #else
+    #define FS_SUPPORT_SECTOR_BUFFER_CACHE        0
+  #endif
 #endif
 
-#ifndef   FS_UNUSED_DATA_FILL_PATTERN
-  #define FS_UNUSED_DATA_FILL_PATTERN             0xFF  // Value to be used to fill the unused bytes at the end of a logical sector.
+#ifdef    FS_UNUSED_DATA_FILL_PATTERN                   // This configuration define is deprecated. Use FS_FILL_PATTERN_UNUSED_DATA instead.
+  #define FS_FILL_PATTERN_UNUSED_DATA             FS_UNUSED_DATA_FILL_PATTERN
+#endif
+#ifndef   FS_FILL_PATTERN_UNUSED_DATA
+  #define FS_FILL_PATTERN_UNUSED_DATA             0xFF  // Value to be used to fill the unused bytes at the end of a logical sector.
 #endif
 
-#ifndef   FS_FILE_COPY_BUFFER_SIZE
-  #define FS_FILE_COPY_BUFFER_SIZE                512   // Size of the buffer used by FS_CopyFile(). This buffer is allocated on stack.
+#ifdef    FS_FILE_COPY_BUFFER_SIZE                      // This configuration define is deprecated. Use FS_BUFFER_SIZE_FILE_COPY instead.
+  #define FS_BUFFER_SIZE_FILE_COPY                FS_FILE_COPY_BUFFER_SIZE
+#endif
+#ifndef     FS_BUFFER_SIZE_FILE_COPY
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_BUFFER_SIZE_FILE_COPY              32    // Size of the buffer used by FS_CopyFile(). This buffer is allocated on stack.
+  #else
+    #define FS_BUFFER_SIZE_FILE_COPY              512
+  #endif
 #endif
 
-/*********************************************************************
-*
-*       Debugging
-*/
-#ifndef   FS_LOG_MASK_DEFAULT
-  #define FS_LOG_MASK_DEFAULT                     FS_MTYPE_INIT     // Only the log initialization messages are enabled by default.
+#ifndef     FS_BUFFER_SIZE_FILE_WIPE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_BUFFER_SIZE_FILE_WIPE              32    // Size of the buffer used by FS_WipeFile(). This buffer is allocated on stack.
+  #else
+    #define FS_BUFFER_SIZE_FILE_WIPE              512
+  #endif
 #endif
 
-#ifndef   FS_DEBUG_MAX_LEN_MESSAGE
-  #define FS_DEBUG_MAX_LEN_MESSAGE                100   // Maximum number of bytes that can be output in a single error, warning or log debug message.
-                                                        // This is the size of the buffer that is used for the formatting of debug messages. This buffer is allocated on the stack.
+#ifndef     FS_BUFFER_SIZE_TRUNCATE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_BUFFER_SIZE_TRUNCATE               32    // Size of the buffer used by FS_Truncate(). This buffer is allocated on stack.
+  #else
+    #define FS_BUFFER_SIZE_TRUNCATE               512
+  #endif
 #endif
 
-#ifndef   FS_DEBUG_STATIC_MESSAGE_BUFFER
-  #define FS_DEBUG_STATIC_MESSAGE_BUFFER          0     // Specifies if the buffer for the formatting of the debug messages has to be allocated on the stack or not. 0 means allocate on stack.
+#ifndef     FS_BUFFER_SIZE_FILE_PRINT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_BUFFER_SIZE_FILE_PRINT             32    // Size of the buffer used by FS_FPrintf(). This buffer is allocated on stack.
+  #else
+    #define FS_BUFFER_SIZE_FILE_PRINT             128
+  #endif
+#endif
+
+#ifndef     FS_SUPPORT_SECTOR_BUFFER_BURST
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MAX_SPEED)
+    #define   FS_SUPPORT_SECTOR_BUFFER_BURST      1     // Set to 1 to enable the sector buffer to read more than one sector at once.
+  #else
+    #define   FS_SUPPORT_SECTOR_BUFFER_BURST      0
+  #endif
+#endif
+
+#ifndef   FS_SUPPORT_GPT
+  #define FS_SUPPORT_GPT                          0     // Enables/disables the support for GPT partitions.
+#endif
+
+#ifndef   FS_MAX_NUM_BYTES_PART_NAME
+  #define FS_MAX_NUM_BYTES_PART_NAME              (72 + 1)      // Maximum number of bytes in the name of a GPT partition (UTF-8 encoded)
 #endif
 
 /*********************************************************************
@@ -268,21 +447,38 @@ Purpose : File system configuration defaults
   #define FS_JOURNAL_ENABLE_STATS                 (FS_DEBUG_LEVEL >= FS_DEBUG_LEVEL_CHECK_ALL)   // Statistics only in debug builds
 #endif
 
-#ifndef   FS_JOURNAL_SUPPORT_FREE_SECTOR
-  #define FS_JOURNAL_SUPPORT_FREE_SECTOR          1     // When set to 1 the storage driver is informed about unused sectors.
+#ifndef     FS_JOURNAL_SUPPORT_FREE_SECTOR
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_JOURNAL_SUPPORT_FREE_SECTOR        0     // When set to 1 the storage driver is informed about unused sectors.
+  #else
+    #define FS_JOURNAL_SUPPORT_FREE_SECTOR        1
+  #endif
 #endif
 
-#ifndef   FS_JOURNAL_SUPPORT_FAST_SECTOR_SEARCH
-  #define FS_JOURNAL_SUPPORT_FAST_SECTOR_SEARCH   1     // When set to 1 each entry in the logical-to-physical mapping table is 32-bit large
+#ifndef     FS_JOURNAL_SUPPORT_FAST_SECTOR_SEARCH
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_JOURNAL_SUPPORT_FAST_SECTOR_SEARCH 0     // When set to 1 each entry in the logical-to-physical mapping table is 32-bit large
                                                         // which increases performance but at the same time it increases the RAM usage.
+  #else
+    #define FS_JOURNAL_SUPPORT_FAST_SECTOR_SEARCH 1
+  #endif
+#endif
+
+#ifndef   FS_JOURNAL_OPTIMIZE_SPACE_USAGE
+  #define FS_JOURNAL_OPTIMIZE_SPACE_USAGE         0     // When set to 1 consecutive sector free operations are grouped together to reduce
+                                                        // the space usage of the journal file. At the same time the RAM usage increases.
 #endif
 
 /*********************************************************************
 *
 *       FAT file system layer defines
 */
-#ifndef   FS_FAT_SUPPORT_FAT32
-  #define FS_FAT_SUPPORT_FAT32                    1     // Set to 0 disable the support for FAT32
+#ifndef     FS_FAT_SUPPORT_FAT32
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_SUPPORT_FAT32                  0     // Set to 0 disable the support for FAT32.
+  #else
+    #define FS_FAT_SUPPORT_FAT32                  1
+  #endif
 #endif
 
 #ifndef   FS_FAT_SUPPORT_UTF8                           // This configuration define is deprecated. Use FS_SUPPORT_FILE_NAME_ENCODING instead.
@@ -294,58 +490,93 @@ Purpose : File system configuration defaults
 #endif
 
 #ifndef   FS_MAINTAIN_FAT_COPY
-  #define FS_MAINTAIN_FAT_COPY                    0     // Shall the 2nd FAT (copy) be maintained
+  #define FS_MAINTAIN_FAT_COPY                    0     // Shall the 2nd FAT (copy) be maintained.
 #endif
 
-#ifndef   FS_FAT_USE_FSINFO_SECTOR
-  #define FS_FAT_USE_FSINFO_SECTOR                1     // Use and update FSInfo sector on FAT32 media. For FAT12/FAT116 there is no FSInfo sector
+#ifndef     FS_FAT_USE_FSINFO_SECTOR
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_USE_FSINFO_SECTOR              0     // Use and update FSInfo sector on FAT32 media. For FAT12/FAT116 there is no FSInfo sector.
+  #else
+    #define FS_FAT_USE_FSINFO_SECTOR              1
+  #endif
 #endif
 
-#ifndef   FS_FAT_OPTIMIZE_DELETE
-  #define FS_FAT_OPTIMIZE_DELETE                  1     // Accelerate delete of large files
+#ifndef     FS_FAT_OPTIMIZE_DELETE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_OPTIMIZE_DELETE                0     // Accelerate delete of large files.
+  #else
+    #define FS_FAT_OPTIMIZE_DELETE                1
+  #endif
+#endif
+
+#ifndef     FS_FAT_OPTIMIZE_LINEAR_ACCESS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_OPTIMIZE_LINEAR_ACCESS         0     // Improves the performance when accessing files with clusters allocated linearly.
+  #else
+    #define FS_FAT_OPTIMIZE_LINEAR_ACCESS         1
+  #endif
 #endif
 
 #ifndef   FS_FAT_PERMIT_RO_FILE_MOVE
-  #define FS_FAT_PERMIT_RO_FILE_MOVE              0     // When set to 1 read-only files and directories can be moved or renamed
+  #define FS_FAT_PERMIT_RO_FILE_MOVE              0     // When set to 1 read-only files and directories can be moved or renamed.
 #endif
 
 #ifndef   FS_FAT_UPDATE_DIRTY_FLAG
-  #define FS_FAT_UPDATE_DIRTY_FLAG                0     // When set to 1 a flag is updated in the boot sector to indicate that the volume was correctly unmounted before reset
+  #define FS_FAT_UPDATE_DIRTY_FLAG                0     // When set to 1 a flag is updated in the boot sector to indicate that the volume was correctly unmounted before reset.
 #endif
 
-#ifndef   FS_FAT_SUPPORT_FREE_CLUSTER_CACHE
-  #define FS_FAT_SUPPORT_FREE_CLUSTER_CACHE       1     // Set to 0 to disable the support for free cluster cache and to reduce ROM usage). The free cluster cache is active only in the FAST write mode.
+#ifndef     FS_FAT_SUPPORT_FREE_CLUSTER_CACHE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_SUPPORT_FREE_CLUSTER_CACHE     0     // Set to 0 to disable the support for free cluster cache and to reduce ROM usage). The free cluster cache is active only in the FAST write mode.
+  #else
+    #define FS_FAT_SUPPORT_FREE_CLUSTER_CACHE     1
+  #endif
 #endif
 
 #ifndef   FS_FAT_LFN_MAX_SHORT_NAME
   #define FS_FAT_LFN_MAX_SHORT_NAME               1000  // Limit for the index of a short file name. The maximum index value of a short file name is FS_FAT_LFN_MAX_SHORT_NAME + FS_FAT_LFN_BIT_ARRAY_SIZE - 1.
 #endif
 
-#ifndef   FS_FAT_LFN_BIT_ARRAY_SIZE
-  #define FS_FAT_LFN_BIT_ARRAY_SIZE               256   // Size in bits of the array used to remember the index of the short file names found. The bit array is allocated on the stack.
+#ifndef     FS_FAT_LFN_BIT_ARRAY_SIZE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_LFN_BIT_ARRAY_SIZE             32    // Size in bits of the array used to remember the index of the short file names found. The bit array is allocated on the stack.
+  #else
+    #define FS_FAT_LFN_BIT_ARRAY_SIZE             256
+  #endif
 #endif
 
-#ifndef   FS_FAT_LFN_LOWER_CASE_SHORT_NAMES
-  #define FS_FAT_LFN_LOWER_CASE_SHORT_NAMES       1     // When set to 1 only a short name is created if all the characters in the base name or extension are small letters or punctuation characters.
+#ifndef     FS_FAT_LFN_LOWER_CASE_SHORT_NAMES
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_FAT_LFN_LOWER_CASE_SHORT_NAMES     0     // When set to 1 only a short name is created if all the characters in the base name or extension are small letters or punctuation characters.
+  #else
+    #define FS_FAT_LFN_LOWER_CASE_SHORT_NAMES     1
+  #endif
 #endif
 
-#ifdef    FS_SUPPORT_UTF8                               // Compatibility define that enables UTF-8 encoding at compile time.
-  #define FS_SUPPORT_FILE_NAME_ENCODING           1
+#if       FS_FAT_SUPPORT_UTF8                           // Compatibility define that enables UTF-8 encoding at compile time.
   #define FS_FAT_LFN_UNICODE_CONV_DEFAULT         &FS_UNICODE_CONV_UTF8
 #endif
 
 #if FS_SUPPORT_FILE_NAME_ENCODING
-  #ifndef   FS_FAT_LFN_UNICODE_CONV_DEFAULT
-    #define FS_FAT_LFN_UNICODE_CONV_DEFAULT       &FS_UNICODE_CONV_CP437      // Default Unicode file name encoder. Can be set to NULL in order to save ROM space if another Unicode encoder is configured at runtime.
+  #ifndef   FS_FAT_LFN_UNICODE_CONV_DEFAULT             // Default Unicode file name encoder. Can be set to NULL in order to save ROM space if another Unicode encoder is configured at runtime.
+    #define FS_FAT_LFN_UNICODE_CONV_DEFAULT       &FS_UNICODE_CONV_CP437
   #endif
+#endif
+
+#ifndef   FS_FAT_CHECK_UNUSED_DIR_ENTRIES
+  #define FS_FAT_CHECK_UNUSED_DIR_ENTRIES         0     // Enables/disables the checking of directory entries located after the first directory entry marked as not in use.
 #endif
 
 /*********************************************************************
 *
 *       EFS file system layer defines
 */
-#ifndef   FS_EFS_OPTIMIZE_DELETE
-  #define FS_EFS_OPTIMIZE_DELETE                  1     // Accelerate delete of large files
+#ifndef     FS_EFS_OPTIMIZE_DELETE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_EFS_OPTIMIZE_DELETE                0     // Accelerate delete of large files.
+  #else
+    #define FS_EFS_OPTIMIZE_DELETE                1
+  #endif
 #endif
 
 #ifndef   FS_EFS_CASE_SENSITIVE
@@ -357,14 +588,22 @@ Purpose : File system configuration defaults
   #define FS_EFS_MAX_DIR_ENTRY_SIZE               255   // Maximum number of bytes of an EFS directory entry
 #endif
 
-#ifndef   FS_EFS_SUPPORT_STATUS_SECTOR
-  #define FS_EFS_SUPPORT_STATUS_SECTOR            1     // Use and update the status sector which stores the number of free clusters.
+#ifndef     FS_EFS_SUPPORT_STATUS_SECTOR
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_EFS_SUPPORT_STATUS_SECTOR          0     // Use and update the status sector which stores the number of free clusters.
+  #else
+    #define FS_EFS_SUPPORT_STATUS_SECTOR          1
+  #endif
 #endif
 
-#ifndef   FS_EFS_SUPPORT_DIRENTRY_BUFFERS
-  #define FS_EFS_SUPPORT_DIRENTRY_BUFFERS         0     // When set to 1 the buffers for reading the directory entries are allocated
-                                                        // from the memory pool of file system instead of allocating them on the stack.
+#ifndef     FS_EFS_SUPPORT_DIRENTRY_BUFFERS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_EFS_SUPPORT_DIRENTRY_BUFFERS       1     // When set to 1 the buffers for reading the directory entries are allocated
+                                                        // from the memory pool of file system instead on the stack.
                                                         // Each buffer is FS_EFS_MAX_DIR_ENTRY_SIZE + 1 bytes large.
+  #else
+    #define FS_EFS_SUPPORT_DIRENTRY_BUFFERS       0
+  #endif
 #endif
 
 #ifndef   FS_EFS_NUM_DIRENTRY_BUFFERS
@@ -377,8 +616,20 @@ Purpose : File system configuration defaults
   #endif
 #endif // FS_SUPPORT_FILE_NAME_ENCODING
 
-#ifndef   FS_EFS_SUPPORT_FREE_CLUSTER_CACHE
-  #define FS_EFS_SUPPORT_FREE_CLUSTER_CACHE       0     // Set to 0 to disable the support for free cluster cache and to reduce ROM usage). The free cluster cache is active only in the FAST write mode.
+#ifndef     FS_EFS_SUPPORT_FREE_CLUSTER_CACHE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MAX_SPEED)
+    #define FS_EFS_SUPPORT_FREE_CLUSTER_CACHE     1     // Set to 0 to disable the support for free cluster cache and to reduce ROM usage. The free cluster cache is active only in the FAST write mode.
+  #else
+    #define FS_EFS_SUPPORT_FREE_CLUSTER_CACHE     0
+  #endif
+#endif
+
+#ifndef     FS_EFS_OPTIMIZE_LINEAR_ACCESS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_EFS_OPTIMIZE_LINEAR_ACCESS         0     // Improves the performance when accessing files with clusters allocated linearly.
+  #else
+    #define FS_EFS_OPTIMIZE_LINEAR_ACCESS         1
+  #endif
 #endif
 
 /*********************************************************************
@@ -397,8 +648,12 @@ Purpose : File system configuration defaults
 *
 *       CLib
 */
-#ifndef   FS_NO_CLIB
-  #define FS_NO_CLIB                              0
+#ifndef     FS_NO_CLIB
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NO_CLIB                            1     // When set to 1 the file system uses the internal standard C library functions.
+  #else
+    #define FS_NO_CLIB                            0
+  #endif
 #endif
 
 #ifndef   FS_VSNPRINTF
@@ -460,32 +715,11 @@ Purpose : File system configuration defaults
 *       OS layer
 */
 #ifndef   FS_OS_LOCKING
-  #define FS_OS_LOCKING                           0     // Configures the locking of the file system against concurrent access form different tasks.
+  #define FS_OS_LOCKING                           FS_OS_LOCKING_NONE     // Configures the locking of the file system against concurrent access form different tasks.
 #endif
 
 #ifndef   FS_OS_SUPPORT_RUNTIME_CONFIG
   #define FS_OS_SUPPORT_RUNTIME_CONFIG            0     // Enables/disables the runtime configuration of the OS layer. 0 means not configurable at runtime.
-#endif
-
-#if   (FS_OS_LOCKING == 0)
-  #define FS_OS                                   0
-  #define FS_OS_LOCK_PER_DRIVER                   0
-#elif (FS_OS_LOCKING == 1)
-  #define FS_OS                                   1
-  #define FS_OS_LOCK_PER_DRIVER                   0
-#elif (FS_OS_LOCKING == 2)
-  #define FS_OS                                   1
-  #define FS_OS_LOCK_PER_DRIVER                   1
-#else
-  #error FS_OS_LOCKING is set to an invalid value.
-#endif
-
-#ifndef   FS_OS
-  #define FS_OS                                   0
-#endif
-
-#ifndef   FS_OS_LOCK_PER_DRIVER
-  #define FS_OS_LOCK_PER_DRIVER                   0     // 0 means a single lock for all files, 1 means one lock per file.
 #endif
 
 /*********************************************************************
@@ -504,51 +738,17 @@ Purpose : File system configuration defaults
 
 /*********************************************************************
 *
-*       Sector buffers
-*/
-#ifndef FS_NUM_SECTOR_BUFFERS_PER_OPERATION
-  #if (FS_SUPPORT_FAT != 0) && (FS_FAT_UPDATE_DIRTY_FLAG != 0)
-    //
-    // An additional sector buffer is required to update the "dirty" flag in the boot sector.
-    //
-    #define FS_NUM_SECTOR_BUFFERS_FS              3u
-  #else
-    //
-    // FAT and EFS file systems require at least 2 sector buffers for an FS operation.
-    //
-    #define FS_NUM_SECTOR_BUFFERS_FS              2u
-  #endif
-  //
-  // File encryption requires one additional sector buffer.
-  //
-  #if FS_SUPPORT_ENCRYPTION
-    #define FS_NUM_SECTOR_BUFFERS_ENCRYPTION      1u
-  #else
-    #define FS_NUM_SECTOR_BUFFERS_ENCRYPTION      0u
-  #endif
-  //
-  // Journaling requires one additional sector buffer.
-  //
-  #if FS_SUPPORT_JOURNAL
-    #define FS_NUM_SECTOR_BUFFERS_JOURNAL         1u
-  #else
-    #define FS_NUM_SECTOR_BUFFERS_JOURNAL         0u
-  #endif
-  //
-  // Total number of sector buffers.
-  //
-  #define FS_NUM_SECTOR_BUFFERS_PER_OPERATION     (FS_NUM_SECTOR_BUFFERS_FS + FS_NUM_SECTOR_BUFFERS_ENCRYPTION + FS_NUM_SECTOR_BUFFERS_JOURNAL)
-#endif
-
-/*********************************************************************
-*
 *       NAND driver
 */
 #ifdef    FS_NAND_MAXUNIT                               // This configuration define is deprecated. Use FS_NAND_NUM_UNITS instead.
   #define FS_NAND_NUM_UNITS                       FS_NAND_MAXUNIT
 #endif
-#ifndef   FS_NAND_NUM_UNITS
-  #define FS_NAND_NUM_UNITS                       4     // Maximum number of driver instances.
+#ifndef     FS_NAND_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_NUM_UNITS                     1     // Maximum number of NAND driver instances.
+  #else
+    #define FS_NAND_NUM_UNITS                     4
+  #endif
 #endif
 
 #ifndef   FS_NAND_MAX_ERASE_CNT_DIFF
@@ -563,8 +763,16 @@ Purpose : File system configuration defaults
   #define FS_NAND_NUM_WRITE_RETRIES               10    // Number of retries performed in case of a write error
 #endif
 
-#ifndef   FS_NAND_ENABLE_STATS
-  #define FS_NAND_ENABLE_STATS                    (FS_DEBUG_LEVEL >= FS_DEBUG_LEVEL_CHECK_ALL)    // Enables / disables statistical counters.
+#ifndef     FS_NAND_ENABLE_STATS
+  #if (FS_DEBUG_LEVEL >= FS_DEBUG_LEVEL_CHECK_ALL)
+    #define FS_NAND_ENABLE_STATS                  1      // Enables / disables statistical counters.
+  #else
+    #define FS_NAND_ENABLE_STATS                  0      // Enables / disables statistical counters.
+  #endif
+#endif
+
+#ifndef   FS_NAND_ENABLE_STATS_SECTOR_STATUS
+  #define FS_NAND_ENABLE_STATS_SECTOR_STATUS      1     // Enables / disables the collection of statistical information about the number of valid logical sectors.
 #endif
 
 #ifndef   FS_NAND_RECLAIM_DRIVER_BAD_BLOCKS
@@ -585,14 +793,18 @@ Purpose : File system configuration defaults
   #define FS_NAND_SUPPORT_TRIM                    FS_NAND_ENABLE_TRIM
 #endif
 #ifndef   FS_NAND_SUPPORT_TRIM
-  #define FS_NAND_SUPPORT_TRIM                    1     // Enables/disables the TRIM functionality
+  #define FS_NAND_SUPPORT_TRIM                    FS_SUPPORT_FREE_SECTOR     // Enables/disables the TRIM functionality
 #endif
 
 #ifdef    FS_NAND_ENABLE_CLEAN                          // This configuration define is deprecated. Use FS_NAND_SUPPORT_CLEAN instead.
   #define FS_NAND_SUPPORT_CLEAN                   FS_NAND_ENABLE_CLEAN
 #endif
-#ifndef   FS_NAND_SUPPORT_CLEAN
-  #define FS_NAND_SUPPORT_CLEAN                   1     // Enables/disables the CLEAN functionality
+#ifndef     FS_NAND_SUPPORT_CLEAN
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_SUPPORT_CLEAN                 0     // Enables/disables the CLEAN functionality.
+  #else
+    #define FS_NAND_SUPPORT_CLEAN                 1
+  #endif
 #endif
 
 #ifndef   FS_NAND_OPTIMIZE_SPARE_AREA_READ
@@ -600,14 +812,22 @@ Purpose : File system configuration defaults
                                                         // By default, the Universal NAND driver reads the entire spare area.
 #endif
 
-#ifndef   FS_NAND_ECC_HOOK_DEFAULT
-  #define FS_NAND_ECC_HOOK_DEFAULT                &FS_NAND_ECC_SW_1BIT      // Default ECC calculation algorithm. Can be set to NULL for NAND flash devices with HW ECC to reduce the ROM usage.
+#ifndef     FS_NAND_ECC_HOOK_DEFAULT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_ECC_HOOK_DEFAULT              NULL  // Default ECC calculation algorithm. Can be set to NULL for NAND flash devices with HW ECC to reduce the ROM usage.
+  #else
+    #define FS_NAND_ECC_HOOK_DEFAULT              &FS_NAND_ECC_SW_1BIT
+  #endif
 #endif
 
-#ifndef   FS_NAND_SUPPORT_BLOCK_GROUPING
-  #define FS_NAND_SUPPORT_BLOCK_GROUPING          1     // If set to 1 the driver handles two or more additional physical NAND blocks as a single block to reduce the RAM usage.
+#ifndef     FS_NAND_SUPPORT_BLOCK_GROUPING
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_SUPPORT_BLOCK_GROUPING        0     // If set to 1 the driver handles two or more adjacent physical NAND blocks as a single block to reduce the RAM usage.
                                                         // The number of blocks in the group has to be configured at runtime via FS_NAND_UNI_SetNumBlocksPerGroup().
-                                                        // Set to 0 to reduce the RAM and ROM usage of the driver.
+                                                        // Can be set to 0 to reduce the RAM and ROM usage of the driver.
+  #else
+    #define FS_NAND_SUPPORT_BLOCK_GROUPING        1
+  #endif
 #endif
 
 #ifndef   FS_NAND_ENABLE_ERROR_RECOVERY
@@ -641,10 +861,6 @@ Purpose : File system configuration defaults
   #define FS_NAND_READ_BUFFER_FILL_PATTERN        0xFF  // The read sector buffer is filled with this value if the sector data is not valid.
 #endif
 
-#ifndef   FS_NAND_NUM_BLOCKS_RESERVED
-  #define FS_NAND_NUM_BLOCKS_RESERVED             2     // Number of NAND blocks the driver reserves for internal use, in addition to the 3 percent for bad block replacement
-#endif
-
 #ifndef   FS_NAND_SUPPORT_READ_CACHE
   #define FS_NAND_SUPPORT_READ_CACHE              0     // Set to 1 to enable the support for read cache.
 #endif
@@ -661,9 +877,13 @@ Purpose : File system configuration defaults
 #ifdef    FS_NAND_ENABLE_FAST_WRITE                     // This configuration define is deprecated. Use FS_NAND_SUPPORT_FAST_WRITE instead.
   #define FS_NAND_SUPPORT_FAST_WRITE              FS_NAND_ENABLE_FAST_WRITE
 #endif
-#ifndef   FS_NAND_SUPPORT_FAST_WRITE
-  #define FS_NAND_SUPPORT_FAST_WRITE              1     // SLC1 NAND driver: If set to 1 the application will be able to perform write operations at maximum speed during which no NAND block is erased or copied.
+#ifndef     FS_NAND_SUPPORT_FAST_WRITE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_SUPPORT_FAST_WRITE            0     // SLC1 NAND driver: If set to 1 the application will be able to perform write operations at maximum speed during which no NAND block is erased or copied.
                                                         // Universal NAND driver: If set to 1 data is written also directly to a data block, if possible. Set to 0 to reduce the RAM and ROM usage of the driver.
+  #else
+    #define FS_NAND_SUPPORT_FAST_WRITE            1
+  #endif
 #endif
 
 #ifndef   FS_NAND_MAX_BIT_ERROR_CNT
@@ -706,17 +926,44 @@ Purpose : File system configuration defaults
                                                         // of the spare area that were not protected by the HW ECC of Micron MT29F1G01ABAFD NAND flash device.
                                                         // The correction of this behavior introduces a data compatibility that can be avoided
                                                         // by setting this define either to 1 or to 2. When set to 1 the physical layer reads
-                                                        // the management data from old location if in the new location no management data is present.
+                                                        // the management data from old location if at the new location no management data is present.
                                                         // When set to 2 the physical layer updates the management data to old and new location
                                                         // in addition to trying to read it from both of these locations.
 #endif
 
-#ifndef   FS_NAND_DEVICE_LIST_DEFAULT
-  #define FS_NAND_DEVICE_LIST_DEFAULT             &FS_NAND_SPI_DeviceList_All
+#ifdef    FS_NAND_DEVICE_LIST_DEFAULT
+  #define FS_NAND_SPI_DEVICE_LIST_DEFAULT         FS_NAND_DEVICE_LIST_DEFAULT
+#endif
+#ifndef     FS_NAND_SPI_DEVICE_LIST_DEFAULT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_SPI_DEVICE_LIST_DEFAULT       NULL
+  #else
+    #define FS_NAND_SPI_DEVICE_LIST_DEFAULT       &FS_NAND_SPI_DeviceListAll
+  #endif
 #endif
 
-#ifndef   FS_NAND_SUPPORT_EXT_ONFI_PARA
-  #define FS_NAND_SUPPORT_EXT_ONFI_PARA           1     // Enables/disables support for extended ONFI parameters.
+#ifndef     FS_NAND_SUPPORT_EXT_ONFI_PARA
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_SUPPORT_EXT_ONFI_PARA         0     // Enables/disables support for extended ONFI parameters.
+  #else
+    #define FS_NAND_SUPPORT_EXT_ONFI_PARA         1
+  #endif
+#endif
+
+#ifndef     FS_NAND_ONFI_DEVICE_LIST_DEFAULT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_ONFI_DEVICE_LIST_DEFAULT      NULL
+  #else
+    #define FS_NAND_ONFI_DEVICE_LIST_DEFAULT      &FS_NAND_ONFI_DeviceListDefault
+  #endif
+#endif
+
+#ifndef     FS_NAND_2048X8_DEVICE_LIST_DEFAULT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NAND_2048X8_DEVICE_LIST_DEFAULT    NULL
+  #else
+    #define FS_NAND_2048X8_DEVICE_LIST_DEFAULT    &FS_NAND_2048X8_DeviceListDefault
+  #endif
 #endif
 
 /*********************************************************************
@@ -726,20 +973,32 @@ Purpose : File system configuration defaults
 #ifdef    FS_NOR_MAXUNIT                                  // This configuration define is deprecated. Use FS_NOR_NUM_UNITS instead.
   #define FS_NOR_NUM_UNITS                        FS_NOR_MAXUNIT
 #endif
-#ifndef   FS_NOR_NUM_UNITS
-  #define FS_NOR_NUM_UNITS                        4       // Maximum number of driver instances.
+#ifndef     FS_NOR_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_NUM_UNITS                      1       // Maximum number of driver instances.
+  #else
+    #define FS_NOR_NUM_UNITS                      4
+  #endif
 #endif
 
 #ifdef    FS_NOR_ENABLE_CLEAN                             // This configuration define is deprecated. Use FS_NOR_SUPPORT_CLEAN instead.
   #define FS_NOR_SUPPORT_CLEAN                    FS_NOR_ENABLE_CLEAN
 #endif
-#ifndef   FS_NOR_SUPPORT_CLEAN
-  #define FS_NOR_SUPPORT_CLEAN                    1       // Enables / disables the support for application-driven garbage collection.
+#ifndef     FS_NOR_SUPPORT_CLEAN
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_SUPPORT_CLEAN                  0       // Enables / disables the support for application-driven garbage collection.
+  #else
+    #define FS_NOR_SUPPORT_CLEAN                  1
+  #endif
 #endif
 
 #ifndef   FS_NOR_MAX_ERASE_CNT_DIFF
   #define FS_NOR_MAX_ERASE_CNT_DIFF               5000    // Maximum erase count difference. Usually 5% of the guaranteed erase cycles is a good value.
                                                           // Low values provide better leveling, but also more overhead for copying.
+#endif
+
+#ifndef   FS_NOR_SUPPORT_CRC
+  #define FS_NOR_SUPPORT_CRC                      0       // If set to 1 the integrity of the management and sector data is protected by CRC.
 #endif
 
 #ifndef   FS_NOR_SUPPORT_ECC
@@ -758,7 +1017,7 @@ Purpose : File system configuration defaults
   #define FS_NOR_MAX_NUM_BLOCKS_ECC_DATA          2       // Maximum number of ECC blocks in a data sector for 1 bit ECC (2 blocks of 256 bytes for a logical sector of 512 bytes).
 #endif
 
-#ifndef   FS_NOR_PHY_SECTOR_RESERVE                       // Number of bytes to be reserved in a physical sector header.
+#ifndef     FS_NOR_PHY_SECTOR_RESERVE                     // Number of bytes to be reserved in a physical sector header.
   #if FS_NOR_SUPPORT_ECC
     #define FS_NOR_PHY_SECTOR_RESERVE             16      // Reserve place for 3 ECCs of 2 bytes and one status byte rounded up to a 4 byte boundary.
   #else
@@ -766,7 +1025,7 @@ Purpose : File system configuration defaults
   #endif // FS_NOR_SUPPORT_ECC
 #endif
 
-#ifndef   FS_NOR_LOG_SECTOR_RESERVE                       // Number of bytes to be reserved in a logical sector header.
+#ifndef     FS_NOR_LOG_SECTOR_RESERVE                     // Number of bytes to be reserved in a logical sector header.
   #if FS_NOR_SUPPORT_ECC
     #define FS_NOR_LOG_SECTOR_RESERVE             16      // Reserve place for 2 ECCs of 2 bytes, one status byte and one 6 byte data ECC rounded up to a 4 byte boundary.
   #else
@@ -801,19 +1060,23 @@ Purpose : File system configuration defaults
   #endif
 #endif
 
-#ifndef   FS_NOR_PHY_SECTOR_RESERVE_EX                    // Number of bytes to be reserved in the area of the physical sector header that stores information about the data status.
+#ifndef     FS_NOR_PHY_SECTOR_RESERVE_EX                  // Number of bytes to be reserved in the area of the physical sector header that stores information about the data status.
   #if FS_NOR_SUPPORT_ECC
     #define FS_NOR_PHY_SECTOR_RESERVE_EX          8       // Reserve place for 1 ECC of 2 bytes.
   #else
     #if (FS_NOR_LINE_SIZE < 4)
       #define FS_NOR_PHY_SECTOR_RESERVE_EX        0
     #else
-      #define FS_NOR_PHY_SECTOR_RESERVE_EX        (FS_NOR_LINE_SIZE - 4)
+      #if (FS_NOR_SUPPORT_CRC != 0) || (FS_NOR_SUPPORT_FAIL_SAFE_ERASE != 0)
+        #define FS_NOR_PHY_SECTOR_RESERVE_EX      4
+      #else
+        #define FS_NOR_PHY_SECTOR_RESERVE_EX      0
+      #endif
     #endif
   #endif
 #endif
 
-#ifndef   FS_NOR_LOG_SECTOR_RESERVE_EX                    // Number of bytes to be reserved in the area of the logical sector header that stores information about the data status.
+#ifndef     FS_NOR_LOG_SECTOR_RESERVE_EX                  // Number of bytes to be reserved in the area of the logical sector header that stores information about the data status.
   #if FS_NOR_SUPPORT_ECC
     #define FS_NOR_LOG_SECTOR_RESERVE_EX          4       // Reserve place for 1 ECC of 2 bytes.
   #else
@@ -825,9 +1088,13 @@ Purpose : File system configuration defaults
   #endif
 #endif
 
-#ifndef   FS_NOR_SKIP_BLANK_SECTORS
-  #define FS_NOR_SKIP_BLANK_SECTORS               1       // If set to 1 the low-level format operation does not erase the physical sectors that are already blank.
+#ifndef     FS_NOR_SKIP_BLANK_SECTORS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_SKIP_BLANK_SECTORS             0       // If set to 1 the low-level format operation does not erase the physical sectors that are already blank.
                                                           // This reduces the time it takes to perform a low-level format of a blank NOR flash.
+  #else
+    #define FS_NOR_SKIP_BLANK_SECTORS             1
+  #endif
 #endif
 
 #ifndef     FS_NOR_VERIFY_WRITE
@@ -857,8 +1124,12 @@ Purpose : File system configuration defaults
   #define FS_NOR_READ_BUFFER_FILL_PATTERN         0xFF    // The read sector buffer is filled with this value if the sector data is not valid.
 #endif
 
-#ifndef   FS_NOR_NUM_FREE_SECTORCACHE
-  #define FS_NOR_NUM_FREE_SECTORCACHE             100     // Number of logical sectors in the cache.
+#ifndef     FS_NOR_NUM_FREE_SECTORCACHE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_NUM_FREE_SECTORCACHE           32      // Number of logical sectors in the cache.
+  #else
+    #define FS_NOR_NUM_FREE_SECTORCACHE           100
+  #endif
 #endif
 
 #ifndef   FS_NOR_ENABLE_STATS
@@ -873,13 +1144,13 @@ Purpose : File system configuration defaults
   #define FS_NOR_NUM_WRITE_RETRIES                10      // Number of retries in case of a write error (verify or CRC error)
 #endif
 
+#ifndef   FS_NOR_NUM_ERASE_RETRIES
+  #define FS_NOR_NUM_ERASE_RETRIES                10      // Number of retries in case of an erase error (device error)
+#endif
+
 #ifndef   FS_NOR_SUPPORT_VARIABLE_BYTE_ORDER
   #define FS_NOR_SUPPORT_VARIABLE_BYTE_ORDER      0       // If set to 1 the byte order of multi-byte the management data can be configured at runtime.
                                                           // The byte order of the host CPU is used if this define is set to 0.
-#endif
-
-#ifndef   FS_NOR_SUPPORT_CRC
-  #define FS_NOR_SUPPORT_CRC                      0       // If set to 1 the integrity of the management and sector data is protected by CRC.
 #endif
 
 #ifndef     FS_NOR_CRC_HOOK_DEFAULT
@@ -933,6 +1204,22 @@ Purpose : File system configuration defaults
   #define FS_NOR_STAT_MAX_BIT_ERRORS              1     // Number of statistical counters for bit errors maintained by the NOR driver.
 #endif
 
+#ifndef     FS_NOR_SUPPORT_FORMAT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_SUPPORT_FORMAT                 0     // Enables or disables the ability to perform a low-level format. Disabling this option reduces the ROM usage.
+  #else
+    #define FS_NOR_SUPPORT_FORMAT                 1
+  #endif
+#endif
+
+#ifndef     FS_NOR_OPTIMIZE_DATA_WRITE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_OPTIMIZE_DATA_WRITE            0       // If set to 1 the data is written directly to a data block if possible instead of a work block.
+  #else
+    #define FS_NOR_OPTIMIZE_DATA_WRITE            1
+  #endif
+#endif
+
 #ifndef   FS_NOR_DI
   #define FS_NOR_DI()                                     // Macro to disable the interrupts globally
 #endif
@@ -949,9 +1236,17 @@ Purpose : File system configuration defaults
   #define FS_NOR_FAR                                      // Memory type specifier. Used for 8/16-bit CPUs only.
 #endif
 
-#ifndef   FS_NOR_MAX_SECTOR_BLOCKS
-  #define FS_NOR_MAX_SECTOR_BLOCKS                6       // Worst (known) case serial NOR device has 5 sector blocks.
+#ifndef   FS_NOR_DMB
+  #define FS_NOR_DMB()                                    // Macro for memory access synchronization.
+#endif
+
+#ifndef     FS_NOR_MAX_SECTOR_BLOCKS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_MAX_SECTOR_BLOCKS              1       // Worst (known) case serial NOR device has 6 sector blocks.
                                                           // Typical serial NOR devices have only 1 (uniform sectors)
+  #else
+    #define FS_NOR_MAX_SECTOR_BLOCKS              6
+  #endif
 #endif
 
 #ifndef   FS_NOR_MAX_NUM_DEVICES
@@ -974,35 +1269,43 @@ Purpose : File system configuration defaults
   #define FS_NOR_BYTES_PER_PAGE                   256     // Maximum number of bytes that can be stored to a NOR flash page
 #endif
 
-#ifndef   FS_NOR_DEVICE_LIST_DEFAULT
-  #define FS_NOR_DEVICE_LIST_DEFAULT              &FS_NOR_SPI_DeviceList_Default      // Default list of recognized serial NOR flash devices.
+#ifndef     FS_NOR_DEVICE_LIST_DEFAULT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_NOR_DEVICE_LIST_DEFAULT            NULL    // Default list of recognized serial NOR flash devices.
+  #else
+    #define FS_NOR_DEVICE_LIST_DEFAULT            &FS_NOR_SPI_DeviceListDefault
+  #endif
 #endif
 
 #ifndef   FS_NOR_MAX_NUM_BYTES_DUMMY
-  #define FS_NOR_MAX_NUM_BYTES_DUMMY              5       // Maximum number of dummy bytes required during a read operation the physical layer can handle
+  #define FS_NOR_MAX_NUM_BYTES_DUMMY              5       // Maximum number of dummy bytes of a read operation that the physical layer can handle.
 #endif
 
 #ifndef   FS_NOR_AMD_WRITE_BUFFER_SIZE
-  #define FS_NOR_AMD_WRITE_BUFFER_SIZE            32        // Size of the internal write buffer of AMD compatible NOR flash devices (in bytes). Typ. 32 bytes large.
+  #define FS_NOR_AMD_WRITE_BUFFER_SIZE            32      // Size of the internal write buffer of AMD compatible NOR flash devices (in bytes). Typ. 32 bytes large.
 #endif
 
 #ifndef   FS_NOR_INTEL_WRITE_BUFFER_SIZE
-  #define FS_NOR_INTEL_WRITE_BUFFER_SIZE          32        // Size of the internal write buffer of Intel compatible NOR flash devices (in bytes). Typ. 32 bytes large.
+  #define FS_NOR_INTEL_WRITE_BUFFER_SIZE          32      // Size of the internal write buffer of Intel compatible NOR flash devices (in bytes). Typ. 32 bytes large.
 #endif
 
 #ifndef   FS_NOR_AMD_STATUS_CHECK_TYPE
-  #define FS_NOR_AMD_STATUS_CHECK_TYPE            0         // Configures how the status of a program and erase operation should be checked.
-                                                            //   0 - poll toggle bit, no error checking (supported by legacy devices). Default for backward compatibility.
-                                                            //   1 - poll toggle bit and check for errors (supported by modern devices, Micron for example)
-                                                            //   2 - check status register (supported by Cypress HyperFlash)
+  #define FS_NOR_AMD_STATUS_CHECK_TYPE            0       // Configures how the status of a program and erase operation should be checked.
+                                                          //   0 - poll toggle bit, no error checking (supported by legacy devices). Default for backward compatibility.
+                                                          //   1 - poll toggle bit and check for errors (supported by modern devices, Micron for example)
+                                                          //   2 - check status register (supported by Cypress HyperFlash)
 #endif
 
 #ifndef   FS_NOR_WRITE_TIMEOUT
-  #define FS_NOR_WRITE_TIMEOUT                    10000     // Number of software cycles to wait for the completion of a write operation.
+  #define FS_NOR_WRITE_TIMEOUT                    10000   // Number of software cycles to wait for the completion of a write operation.
 #endif
 
 #ifndef   FS_NOR_ERASE_TIMEOUT
-  #define FS_NOR_ERASE_TIMEOUT                    0         // Number of software cycles to wait for the completion of an sector erase operation.
+  #define FS_NOR_ERASE_TIMEOUT                    0       // Number of software cycles to wait for the completion of an sector erase operation.
+#endif
+
+#ifndef   FS_NOR_REVERSE_ENDIANESS
+  #define FS_NOR_REVERSE_ENDIANESS                0       // Specifies if the byte ordering of the CFI information has to be reversed.
 #endif
 
 /*********************************************************************
@@ -1012,8 +1315,12 @@ Purpose : File system configuration defaults
 #ifdef    FS_MMC_MAXUNIT                                  // Compatibility define. Use FS_MMC_NUM_UNITS instead.
   #define FS_MMC_NUM_UNITS                        FS_MMC_MAXUNIT
 #endif
-#ifndef   FS_MMC_NUM_UNITS
-  #define FS_MMC_NUM_UNITS                        2       // Maximum number of driver instances.
+#ifndef     FS_MMC_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_MMC_NUM_UNITS                      1       // Maximum number of driver instances.
+  #else
+    #define FS_MMC_NUM_UNITS                      2
+  #endif
 #endif
 
 #ifndef   FS_MMC_SUPPORT_POWER_SAVE
@@ -1085,6 +1392,10 @@ Purpose : File system configuration defaults
   #define FS_MMC_SUPPORT_UHS                      0       // Enables/disables the support for the ultra-high-speed data transfer modes.
 #endif
 
+#ifndef   FS_MMC_DISABLE_DAT3_PULLUP
+  #define FS_MMC_DISABLE_DAT3_PULLUP              0       // Disables the internal pull-up connected to the DAT3 line of an SD card.
+#endif
+
 /*********************************************************************
 *
 *       CF/IDE driver
@@ -1092,8 +1403,12 @@ Purpose : File system configuration defaults
 #ifdef    FS_IDE_MAXUNIT                                  // Compatibility define. Use FS_IDE_NUM_UNITS instead.
   #define FS_IDE_NUM_UNITS                        FS_IDE_MAXUNIT
 #endif
-#ifndef   FS_IDE_NUM_UNITS
-  #define FS_IDE_NUM_UNITS                        4       // Maximum number of driver instances.
+#ifndef     FS_IDE_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_IDE_NUM_UNITS                      1       // Maximum number of driver instances.
+  #else
+    #define FS_IDE_NUM_UNITS                      4
+  #endif
 #endif
 
 #ifndef   FS_IDE_DEVICE_BUSY_TIMEOUT
@@ -1106,25 +1421,64 @@ Purpose : File system configuration defaults
 
 /*********************************************************************
 *
-*       RAMDisk driver
+*       RAM Disk driver
 */
 #ifdef    FS_RAMDISK_MAXUNIT                              // Compatibility define. Use FS_RAMDISK_NUM_UNITS instead.
   #define FS_RAMDISK_NUM_UNITS                    FS_RAMDISK_MAXUNIT
 #endif
-#ifndef   FS_RAMDISK_NUM_UNITS
-  #define FS_RAMDISK_NUM_UNITS                    4       // Maximum number of driver instances.
+#ifndef     FS_RAMDISK_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_RAMDISK_NUM_UNITS                  1       // Maximum number of driver instances.
+  #else
+    #define FS_RAMDISK_NUM_UNITS                  4
+  #endif
+#endif
+
+#ifndef     FS_RAMDISK_VERIFY_WRITE
+  #if       (FS_DEBUG_LEVEL >= FS_DEBUG_LEVEL_CHECK_ALL)
+    #define FS_RAMDISK_VERIFY_WRITE               1       // If set to 1 the driver checks if a write operation was successful
+                                                          // by comparing the actual written data with the data to be written.
+                                                          // Enabling this feature reduces the write performance.
+  #else
+    #define FS_RAMDISK_VERIFY_WRITE               0
+  #endif
+#endif
+
+#ifndef   FS_RAMDISK_DATA_BUFFER_SIZE
+  #define FS_RAMDISK_DATA_BUFFER_SIZE             32      // Size of the buffer used for accessing the data of the RAM device
+                                                          // for internal operations. This buffer is allocated on the stack.
+#endif
+
+#ifndef   FS_RAMDISK_NUM_READ_RETRIES
+  #define FS_RAMDISK_NUM_READ_RETRIES             10      // Number of retries in case of a read error.
+#endif
+
+#ifndef   FS_RAMDISK_DEVICE_OPERATION_TIMEOUT
+  #define FS_RAMDISK_DEVICE_OPERATION_TIMEOUT     500     // Timeout for any device operation in milliseconds
+#endif
+
+#ifndef   FS_RAMDISK_DEVICE_LIST_DEFAULT
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_RAMDISK_DEVICE_LIST_DEFAULT        NULL    // Default list of recognized serial RAM devices.
+  #else
+    #define FS_RAMDISK_DEVICE_LIST_DEFAULT        &FS_RAMDISK_SPI_DeviceListDefault
+  #endif
 #endif
 
 /*********************************************************************
 *
-*       WinDrive driver
+*       Windows Drive driver
 */
 #ifdef    FS_WD_MAXUNITS                                  // Compatibility define. Use FS_WINDRIVE_NUM_UNITS instead.
   #define FS_WINDRIVE_NUM_UNITS                   FS_WD_MAXUNITS
 #endif
 
-#ifndef   FS_WINDRIVE_NUM_UNITS
-  #define FS_WINDRIVE_NUM_UNITS                   4       // Maximum number of driver instances.
+#ifndef     FS_WINDRIVE_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_WINDRIVE_NUM_UNITS                 1       // Maximum number of driver instances.
+  #else
+    #define FS_WINDRIVE_NUM_UNITS                 4
+  #endif
 #endif
 
 #ifdef    WD_SECTOR_SIZE                                  // Compatibility define. Use FS_WINDRIVE_SECTOR_SIZE instead.
@@ -1141,16 +1495,40 @@ Purpose : File system configuration defaults
 #ifdef    FS_CRYPT_MAXUNIT                                // This configuration define is deprecated. Use FS_CRYPT_NUM_UNITS instead.
   #define FS_CRYPT_NUM_UNITS                      FS_CRYPT_MAXUNIT
 #endif
-#ifndef   FS_CRYPT_NUM_UNITS
-  #define FS_CRYPT_NUM_UNITS                      4       // Maximum number of driver instances.
+#ifndef     FS_CRYPT_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_CRYPT_NUM_UNITS                    1       // Maximum number of driver instances.
+  #else
+    #define FS_CRYPT_NUM_UNITS                    4
+  #endif
 #endif
 
-#ifndef   FS_CRYPT_AES_OPTIMIZE_MIX_SUBST
-  #define FS_CRYPT_AES_OPTIMIZE_MIX_SUBST         1       // 0: No opt, 1: Use a 32-bit table to perform "MixColumns" and "SubBytes" at the same time.
+#ifndef     FS_CRYPT_AES_OPTIMIZE_MIX_SUBST
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_CRYPT_AES_OPTIMIZE_MIX_SUBST       0       // 0: No opt, 1: Use a 32-bit table to perform "MixColumns" and "SubBytes" at the same time.
+  #else
+    #define FS_CRYPT_AES_OPTIMIZE_MIX_SUBST       1
+  #endif
 #endif
 
-#ifndef   FS_CRYPT_AES_OPTIMIZE_MIX_COLUMNS
-  #define FS_CRYPT_AES_OPTIMIZE_MIX_COLUMNS       0       // 0: No opt, 2 highest
+#ifndef     FS_CRYPT_AES_OPTIMIZE_MIX_COLUMNS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MAX_SPEED)
+    #define FS_CRYPT_AES_OPTIMIZE_MIX_COLUMNS     2       // 0: No opt, 2 highest
+  #else
+    #define FS_CRYPT_AES_OPTIMIZE_MIX_COLUMNS     0
+  #endif
+#endif
+
+/*********************************************************************
+*
+*       Compression
+*/
+#ifndef     FS_COMPRESS_BUFFER_SIZE
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_COMPRESS_BUFFER_SIZE               32    // Size of the work buffer used for file system operations (in bytes).
+  #else
+    #define FS_COMPRESS_BUFFER_SIZE               128
+  #endif
 #endif
 
 /*********************************************************************
@@ -1160,8 +1538,12 @@ Purpose : File system configuration defaults
 #ifdef    FS_LOGVOL_MAXUNIT                               // This configuration define is deprecated. Use FS_LOGVOL_NUM_UNITS instead.
   #define FS_LOGVOL_NUM_UNITS                     FS_LOGVOL_MAXUNIT
 #endif
-#ifndef   FS_LOGVOL_NUM_UNITS
-  #define FS_LOGVOL_NUM_UNITS                     4       // Maximum number of driver instances.
+#ifndef     FS_LOGVOL_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_LOGVOL_NUM_UNITS                   1       // Maximum number of driver instances.
+  #else
+    #define FS_LOGVOL_NUM_UNITS                   4
+  #endif
 #endif
 
 #ifndef   FS_LOGVOL_SUPPORT_DRIVER_MODE
@@ -1177,11 +1559,15 @@ Purpose : File system configuration defaults
   #define FS_READAHEAD_NUM_UNITS                  FS_READAHEAD_MAXUNIT
 #endif
 
-#ifndef   FS_READAHEAD_NUM_UNITS
-  #define FS_READAHEAD_NUM_UNITS                  4       // Maximum number of driver instances.
+#ifndef     FS_READAHEAD_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_READAHEAD_NUM_UNITS                1       // Maximum number of driver instances.
+  #else
+    #define FS_READAHEAD_NUM_UNITS                4
+  #endif
 #endif
 
-#ifndef   FS_READAHEAD_ENABLE_STATS                       // Enables/disables the statistical counters.
+#ifndef     FS_READAHEAD_ENABLE_STATS                    // Enables/disables the statistical counters.
   #if (FS_DEBUG_LEVEL >= FS_DEBUG_LEVEL_CHECK_ALL)
     #define FS_READAHEAD_ENABLE_STATS             1
   #else
@@ -1196,8 +1582,12 @@ Purpose : File system configuration defaults
 #ifdef    FS_DISKPART_MAXUNIT                             // This configuration define is deprecated. Use FS_DISKPART_NUM_UNITS instead.
   #define FS_DISKPART_NUM_UNITS                   FS_DISKPART_MAXUNIT
 #endif
-#ifndef   FS_DISKPART_NUM_UNITS
-  #define FS_DISKPART_NUM_UNITS                   4       // Maximum number of driver instances.
+#ifndef     FS_DISKPART_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_DISKPART_NUM_UNITS                 1       // Maximum number of driver instances.
+  #else
+    #define FS_DISKPART_NUM_UNITS                 4
+  #endif
 #endif
 
 #ifndef   FS_DISKPART_SUPPORT_ERROR_RECOVERY
@@ -1206,21 +1596,17 @@ Purpose : File system configuration defaults
 
 /*********************************************************************
 *
-*       RAID1 driver
+*       RAID driver
 */
 #ifdef    FS_RAID1_MAXUNIT                                // This configuration define is deprecated. Use FS_RAID_NUM_UNITS instead.
   #define FS_RAID_NUM_UNITS                       FS_RAID1_MAXUNIT
 #endif
-#ifndef   FS_RAID_NUM_UNITS
-  #define FS_RAID_NUM_UNITS                       4       // Maximum number of driver instances.
-#endif
-
-/*********************************************************************
-*
-*       RAID5 driver
-*/
-#ifndef   FS_RAID_MAX_UNITS
-  #define FS_RAID_MAX_UNITS                       4       // Maximum number of instances that can be handled.
+#ifndef     FS_RAID_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_RAID_NUM_UNITS                     1       // Maximum number of driver instances.
+  #else
+    #define FS_RAID_NUM_UNITS                     4
+  #endif
 #endif
 
 #ifndef   FS_RAID_NUM_READ_RETRIES
@@ -1238,8 +1624,12 @@ Purpose : File system configuration defaults
 #ifdef    FS_SECSIZE_MAXUNIT                              // This configuration define is deprecated. Use FS_SECSIZE_NUM_UNITS instead.
   #define FS_SECSIZE_NUM_UNITS                    FS_SECSIZE_MAXUNIT
 #endif
-#ifndef   FS_SECSIZE_NUM_UNITS
-  #define FS_SECSIZE_NUM_UNITS                    4       // Maximum number of instances that can be handled.
+#ifndef     FS_SECSIZE_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_SECSIZE_NUM_UNITS                  1       // Maximum number of instances that can be handled.
+  #else
+    #define FS_SECSIZE_NUM_UNITS                  4
+  #endif
 #endif
 
 #ifndef   FS_SECSIZE_ENABLE_ERROR_RECOVERY
@@ -1253,8 +1643,12 @@ Purpose : File system configuration defaults
 #ifdef    FS_WRBUF_MAXUNIT                                // This configuration define is deprecated. Use FS_WRBUF_NUM_UNITS instead.
   #define FS_WRBUF_NUM_UNITS                      FS_WRBUF_MAXUNIT
 #endif
-#ifndef   FS_WRBUF_NUM_UNITS
-  #define FS_WRBUF_NUM_UNITS                      4       // Maximum number of instances that can be handled.
+#ifndef     FS_WRBUF_NUM_UNITS
+  #if (FS_OPTIMIZATION_TYPE == FS_OPTIMIZATION_TYPE_MIN_SIZE)
+    #define FS_WRBUF_NUM_UNITS                    1       // Maximum number of instances that can be handled.
+  #else
+    #define FS_WRBUF_NUM_UNITS                    4
+  #endif
 #endif
 
 #ifndef   FS_WRBUF_ENABLE_STATS
